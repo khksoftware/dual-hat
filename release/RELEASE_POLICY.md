@@ -12,6 +12,8 @@ A release candidate is assembled only from the canonical source allowlist in `ex
 
 The ZIP includes framework code, governance, prompts, schemas, templates, examples, tests, and user documentation. Tests remain included because they are the standalone installation and extension-safety proof. It excludes Git metadata, source-repository-only engineering state, external publication markers, credentials, machine-local dependencies, caches, bytecode, and validation residue.
 
+Canonical release products belong to the framework they distribute. Each versioned ZIP and its companion manifest and checksum are written under `release/v<version>/` inside the canonical Dual Hat folder. They are generated products, not recursive inputs to the canonical source allowlist or the derived Git source publication. An adopting product's engineering space may retain compact conformance and publication evidence that points to them, but it does not own or contain the Dual Hat distributable.
+
 Each ZIP has one top-level directory named `dual-hat-<version>/`. It contains `.dual-hat-release/content-manifest.json` and `.dual-hat-release/SHA256SUMS`. A companion release manifest records the ZIP hash, canonical source commit, external publication commit, and all archive-entry hashes without creating a self-referential hash cycle.
 
 Creating a package does not authorize a Git tag, GitHub Release, public upload, or stable-API claim. Those actions require explicit publication authority.
