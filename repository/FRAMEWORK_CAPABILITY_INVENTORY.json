@@ -27,6 +27,9 @@
       ],
       "support": [
         "architecture/REASONING_AND_DECISION_REVIEW.md",
+        "architecture/OPERATING_MODES.md",
+        "governance/ROLE_TRANSITIONS.md",
+        "schemas/work-item.schema.json",
         "templates/REQUIREMENT.md",
         "templates/SPECIFICATION.md"
       ],
@@ -56,8 +59,12 @@
       ],
       "support": [
         "process/CAPABILITY_LIFECYCLE.md",
+        "process/WORK_ITEM_LIFECYCLE.md",
         "schemas/bounded-task.schema.json",
-        "templates/WORK_ORDER.md"
+        "schemas/mode-transition-package.schema.json",
+        "templates/WORK_ORDER.md",
+        "templates/MODE_TRANSITION_PACKAGE.json",
+        "tooling/work_item_governance.py"
       ],
       "validation": "tooling/framework_completeness.py"
     },
@@ -126,9 +133,14 @@
       ],
       "support": [
         "validation/PROCESS_WATCHDOG.md",
+        "governance/PLATFORM_PROFILE_CONTRACT.md",
+        "schemas/platform-profile.schema.json",
+        "schemas/platform-contract-stop-report.schema.json",
         "schemas/validation-run-manifest.schema.json",
         "schemas/delegated-validation-result.schema.json",
+        "templates/PLATFORM_CONTRACT_STOP_REPORT.json",
         "templates/PHASE_HEALTH_REVIEW.md",
+        "tooling/profile_conformance.py",
         "tooling/temporary_workspace.py"
       ],
       "validation": "tooling/validate_framework.py"

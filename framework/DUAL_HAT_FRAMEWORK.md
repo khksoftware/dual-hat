@@ -2,6 +2,8 @@
 
 # Dual Hat Framework
 
+Dual Hat supports Integrated mode (the default connected environment) and Split mode (separate Architecture and Engineering environments). Mode, active role, lifecycle state, and work-item type are independent. Every execution begins from an approved sealed work order and a conformant platform-profile preflight. A mandatory contract gap is an immediate hard stop with state preservation, explicit user and Architecture reporting, and a resumable handoff; partial conformance is never conformance.
+
 This contract defines the framework-wide invariants. Operational ownership is
 enumerated in `../repository/FRAMEWORK_CAPABILITY_INVENTORY.json`; its linked
 architecture, governance, planning, process, repository, session, validation,

@@ -1,0 +1,29 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "active_role": "engineering",
+  "approved_work_order_hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "completed_steps": [
+    "implementation"
+  ],
+  "continuation_phrase": "Resume the approved work item from this sealed transition package.",
+  "current_mode": "integrated",
+  "lifecycle_state": "engineering_paused",
+  "pending_steps": [
+    "validation"
+  ],
+  "permitted_next_action": "run approved validation",
+  "repository": {
+    "branch": "work-item",
+    "commit": "abc123",
+    "dirty_worktree": false,
+    "remote_state": "fetched",
+    "upstream": "origin/main"
+  },
+  "required_local_artifacts": [
+    "operator-held fixture manifest"
+  ],
+  "target_mode": "split",
+  "unresolved_decisions": [],
+  "work_item_id": "CAP-EXAMPLE",
+  "work_item_type": "capability"
+}

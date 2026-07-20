@@ -1,0 +1,135 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/work-item.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "active_role": {
+      "enum": [
+        "architecture",
+        "engineering",
+        "architecture_review"
+      ]
+    },
+    "approval_state": {
+      "enum": [
+        "draft",
+        "work_order_ready",
+        "author_approved_for_execution"
+      ]
+    },
+    "approval_timestamp": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "approved_scope": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "authorized_mutation": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "authorized_repositories": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "explicit_exclusions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "follow_up_blocking": {
+      "type": "boolean"
+    },
+    "governance_contract_change": {
+      "type": "boolean"
+    },
+    "lifecycle_state": {
+      "enum": [
+        "architecture",
+        "work_order_ready",
+        "author_approved_for_execution",
+        "engineering",
+        "engineering_complete",
+        "engineering_paused",
+        "engineering_blocked",
+        "engineering_aborted",
+        "architecture_review",
+        "accepted",
+        "accepted_with_follow_up",
+        "remediation_required",
+        "rejected",
+        "archived"
+      ]
+    },
+    "operating_mode": {
+      "enum": [
+        "integrated",
+        "split"
+      ]
+    },
+    "product_increment": {
+      "type": "boolean"
+    },
+    "publication_authority": {
+      "type": "object"
+    },
+    "required_validation": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "stop_gates": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "title": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "work_item_id": {
+      "pattern": "^(GOV-[0-9]{4}|Capability [0-9]+)$",
+      "type": "string"
+    },
+    "work_item_type": {
+      "enum": [
+        "gov",
+        "capability"
+      ]
+    },
+    "work_order_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "work_item_id",
+    "work_item_type",
+    "title",
+    "operating_mode",
+    "active_role",
+    "lifecycle_state",
+    "approved_scope",
+    "explicit_exclusions",
+    "stop_gates",
+    "authorized_repositories",
+    "authorized_mutation",
+    "required_validation",
+    "publication_authority",
+    "approval_state",
+    "approval_timestamp",
+    "work_order_hash"
+  ],
+  "type": "object"
+}

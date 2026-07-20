@@ -4,7 +4,8 @@
 
 ## Identity and objective
 
-- Task/capability ID:
+- Work-item ID and type (`capability` or `gov`):
+- Operating mode, active role, and lifecycle state:
 - Title:
 - Objective:
 - Underlying goal:
@@ -21,6 +22,8 @@
 - Protected assets:
 - Risks, failure modes, and corner cases:
 - Authorization and stop gates:
+- Approval state and timestamp:
+- Canonical work-order content hash:
 - Required stakeholder decisions:
 
 ## Execution
@@ -40,3 +43,5 @@
 - Stop before:
 
 Optional sections may be omitted for trivial work, but material risk or scope cannot be hidden by omission.
+
+Material revision after approval returns to Architecture for revision, reapproval, and resealing. Engineering never edits the approved order retrospectively to manufacture conformance.

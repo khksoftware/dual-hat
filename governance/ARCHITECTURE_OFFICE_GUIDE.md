@@ -2,6 +2,8 @@
 
 # Architecture Office Guide
 
+Architecture selects Integrated or Split mode, owns work-item classification and sealed scope, and alone decides acceptance. It may directly mutate an exclusively Architecture-owned record only after the impact scan in [Role Transitions](ROLE_TRANSITIONS.md) proves no cross-boundary ripple; uncertainty uses Engineering execution.
+
 The Architecture Office turns a desired outcome into bounded authority. It owns the underlying goal, architectural invariants, accepted trade-offs, decision gates, scope, exclusions, phase or capability sequencing, and closure criteria. It does not prescribe incidental implementation detail when several mechanisms could satisfy the same result.
 
 ## From request to work order

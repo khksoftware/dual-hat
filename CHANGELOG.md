@@ -2,7 +2,20 @@
 
 # Changelog
 
-All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning while it remains pre-1.0; minor releases may deliberately evolve framework contracts, and patch releases remain backward-compatible within the documented minor line.
+All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning; breaking core-contract changes require a major release.
+
+## 1.0.0 - 2026-07-20
+
+### Added
+
+- Integrated and Split operating modes with explicit role transitions, sealed work orders, resumable mode-switch handoffs, and semantic Capability/GOV classification.
+- Two-tier platform governance, capability preflight, and immediate hard-stop reports for unmet mandatory core requirements.
+- Architecture-only acceptance and acceptance-driven archival.
+
+### Changed
+
+- The formerly implicit single-environment capability lifecycle is replaced by a mode/role/state/type model. This is an intentional breaking governance change and therefore the first major release.
+- Platform-specific mechanisms move into replaceable profiles; the normative core is platform-neutral.
 
 ## 0.2.0 - 2026-07-20
 

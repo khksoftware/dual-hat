@@ -1,0 +1,58 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "applicability": [
+    "explicitly selected work items"
+  ],
+  "authentication": {
+    "credentials": "never retained in framework evidence"
+  },
+  "degraded_features": [],
+  "detached_validation": {
+    "mechanism": "profile-defined metadata-capable checkout"
+  },
+  "dual_hat_core_version": "1.0.0",
+  "guarantees": {
+    "evidence_not_weakened": true,
+    "monitoring_not_weakened": true,
+    "recovery_not_weakened": true,
+    "security_not_weakened": true,
+    "validation_not_weakened": true
+  },
+  "known_environment_limitations": [],
+  "limitations": [
+    "illustrative nonnormative configuration"
+  ],
+  "mandatory_capabilities": {
+    "explicit_user_and_architecture_reporting": true,
+    "repository_state_preservation": true,
+    "resumable_handoff": true,
+    "sealed_work_order": true
+  },
+  "monitoring": {
+    "cadence": "governed environment-appropriate interval",
+    "owned_process_identification": "profile-defined"
+  },
+  "precedence": "dual_hat_core_governs_profile_specializes",
+  "profile_id": "example-toolchain",
+  "profile_version": "1.0.0",
+  "recovery": {
+    "context_loss": "reload sealed state and repository evidence"
+  },
+  "required_permissions_and_tools": [
+    "read governed state",
+    "write only authorized paths"
+  ],
+  "supported_configuration": {
+    "agent_runtime": "example",
+    "editor": "example",
+    "execution_host": "example"
+  },
+  "temporary_workspace": {
+    "resolver": "profile-defined outside governed active paths"
+  },
+  "unavailable_external_services": [],
+  "uncertainties_requiring_architecture_review": [],
+  "validation": [
+    "profile-to-core conformance"
+  ]
+}

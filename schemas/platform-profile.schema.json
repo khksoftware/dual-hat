@@ -1,0 +1,106 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/platform-profile.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "applicability": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "authentication": {
+      "type": "object"
+    },
+    "degraded_features": {
+      "type": "array"
+    },
+    "detached_validation": {
+      "type": "object"
+    },
+    "dual_hat_core_version": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "type": "string"
+    },
+    "guarantees": {
+      "required": [
+        "monitoring_not_weakened",
+        "recovery_not_weakened",
+        "security_not_weakened",
+        "validation_not_weakened",
+        "evidence_not_weakened"
+      ],
+      "type": "object"
+    },
+    "known_environment_limitations": {
+      "type": "array"
+    },
+    "limitations": {
+      "type": "array"
+    },
+    "mandatory_capabilities": {
+      "additionalProperties": {
+        "const": true
+      },
+      "minProperties": 1,
+      "type": "object"
+    },
+    "monitoring": {
+      "type": "object"
+    },
+    "precedence": {
+      "const": "dual_hat_core_governs_profile_specializes"
+    },
+    "profile_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "profile_version": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "recovery": {
+      "type": "object"
+    },
+    "required_permissions_and_tools": {
+      "type": "array"
+    },
+    "supported_configuration": {
+      "type": "object"
+    },
+    "temporary_workspace": {
+      "type": "object"
+    },
+    "unavailable_external_services": {
+      "type": "array"
+    },
+    "uncertainties_requiring_architecture_review": {
+      "type": "array"
+    },
+    "validation": {
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "profile_id",
+    "profile_version",
+    "dual_hat_core_version",
+    "supported_configuration",
+    "applicability",
+    "precedence",
+    "guarantees",
+    "mandatory_capabilities",
+    "required_permissions_and_tools",
+    "degraded_features",
+    "unavailable_external_services",
+    "known_environment_limitations",
+    "uncertainties_requiring_architecture_review",
+    "monitoring",
+    "temporary_workspace",
+    "detached_validation",
+    "authentication",
+    "recovery",
+    "limitations",
+    "validation"
+  ],
+  "type": "object"
+}

@@ -2,6 +2,10 @@
 
 # Dual Hat
 
+## Choose how the roles work together
+
+Dual Hat supports both **Integrated Mode** and **Split Mode**, with Integrated as the default. The plain-language [Integrated and Split Dual Hat Modes guide](guides/OPERATING_MODES.md) explains roles, pros and cons, approval, safe switching, recovery, review, acceptance, archival, platform profiles, and ordinary commands. The [platform-profile contract](governance/PLATFORM_PROFILE_CONTRACT.md) makes capability preflight and hard-stop behavior prominent.
+
 Dual Hat is a product-neutral operating framework for governed software development. The Architecture Office owns intent, requirements, boundaries, trade-offs, and acceptance; the Engineering Agent owns implementation, validation, publication, cleanup, and complete exit reporting.
 
 Start with the [operating model](architecture/OPERATING_MODEL.md), [bootstrap guide](process/BOOTSTRAP.md), and [operating guide](guides/OPERATING_GUIDE.md). The [Architecture Office guide](governance/ARCHITECTURE_OFFICE_GUIDE.md) and [Engineering Agent guide](governance/ENGINEERING_AGENT_GUIDE.md) explain role practice. [Canonical Entrypoints](repository/CANONICAL_ENTRYPOINTS.md) says where to begin; the [Canonical Domain Index](repository/CANONICAL_DOMAIN_INDEX.md) says which role owns each kind of truth. Use the [command reference](reference/COMMAND_REFERENCE.md) for standalone validation and bootstrap commands.
