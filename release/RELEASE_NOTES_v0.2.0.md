@@ -36,4 +36,8 @@ repository and the bound export manifest in the standalone source publication.
 Both routes select the same canonical source set; generated publication controls
 and prior release products remain excluded.
 
+Versioned release-product directories are ignored by default. This release remains
+local and release-ready unless a separate authority explicitly permits repository
+release publication; historical tracked release products are not rewritten.
+
 To verify the included lifecycle fixture, run the planning reconciliation command in `examples/planning-lifecycle.example.md`, followed by the standalone commands in `reference/COMMAND_REFERENCE.md`.
