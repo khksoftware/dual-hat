@@ -2,6 +2,8 @@
 
 # Session and Handover Protocol
 
+Every current session records operating mode, active role, work-item identity/type, lifecycle state, approved order hash, selected platform profile when one exists, and safe next transition. Split transfers and Integrated safe-boundary mode changes use `schemas/mode-transition-package.schema.json`; context memory is never the transfer contract.
+
 Exactly one current active-session record and one current human/machine handover pair exist per governed repository. They are generated from repository truth and replaced on update; historical copies are retained only when policy requires them.
 
 The current Markdown handover is the sole new-chat bootstrap input. Do not create a separate continuation prompt, compatibility copy, or generated alias with overlapping authority. Other resume or interrupted-operation artifacts may exist only when they have a distinct bounded purpose and link back to the current pair.

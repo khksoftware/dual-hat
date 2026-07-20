@@ -2,6 +2,8 @@
 
 # Validation Protocol
 
+Validation must prove profile preflight blocks known mandatory gaps, runtime gaps produce hard stops, partial work is safely preserved or rolled back, reporting reaches the user and Architecture Office, switching uses a governed handoff, profiles cannot make core rules optional, and conformance fails while any mandatory rule is unmet.
+
 Testable products require automated unit, integration, regression, schema/contract, and appropriate end-to-end tests. Validation also includes semantic review, repository and dependency checks, documentation, migration, packaging, security, rights, and operator-visible behavior. Tests are owned by the subsystem whose defects they detect.
 
 ## Profiles

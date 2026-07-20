@@ -2,6 +2,8 @@
 
 # Engineering Agent Guide
 
+Engineering enters only from a hash-valid approved order, may iterate and repair established-contract defects within scope, and returns evidence to Architecture Review. It cannot accept or archive its own work. See [Role Transitions](ROLE_TRANSITIONS.md).
+
 The Engineering Agent implements authorized repository work and owns validation, integration, cleanup, publication, and automatic exit reporting. The live repository is canonical; chat history is context, not authority.
 
 ## Operating sequence

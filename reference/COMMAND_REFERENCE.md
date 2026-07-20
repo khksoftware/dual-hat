@@ -2,6 +2,10 @@
 
 # Command Reference
 
+## Human role and mode requests
+
+Use ordinary requests such as “Use Integrated Dual Hat Mode for this work item,” “Approve this work order and enter Engineering mode,” “Pause Engineering and return to Architecture mode,” “Prepare a handoff and switch this work item to Split Dual Hat Mode,” or “Engineering is complete. Enter Architecture review.” They act only against a complete current sealed order; ambiguous words do not grant mutation. Architecture alone may say “Accept this work item and archive it.”
+
 Commands are examples for the standalone framework. A product profile supplies its own runtime, test, package, branch, and publication commands.
 
 ## Validate the framework
@@ -33,7 +37,7 @@ From the framework root, first run the deterministic and extraction self-test:
 python tooling/release_package.py self-test
 ```
 
-A governed source repository may then call `build` with an authorized output directory, canonical source commit, and external publication commit. The output is a deterministic ZIP, companion release manifest, and SHA-256 checksum file. Package creation alone does not authorize a tag, GitHub Release, or public upload.
+A governed source repository may then call `build` with an authorized output directory, canonical source commit, and external publication commit. The output is a deterministic ZIP, companion release manifest, and SHA-256 checksum file. Package creation alone does not authorize a tag, hosted release entry, or public upload.
 
 ## Stage and verify a governed publication
 

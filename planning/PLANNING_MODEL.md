@@ -2,6 +2,8 @@
 
 # Planning Model
 
+New planning items declare `work_item_type` as `capability` or `gov`. Capability planning denotes product increments; independently bounded authority, protocol, lifecycle, shared-governance-schema, cross-repository, or role-model work uses GOV identity and a governance history surface. Historical records remain valid without mass rewrite.
+
 Planning separates authorization from intent. A roadmap states direction and current sequencing; a backlog stores bounded candidate work; a future-work registry stores trigger-governed planning; phases group related outcomes; milestones state observable graduation; capabilities are atomic authorized changes. None authorizes execution without an active work order or equivalent decision.
 
 ## Required lifecycle

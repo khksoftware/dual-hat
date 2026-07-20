@@ -1,0 +1,95 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/mode-transition-package.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "active_role": {
+      "enum": [
+        "architecture",
+        "engineering",
+        "architecture_review"
+      ]
+    },
+    "approved_work_order_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "completed_steps": {
+      "type": "array"
+    },
+    "continuation_phrase": {
+      "type": "string"
+    },
+    "current_mode": {
+      "enum": [
+        "integrated",
+        "split"
+      ]
+    },
+    "lifecycle_state": {
+      "type": "string"
+    },
+    "pending_steps": {
+      "type": "array"
+    },
+    "permitted_next_action": {
+      "type": "string"
+    },
+    "platform_profile": {
+      "required": [
+        "profile_id",
+        "profile_version"
+      ],
+      "type": "object"
+    },
+    "repository": {
+      "required": [
+        "branch",
+        "commit",
+        "upstream",
+        "remote_state",
+        "dirty_worktree"
+      ],
+      "type": "object"
+    },
+    "required_local_artifacts": {
+      "type": "array"
+    },
+    "target_mode": {
+      "enum": [
+        "integrated",
+        "split"
+      ]
+    },
+    "unresolved_decisions": {
+      "type": "array"
+    },
+    "work_item_id": {
+      "type": "string"
+    },
+    "work_item_type": {
+      "enum": [
+        "gov",
+        "capability"
+      ]
+    }
+  },
+  "required": [
+    "current_mode",
+    "target_mode",
+    "active_role",
+    "work_item_id",
+    "work_item_type",
+    "lifecycle_state",
+    "approved_work_order_hash",
+    "platform_profile",
+    "repository",
+    "completed_steps",
+    "pending_steps",
+    "unresolved_decisions",
+    "required_local_artifacts",
+    "permitted_next_action",
+    "continuation_phrase"
+  ],
+  "type": "object"
+}

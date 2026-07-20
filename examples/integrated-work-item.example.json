@@ -1,0 +1,33 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "active_role": "engineering",
+  "approval_state": "author_approved_for_execution",
+  "approval_timestamp": "2030-01-01T00:00:00Z",
+  "approved_scope": [
+    "example scope"
+  ],
+  "authorized_mutation": "bounded governance source",
+  "authorized_repositories": [
+    "example repository"
+  ],
+  "explicit_exclusions": [
+    "product behavior"
+  ],
+  "governance_contract_change": true,
+  "lifecycle_state": "engineering",
+  "operating_mode": "integrated",
+  "product_increment": false,
+  "publication_authority": {
+    "push": false
+  },
+  "required_validation": [
+    "focused tests"
+  ],
+  "stop_gates": [
+    "new public contract"
+  ],
+  "title": "Example governance update",
+  "work_item_id": "GOV-0000",
+  "work_item_type": "gov",
+  "work_order_hash": "replace with tooling/work_item_governance.py canonical hash"
+}

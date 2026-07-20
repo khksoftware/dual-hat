@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# Capability Lifecycle
+# Capability Lifecycle Compatibility
 
-A capability is the smallest coherent authorized change that can be implemented, validated, published, reversed, and reported as one accountable unit. Multi-capability runs preserve separate gates and commits unless the work order explicitly justifies another rollback model.
+A capability is the smallest coherent authorized product change that can be implemented, validated, published, reversed, and reported as one accountable unit. Independently bounded framework/governance changes use GOV identities. New work follows [Capability and GOV Work-Item Lifecycle](WORK_ITEM_LIFECYCLE.md); this sequence remains compatible for existing capability records. Multi-capability runs preserve separate gates and commits unless the work order explicitly justifies another rollback model.
 
 ## Sequence
 

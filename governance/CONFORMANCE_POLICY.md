@@ -2,6 +2,8 @@
 
 # Conformance Policy
 
+Conformance is all-or-nothing for mandatory core requirements. A platform profile implements the core; it does not approximate it. Preflight failure or a runtime-discovered gap blocks execution and conformance claims. Mode or platform switching requires a governed, resumable handoff. Platform-specific limitations cannot redefine core authority or establish precedent.
+
 Conformance is a reasoned determination that implementation, repository state, validation evidence, documentation, publication, and cleanup satisfy the authorized objective. Passing tests alone is insufficient.
 
 ## Required dimensions

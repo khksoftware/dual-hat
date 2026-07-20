@@ -1,0 +1,27 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "active_role": "engineering",
+  "approved_work_order_hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "completed_steps": [],
+  "continuation_phrase": "Resume this work item from the sealed handoff.",
+  "current_mode": "integrated",
+  "lifecycle_state": "engineering_paused",
+  "pending_steps": [],
+  "permitted_next_action": "resume approved execution",
+  "platform_profile": {
+    "profile_id": "example-toolchain",
+    "profile_version": "1.0.0"
+  },
+  "repository": {
+    "branch": "main",
+    "commit": "replace",
+    "dirty_worktree": false,
+    "remote_state": "verified",
+    "upstream": "origin/main"
+  },
+  "required_local_artifacts": [],
+  "target_mode": "split",
+  "unresolved_decisions": [],
+  "work_item_id": "GOV-0000",
+  "work_item_type": "gov"
+}

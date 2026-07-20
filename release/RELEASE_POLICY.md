@@ -16,4 +16,4 @@ Canonical release products belong to the standalone Dual Hat repository. Each ve
 
 Each ZIP has one top-level directory named `dual-hat-<version>/`. It contains `.dual-hat-release/content-manifest.json` and `.dual-hat-release/SHA256SUMS`. A companion release manifest records the ZIP hash, canonical source commit, external publication commit, and all archive-entry hashes without creating a self-referential hash cycle.
 
-Creating a package does not authorize a repository commit, Git tag, GitHub Release, public upload, or stable-API claim. Each action requires explicit publication authority. A repository release commit must contain only the ZIP, its release manifest, and its checksum; package validation and staged-path inspection must pass before push.
+Creating a package does not authorize a repository commit, source-control tag, hosted release entry, public upload, or stable-API claim. Each action requires explicit publication authority. A repository release commit must contain only the ZIP, its release manifest, and its checksum; package validation and staged-path inspection must pass before push.

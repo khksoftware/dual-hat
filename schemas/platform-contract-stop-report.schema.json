@@ -1,0 +1,53 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "architecture_disposition_required": {
+      "const": true
+    },
+    "exact_unmet_requirement": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "gap_kind": {
+      "enum": [
+        "unsupported_capability",
+        "unavailable_capability",
+        "misconfigured_capability",
+        "temporarily_degraded_capability",
+        "permission_or_access_failure",
+        "security_or_rights_restriction",
+        "tool_defect",
+        "profile_defect",
+        "core_contract_ambiguity"
+      ]
+    },
+    "handoff": {
+      "type": "object"
+    },
+    "mutation_blocked": {
+      "const": true
+    },
+    "notifications": {
+      "type": "object"
+    },
+    "platform_or_profile_limitation": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "status": {
+      "const": "hard_stop"
+    }
+  },
+  "required": [
+    "status",
+    "mutation_blocked",
+    "gap_kind",
+    "exact_unmet_requirement",
+    "platform_or_profile_limitation",
+    "architecture_disposition_required",
+    "notifications",
+    "handoff"
+  ],
+  "type": "object"
+}

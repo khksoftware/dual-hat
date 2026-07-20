@@ -4,6 +4,8 @@
 
 Dual Hat separates architectural authority from execution accountability without creating two competing sources of truth. The Architecture Office owns intent, requirements, invariants, trade-offs, boundaries, and acceptance. The Engineering Agent owns repository inspection, implementation, validation, migration, publication, cleanup, and complete reporting. A stakeholder retains final informed authority where the decision is genuinely theirs.
 
+Integrated and Split operation are coequal first-class modes governed by [Operating Modes](OPERATING_MODES.md). Integrated is the usability default. Mode, role, lifecycle state, and work-item type remain independent; shared context never permits Engineering self-acceptance or informal role blending.
+
 ## Authority stack
 
 1. The live repository and its declared canonical artifacts are authoritative.

@@ -22,8 +22,13 @@ REQUIRED_DOMAIN_IDS = {
     "publication_and_closure", "documentation_and_help",
 }
 REQUIRED_GUIDES = {
+    "architecture/OPERATING_MODES.md",
     "governance/ARCHITECTURE_OFFICE_GUIDE.md",
     "governance/ENGINEERING_AGENT_GUIDE.md",
+    "governance/PLATFORM_PROFILE_CONTRACT.md",
+    "governance/ROLE_TRANSITIONS.md",
+    "guides/OPERATING_MODES.md",
+    "process/WORK_ITEM_LIFECYCLE.md",
     "sessions/TASK_CONTEXT_RETRIEVAL.md",
     "reference/COMMAND_REFERENCE.md",
 }
@@ -48,6 +53,10 @@ FORBIDDEN_PRODUCT_PATTERNS = (
     re.compile(r"Phase\s+15"),
     re.compile(r"workspace/(?:alex|user|author)[^/]*/", re.IGNORECASE),
     re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]"),
+)
+FORBIDDEN_PLATFORM_PATTERNS = (
+    re.compile(r"\b(?:Codex|OpenAI|ChatGPT|Windows|PowerShell|GitHub|Gemini)\b", re.IGNORECASE),
+    re.compile(r"\bVisual Studio Code\b", re.IGNORECASE),
 )
 RELEASE_CONTROL_PATHS = {
     ".dual-hat-release/content-manifest.json",
@@ -162,4 +171,8 @@ def validate_framework(root: Path) -> tuple[str, ...]:
         for pattern in FORBIDDEN_PRODUCT_PATTERNS:
             if pattern.search(text):
                 failures.append(f"product-specific leakage in {relative}: {pattern.pattern}")
+        if relative != "tooling/framework_completeness.py":
+            for pattern in FORBIDDEN_PLATFORM_PATTERNS:
+                if pattern.search(text):
+                    failures.append(f"platform-specific leakage in normative core {relative}: {pattern.pattern}")
     return tuple(sorted(set(failures)))
