@@ -1,15 +1,13 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# Bootstrap a product
+# Bootstrap
 
-Prerequisites are Git and Python 3.10+; the bootstrap uses only the Python standard library.
+1. Copy or install the governed Dual Hat distribution and verify its manifest/license.
+2. Create a product profile from `examples/product-profile.example.json`.
+3. Run `python scripts/bootstrap_product.py --target <new-root> --profile <profile.json>`.
+4. Populate canonical entrypoints/domain indexes, active session, roadmap, work order, validation profile, and protected assets.
+5. Run `python tooling/validate_framework.py --root .` in the Dual Hat checkout and the product's own focused bootstrap tests.
 
-1. Initialize an empty product repository.
-2. Copy or install this derived Dual Hat publication without changing its governed files.
-3. Review `examples/product-profile.example.json` against `schemas/product-profile.schema.json`.
-4. Preview: `python scripts/bootstrap_product.py --profile examples/product-profile.example.json --target <repository> --dry-run`.
-5. Apply: `python scripts/bootstrap_product.py --profile examples/product-profile.example.json --target <repository>`.
-6. Create the first bounded work order from `templates/WORK_ORDER.md`.
-7. Implement, validate, record conformance with `templates/CONFORMANCE_REVIEW.md`, and generate a handover from `templates/CURRENT_HANDOVER.md`.
+Bootstrap creates only mandatory surfaces. Optional architecture, data, migration, template, and archive areas appear when first needed. The template is product-neutral; do not copy example identities or paths into production. Product-specific paths and commands belong in the profile, not in framework source.
 
-The command creates only absent governed directories and `engineering/product-profile.json`. It fails on conflicting content and is idempotent. See the [repository map](REPOSITORY_MAP.md), [boundary contract](../governance/REPOSITORY_BOUNDARIES.md), and [troubleshooting guide](TROUBLESHOOTING.md).
+Manual edits to a derived external framework publication are drift: stop, reconcile ownership, and publish forward from the canonical source. See [Publication](PUBLICATION.md).

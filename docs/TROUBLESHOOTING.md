@@ -2,8 +2,12 @@
 
 # Troubleshooting
 
-- **Bootstrap reports a conflict:** inspect the named path; Dual Hat never overwrites unexplained content. Reconcile it explicitly or choose an empty target.
-- **Validation reports drift:** restore the derived publication to its marker-bound commit or deliberately change the authority model. Do not force-push or silently overwrite manual edits.
-- **A path or command changed:** update implementation, README/help, examples, templates, schemas, links, and repository map in the same canonical change.
-- **A license is missing or ambiguous:** exclude the file or add accurate compatible attribution. Never relabel third-party content as Apache-2.0.
-- **A capability is interrupted:** preserve a structured handover with completed work, current state, blockers, transient disposition, and the exact continuation action.
+- Conflicting rules: identify generic authority and product profile; fail closed and correct composition.
+- Missing domain owner: add or consolidate an operational owner, then update the capability inventory; a vague overview sentence is insufficient.
+- Clean-checkout-only failure: reproduce in detached validation, repair packaging/path/discovery ownership, and retain the regression.
+- Excessive disk activity: stop duplicate scans, inspect owned process trees and I/O, exclude archives/workspace/caches, clean orphans, then resume bounded work.
+- Stale handover/session: regenerate both human and machine state from live repository inputs and validate parity.
+- External drift: do not overwrite; compare prior manifest ownership, reconcile manual changes with the stakeholder, and publish forward.
+- Deferred item never wakes: implement trigger, selector, invoker, history, retry/terminal behavior, and tests—or label it planning-only.
+- Documentation mismatch: block closure until commands, paths, schemas, templates, and behavior converge.
+- Failed publication: preserve the local commit, report exact remote/auth state, and never claim success or force-push.

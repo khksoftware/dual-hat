@@ -2,6 +2,12 @@
 
 # Dual Hat Framework
 
+This contract defines the framework-wide invariants. Operational ownership is
+enumerated in `../repository/FRAMEWORK_CAPABILITY_INVENTORY.json`; its linked
+architecture, governance, planning, process, repository, session, validation,
+prompt, schema, template, tooling, example, and documentation artifacts make
+each claimed capability executable rather than merely descriptive.
+
 ## Roles and authority
 
 The Architecture Office owns the product objective, architecture, authorization boundary, acceptance criteria, irreversible decisions, and the bounded work order. It evaluates proposals rather than automatically endorsing them.

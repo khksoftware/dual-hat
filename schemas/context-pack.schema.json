@@ -1,0 +1,69 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/context-pack.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authoritative_sources": {
+      "items": {
+        "required": [
+          "path",
+          "revision",
+          "role"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "budgets": {
+      "required": [
+        "record_limit",
+        "token_limit"
+      ],
+      "type": "object"
+    },
+    "conflicts": {
+      "type": "array"
+    },
+    "context_pack_id": {
+      "type": "string"
+    },
+    "exclusions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "freshness": {
+      "type": "object"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "regeneration_triggers": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "retrieved_but_unused": {
+      "type": "array"
+    },
+    "schema": {
+      "const": "dual-hat-context-pack/1.0"
+    },
+    "task_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "context_pack_id",
+    "task_id",
+    "generated_at",
+    "authoritative_sources",
+    "exclusions",
+    "budgets",
+    "freshness",
+    "regeneration_triggers"
+  ],
+  "type": "object"
+}

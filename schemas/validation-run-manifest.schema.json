@@ -1,0 +1,68 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/validation-run-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_fingerprint": {
+      "type": "string"
+    },
+    "detached_decision": {
+      "required": [
+        "required",
+        "risk",
+        "rationale",
+        "compensating_validation"
+      ],
+      "type": "object"
+    },
+    "groups": {
+      "items": {
+        "required": [
+          "id",
+          "owner",
+          "command",
+          "environment",
+          "serialized"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "profile": {
+      "enum": [
+        "focused",
+        "integration",
+        "full_live",
+        "committed_tree",
+        "export",
+        "post_commit",
+        "post_push"
+      ]
+    },
+    "resource_watchdog": {
+      "required": [
+        "cadence_minutes",
+        "owner",
+        "closure_check"
+      ],
+      "type": "object"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "dual-hat-validation-run-manifest/1.0"
+    }
+  },
+  "required": [
+    "schema",
+    "run_id",
+    "candidate_fingerprint",
+    "profile",
+    "groups",
+    "detached_decision",
+    "resource_watchdog"
+  ],
+  "type": "object"
+}

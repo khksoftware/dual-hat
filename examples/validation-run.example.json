@@ -1,0 +1,33 @@
+{
+  "candidate_fingerprint": "example",
+  "detached_decision": {
+    "compensating_validation": [],
+    "rationale": "clean-checkout behavior can differ",
+    "required": true,
+    "risk": "repository paths changed"
+  },
+  "groups": [
+    {
+      "command": [
+        "python",
+        "-m",
+        "unittest"
+      ],
+      "environment": {
+        "isolation": "detached"
+      },
+      "id": "product",
+      "owner": "primary agent",
+      "serialized": false
+    }
+  ],
+  "license_expression": "Apache-2.0",
+  "profile": "committed_tree",
+  "resource_watchdog": {
+    "cadence_minutes": 5,
+    "closure_check": true,
+    "owner": "primary agent"
+  },
+  "run_id": "VAL-EXAMPLE",
+  "schema": "dual-hat-validation-run-manifest/1.0"
+}

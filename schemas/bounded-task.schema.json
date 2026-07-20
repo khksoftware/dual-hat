@@ -1,0 +1,50 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/bounded-task.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "authorization": {
+      "type": "object"
+    },
+    "durable_objective": {
+      "type": "string"
+    },
+    "exclusions": {
+      "type": "array"
+    },
+    "id": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "object"
+    },
+    "reporting": {
+      "type": "object"
+    },
+    "scope": {
+      "type": "array"
+    },
+    "stop_gates": {
+      "type": "array"
+    },
+    "validation": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "id",
+    "objective",
+    "durable_objective",
+    "scope",
+    "exclusions",
+    "authorization",
+    "stop_gates",
+    "validation",
+    "publication",
+    "reporting"
+  ],
+  "type": "object"
+}

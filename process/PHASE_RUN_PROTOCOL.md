@@ -1,0 +1,19 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
+# Phase-Run Protocol
+
+A phase groups capabilities that deliver one graduation outcome. The phase proposal states purpose, boundaries, dependencies, entry criteria, exit criteria, milestones, validation strategy, debt budget, release intent, rollback, and authorization owner. Opening updates all current planning/session authorities atomically and does not begin later phases.
+
+## Execution
+
+- Sequence bounded capabilities with explicit internal gates.
+- Close, validate, commit, and report each capability before the next opens.
+- Reconcile roadmap, backlog, debt, deferred triggers, documentation, and health after each capability.
+- Use safe parallel validation only from a complete inventory with one owner per shard and one reconciliation owner.
+- Preserve unresolved risk and accepted debt; do not convert deferral into completion language.
+
+## Phase health and closure
+
+At phase end, review outcomes, requirements, test relevance and semantic adequacy, coverage gaps, obsolete/redundant/flaky tests, runtime trends, shardability, fixture quality, escaped defects, debt, deferred work, documentation, repository hygiene, and protected assets. Strengthen, consolidate, or retire tests based on defect-detection value rather than count or raw coverage.
+
+Closure requires every exit criterion, zero unaccepted blockers, current planning/session/handover state, conformance, detached committed-tree validation, clean worktree, authorized release/tag decision, and rollback/reopening instructions. Publish a final handover. A closed phase is immutable; correction proceeds forward through a new bounded capability.

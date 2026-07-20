@@ -1,0 +1,29 @@
+{
+  "authorization": {
+    "status": "example-only"
+  },
+  "durable_objective": "One clear authority and dependency direction.",
+  "exclusions": [
+    "unrelated refactors"
+  ],
+  "id": "TASK-EXAMPLE",
+  "license_expression": "Apache-2.0",
+  "objective": "Correct one repository ownership defect.",
+  "publication": {
+    "policy": "forward-only"
+  },
+  "reporting": {
+    "automatic_exit_report": true
+  },
+  "scope": [
+    "consumer inventory",
+    "migration",
+    "validation"
+  ],
+  "stop_gates": [
+    "unexplained drift"
+  ],
+  "validation": {
+    "profile": "integration"
+  }
+}
