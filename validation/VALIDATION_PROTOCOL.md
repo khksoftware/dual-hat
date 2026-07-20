@@ -13,6 +13,8 @@ Testable products require automated unit, integration, regression, schema/contra
 - Export/standalone: isolated distribution with no source-repository dependency.
 - Post-commit/post-push: identity, cleanliness, evidence, and alignment only.
 
+Publication validation is additionally state-specific. Before commit, validate the complete staged index against the current export manifest, inspect the staged path list, scan staged content for likely secrets, and reject unowned or generated/cache artifacts. After commit and before push, validate the exact committed tree against the bound manifest and marker. Product-specific wrappers may add checks but may not replace or weaken these generic gates.
+
 The fingerprint binds base commit, complete candidate tracked-tree identity, changed-path digest, runtime/dependencies, schemas/inventories, protected assets, and profile. Caller path lists are optimization hints, never authority.
 
 ## Safe parallel validation

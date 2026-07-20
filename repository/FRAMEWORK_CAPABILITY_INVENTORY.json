@@ -202,6 +202,11 @@
         "branch discipline",
         "forward-only correction",
         "publication",
+        "manifest-owned staging",
+        "staged-index inspection",
+        "staged secret scanning",
+        "generated-artifact rejection",
+        "committed-tree verification before push",
         "origin alignment",
         "conformance review",
         "automatic exit reports",
@@ -219,7 +224,8 @@
         "docs/PUBLICATION.md",
         "docs/BOOTSTRAP.md",
         "docs/TROUBLESHOOTING.md",
-        "governance/PROFILE_COMPOSITION.md"
+        "governance/PROFILE_COMPOSITION.md",
+        "tooling/staged_publication.py"
       ],
       "validation": "tooling/validate_framework.py"
     },

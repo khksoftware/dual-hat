@@ -15,6 +15,27 @@ python -m unittest discover -s tests
 
 The first command validates semantic ownership, required documentation, product-neutrality, and declared artifacts. The second validates examples and bootstrap surfaces. Both must pass in a standalone tree before publication.
 
+## Stage and verify a governed publication
+
+From the derived publication repository, after applying and validating the export:
+
+```text
+git status --short
+python tooling/staged_publication.py stage --root .
+git diff --cached --name-status
+python tooling/staged_publication.py validate-staged --root .
+```
+
+The `stage` action stages only manifest-owned paths and exact governed removals. It rejects unknown files, common generated artifacts and caches (even when ignored), missing governed files, content-hash drift, marker drift, and likely secrets. Do not substitute `git add -A` or another unbounded staging command.
+
+After reviewing the staged paths and creating a transparent commit, validate the exact committed tree before push:
+
+```text
+python tooling/staged_publication.py verify-commit --root . --revision HEAD
+```
+
+Only then push without force, fetch, and confirm branch alignment and cleanliness. A product profile may wrap these generic commands but must not weaken their checks.
+
 ## Bootstrap a product
 
 ```text
