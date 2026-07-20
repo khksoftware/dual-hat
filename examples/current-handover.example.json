@@ -1,0 +1,38 @@
+{
+  "active_capability": null,
+  "authorization_boundaries": [
+    "Do not open CAP-002"
+  ],
+  "commit_roles": {
+    "closure_evidence": "example",
+    "corrected": null,
+    "detached_validation": "example",
+    "final_published": "example",
+    "generation_input": "example",
+    "implementation": "example",
+    "starting": "example"
+  },
+  "external_repositories": [],
+  "identity": "Example Product",
+  "latest_completed_capability": {
+    "id": "CAP-001",
+    "status": "complete"
+  },
+  "license_expression": "Apache-2.0",
+  "next_allowed_work": [
+    "Architecture review"
+  ],
+  "phase_or_release": {
+    "id": "PHASE-1",
+    "status": "open"
+  },
+  "protected_assets": [],
+  "repository": {
+    "branch": "main",
+    "clean": true,
+    "head": "example",
+    "origin_head": "example"
+  },
+  "schema": "dual-hat-current-handover/1.0",
+  "unresolved_decisions": []
+}

@@ -1,0 +1,97 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/current-handover.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "active_capability": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "authorization_boundaries": {
+      "type": "array"
+    },
+    "commit_roles": {
+      "required": [
+        "starting",
+        "implementation",
+        "corrected",
+        "detached_validation",
+        "closure_evidence",
+        "generation_input",
+        "final_published"
+      ],
+      "type": "object"
+    },
+    "external_repositories": {
+      "type": "array"
+    },
+    "identity": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "latest_completed_capability": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "next_allowed_work": {
+      "type": "array"
+    },
+    "phase_or_release": {
+      "type": "object"
+    },
+    "protected_assets": {
+      "type": "array"
+    },
+    "repository": {
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "clean": {
+          "type": "boolean"
+        },
+        "head": {
+          "type": "string"
+        },
+        "origin_head": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "branch",
+        "head",
+        "origin_head",
+        "clean"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "dual-hat-current-handover/1.0"
+    },
+    "unresolved_decisions": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "identity",
+    "repository",
+    "latest_completed_capability",
+    "active_capability",
+    "phase_or_release",
+    "commit_roles",
+    "external_repositories",
+    "protected_assets",
+    "unresolved_decisions",
+    "authorization_boundaries",
+    "next_allowed_work"
+  ],
+  "title": "Dual Hat current handover",
+  "type": "object"
+}

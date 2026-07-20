@@ -1,8 +1,31 @@
 {
-  "schema": "dual-hat-product-profile/1.0",
+  "archive_policy": "explicit_audit_only",
+  "canonical_branch": "main",
+  "governance": {
+    "extension_root": "engineering/governance/",
+    "generic_authority": "dual-hat/"
+  },
+  "handover": {
+    "json": "engineering/handoffs/CURRENT_HANDOVER.json",
+    "markdown": "engineering/handoffs/CURRENT_HANDOVER.md"
+  },
   "license_expression": "Apache-2.0",
   "product_name": "Example Product",
-  "canonical_branch": "main",
-  "roots": {"product": "product/", "dual_hat": "dual-hat/", "engineering": "engineering/", "workspace": "workspace/"},
-  "publication_policy": "branch_squash_forward_only"
+  "publication_policy": "branch_squash_forward_only",
+  "roots": {
+    "dual_hat": "dual-hat/",
+    "engineering": "engineering/",
+    "product": "product/",
+    "workspace": "workspace/"
+  },
+  "schema": "dual-hat-product-profile/1.0",
+  "validation": {
+    "detached": "risk_based",
+    "focused": [
+      "python -m unittest"
+    ],
+    "full": [
+      "python -m unittest discover"
+    ]
+  }
 }

@@ -1,23 +1,130 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$comment": "SPDX-License-Identifier: Apache-2.0",
-  "$id": "https://dual-hat.example/schemas/export-manifest/2.0",
-  "title": "Dual Hat deterministic export manifest",
-  "type": "object",
+  "$id": "https://dual-hat.example/schemas/export-manifest/3.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "required": ["schema", "framework", "license_expression", "source_commit", "files", "included_file_count", "generated_file_count", "excluded_file_count", "tree_sha256", "previous_export_identity", "authority", "drift_policy"],
   "properties": {
-    "schema": {"const": "dual-hat-export-manifest/2.0"},
-    "framework": {"const": "Dual Hat"},
-    "license_expression": {"const": "Apache-2.0"},
-    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-    "files": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "bytes", "license", "origin"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[A-F0-9]{64}$"}, "bytes": {"type": "integer", "minimum": 0}, "license": {"const": "Apache-2.0"}, "origin": {"enum": ["canonical_source", "generated"]}}}},
-    "included_file_count": {"type": "integer", "minimum": 1},
-    "generated_file_count": {"type": "integer", "minimum": 1},
-    "excluded_file_count": {"type": "integer", "minimum": 0},
-    "tree_sha256": {"type": "string", "pattern": "^[A-F0-9]{64}$"},
-    "previous_export_identity": {"type": ["string", "null"]},
-    "authority": {"type": "string", "minLength": 1},
-    "drift_policy": {"type": "string", "minLength": 1}
-  }
+    "authority": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "content_files": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "license": {
+            "const": "Apache-2.0"
+          },
+          "mode": {
+            "const": "100644"
+          },
+          "origin": {
+            "enum": [
+              "canonical_source",
+              "generated"
+            ]
+          },
+          "path": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[A-F0-9]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "sha256",
+          "bytes",
+          "mode",
+          "license",
+          "origin"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "control_file_count": {
+      "const": 2
+    },
+    "copied_file_count": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "drift_policy": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "excluded_canonical_control_count": {
+      "const": 2
+    },
+    "framework": {
+      "const": "Dual Hat"
+    },
+    "generated_content_file_count": {
+      "const": 1
+    },
+    "license_expression": {
+      "const": "Apache-2.0"
+    },
+    "license_sha256": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "notice_sha256": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "previous_export_identity": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema": {
+      "const": "dual-hat-export-manifest/3.0"
+    },
+    "source_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "third_party_notice_sha256": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "total_file_count": {
+      "minimum": 4,
+      "type": "integer"
+    },
+    "tree_sha256": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "framework",
+    "license_expression",
+    "source_commit",
+    "content_files",
+    "copied_file_count",
+    "generated_content_file_count",
+    "control_file_count",
+    "total_file_count",
+    "excluded_canonical_control_count",
+    "tree_sha256",
+    "previous_export_identity",
+    "license_sha256",
+    "notice_sha256",
+    "third_party_notice_sha256",
+    "authority",
+    "drift_policy"
+  ],
+  "title": "Dual Hat deterministic export manifest",
+  "type": "object"
 }

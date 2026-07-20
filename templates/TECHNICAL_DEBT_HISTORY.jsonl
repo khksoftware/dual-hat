@@ -1,0 +1,1 @@
+{"license_expression":"Apache-2.0","schema":"dual-hat-technical-debt-event/1.0","event_id":"example","item_id":"DEBT-0001","event":"proposed","timestamp":"1970-01-01T00:00:00Z","actor":"example","rationale":"template row; remove before use"}

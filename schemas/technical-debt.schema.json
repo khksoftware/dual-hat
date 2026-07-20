@@ -1,0 +1,88 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/technical-debt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "accepted": {
+      "type": "boolean"
+    },
+    "category": {
+      "type": "string"
+    },
+    "closure_evidence": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "discovery_source": {
+      "type": "string"
+    },
+    "id": {
+      "pattern": "^[A-Z][A-Z0-9-]+$",
+      "type": "string"
+    },
+    "impact": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string"
+    },
+    "rationale": {
+      "type": "string"
+    },
+    "remediation_trigger": {
+      "required": [
+        "event",
+        "selector",
+        "invoker"
+      ],
+      "type": "object"
+    },
+    "severity": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "blocker"
+      ]
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "accepted",
+        "scheduled",
+        "in_progress",
+        "blocked",
+        "resolved",
+        "superseded",
+        "rejected"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "validation": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "category",
+    "severity",
+    "priority",
+    "owner",
+    "discovery_source",
+    "rationale",
+    "impact",
+    "remediation_trigger",
+    "status",
+    "validation"
+  ],
+  "type": "object"
+}

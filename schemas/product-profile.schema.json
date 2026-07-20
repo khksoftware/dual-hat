@@ -1,27 +1,131 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$comment": "SPDX-License-Identifier: Apache-2.0",
   "$id": "https://dual-hat.example/schemas/product-profile/1.0",
-  "title": "Dual Hat product profile",
-  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "required": ["schema", "license_expression", "product_name", "canonical_branch", "roots", "publication_policy"],
   "properties": {
-    "schema": {"const": "dual-hat-product-profile/1.0"},
-    "license_expression": {"const": "Apache-2.0"},
-    "product_name": {"type": "string", "minLength": 1},
-    "canonical_branch": {"type": "string", "minLength": 1},
+    "archive_policy": {
+      "enum": [
+        "excluded_by_default",
+        "explicit_audit_only"
+      ]
+    },
+    "canonical_branch": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "governance": {
+      "properties": {
+        "extension_root": {
+          "type": "string"
+        },
+        "generic_authority": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "generic_authority",
+        "extension_root"
+      ],
+      "type": "object"
+    },
+    "handover": {
+      "properties": {
+        "json": {
+          "type": "string"
+        },
+        "markdown": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "markdown",
+        "json"
+      ],
+      "type": "object"
+    },
+    "license_expression": {
+      "const": "Apache-2.0"
+    },
+    "product_name": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "publication_policy": {
+      "enum": [
+        "branch_squash_forward_only",
+        "transparent_forward_only"
+      ]
+    },
     "roots": {
-      "type": "object",
-      "required": ["product", "dual_hat", "engineering", "workspace"],
       "additionalProperties": false,
       "properties": {
-        "product": {"type": "string", "pattern": "^[^/].*/$"},
-        "dual_hat": {"type": "string", "pattern": "^[^/].*/$"},
-        "engineering": {"type": "string", "pattern": "^[^/].*/$"},
-        "workspace": {"type": "string", "pattern": "^[^/].*/$"}
-      }
+        "dual_hat": {
+          "pattern": "^[^/].*/$",
+          "type": "string"
+        },
+        "engineering": {
+          "pattern": "^[^/].*/$",
+          "type": "string"
+        },
+        "product": {
+          "pattern": "^[^/].*/$",
+          "type": "string"
+        },
+        "workspace": {
+          "pattern": "^[^/].*/$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "product",
+        "dual_hat",
+        "engineering",
+        "workspace"
+      ],
+      "type": "object"
     },
-    "publication_policy": {"enum": ["branch_squash_forward_only", "transparent_forward_only"]}
-  }
+    "schema": {
+      "const": "dual-hat-product-profile/1.0"
+    },
+    "validation": {
+      "properties": {
+        "detached": {
+          "type": "string"
+        },
+        "focused": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "full": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "focused",
+        "full",
+        "detached"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "license_expression",
+    "product_name",
+    "canonical_branch",
+    "roots",
+    "publication_policy",
+    "governance",
+    "validation",
+    "handover",
+    "archive_policy"
+  ],
+  "title": "Dual Hat product profile",
+  "type": "object"
 }
