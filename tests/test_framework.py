@@ -69,6 +69,8 @@ class FrameworkTests(unittest.TestCase):
             "bounded-task.example.json", "context-pack.example.json",
             "current-handover.example.json", "technical-debt.example.json",
             "validation-run.example.json", "roadmap-and-phase.example.md",
+            "planning-backlog.example.json", "future-work.example.json",
+            "planning-history.example.jsonl", "planning-lifecycle.example.md",
         }
         self.assertTrue(expected.issubset({path.name for path in (ROOT / "examples").iterdir()}))
 
@@ -78,6 +80,8 @@ class FrameworkTests(unittest.TestCase):
             "ACTIVE_SESSION.md", "CONTEXT_PACK.md", "ROADMAP.md",
             "TECHNICAL_DEBT_BACKLOG.json", "CANONICAL_ENTRYPOINTS.md",
             "CANONICAL_DOMAIN_INDEX.md", "PRODUCT_REPOSITORY.md",
+            "PLANNING_BACKLOG.json", "FUTURE_WORK_REGISTRY.json",
+            "PLANNING_HISTORY.jsonl",
         }
         self.assertTrue(expected.issubset({path.name for path in (ROOT / "templates").iterdir()}))
 

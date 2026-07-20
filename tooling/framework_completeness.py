@@ -27,6 +27,15 @@ REQUIRED_GUIDES = {
     "sessions/TASK_CONTEXT_RETRIEVAL.md",
     "reference/COMMAND_REFERENCE.md",
 }
+REQUIRED_PLANNING_SUPPORT = {
+    "schemas/planning-backlog.schema.json",
+    "schemas/future-work.schema.json",
+    "schemas/planning-history-event.schema.json",
+    "templates/PLANNING_BACKLOG.json",
+    "templates/FUTURE_WORK_REGISTRY.json",
+    "templates/PLANNING_HISTORY.jsonl",
+    "tooling/planning_reconciliation.py",
+}
 DOMAIN_OPERATIONAL_SUFFIXES = {
     "engineering_execution": (".schema.json", "templates/WORK_ORDER.md"),
     "planning": (".schema.json", "templates/ROADMAP.md"),
@@ -96,6 +105,10 @@ def validate_framework(root: Path) -> tuple[str, ...]:
                         failures.append(f"domain {domain_id} lacks required support type: {required}")
                 elif required not in support:
                     failures.append(f"domain {domain_id} lacks required support: {required}")
+            if domain_id == "planning":
+                missing_planning = REQUIRED_PLANNING_SUPPORT - set(support)
+                if missing_planning:
+                    failures.append(f"planning domain lacks lifecycle support: {sorted(missing_planning)}")
 
     missing_domains = REQUIRED_DOMAIN_IDS - domain_ids
     extra_domains = domain_ids - REQUIRED_DOMAIN_IDS

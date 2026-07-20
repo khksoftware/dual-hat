@@ -1,0 +1,37 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "items": [
+    {
+      "dependencies": [
+        "WORK-0001"
+      ],
+      "entry_criteria": [
+        "A governed trigger fires"
+      ],
+      "exit_criteria": [
+        "The item is promoted or retired with rationale"
+      ],
+      "id": "FUTURE-0001",
+      "objective": "Evaluate retention only after operational volume justifies it.",
+      "owner": "Architecture Office",
+      "requirements": [],
+      "risks": [
+        "Premature optimization adds unused policy"
+      ],
+      "status": "monitored",
+      "superseded_by": null,
+      "title": "Revisit status retention",
+      "trigger": {
+        "event": "Status history exceeds the profile retention threshold",
+        "invoker": "Phase health review",
+        "last_evaluated_at": "2026-01-01T00:00:00Z",
+        "review_interval": "At each phase closure",
+        "selector": "Canonical planning-history byte count"
+      },
+      "validation": [
+        "Trigger evidence is recorded before promotion"
+      ]
+    }
+  ],
+  "schema": "dual-hat-future-work/1.0"
+}

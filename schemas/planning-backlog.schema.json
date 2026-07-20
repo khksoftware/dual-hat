@@ -1,0 +1,105 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$defs": {
+    "item": {
+      "additionalProperties": false,
+      "properties": {
+        "dependencies": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        },
+        "entry_criteria": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        },
+        "exit_criteria": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        },
+        "id": {
+          "pattern": "^[A-Z][A-Z0-9-]+$",
+          "type": "string"
+        },
+        "objective": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "owner": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "requirements": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        },
+        "risks": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        },
+        "status": {
+          "enum": [
+            "candidate",
+            "ready",
+            "authorized",
+            "in_progress",
+            "blocked",
+            "completed",
+            "deferred",
+            "cancelled",
+            "superseded"
+          ]
+        },
+        "superseded_by": {
+          "pattern": "^[A-Z][A-Z0-9-]+$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "validation": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "objective",
+        "owner",
+        "dependencies",
+        "status",
+        "entry_criteria",
+        "exit_criteria",
+        "requirements",
+        "validation",
+        "risks",
+        "superseded_by"
+      ],
+      "type": "object"
+    },
+    "nonEmptyStrings": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "$id": "https://example.invalid/dual-hat/planning-backlog.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/item"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "dual-hat-planning-backlog/1.0"
+    }
+  },
+  "required": [
+    "schema",
+    "items"
+  ],
+  "type": "object"
+}

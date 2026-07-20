@@ -83,10 +83,17 @@
       ],
       "support": [
         "planning/TECHNICAL_DEBT.md",
+        "schemas/planning-backlog.schema.json",
+        "schemas/future-work.schema.json",
+        "schemas/planning-history-event.schema.json",
         "schemas/technical-debt.schema.json",
         "templates/ROADMAP.md",
+        "templates/PLANNING_BACKLOG.json",
+        "templates/FUTURE_WORK_REGISTRY.json",
+        "templates/PLANNING_HISTORY.jsonl",
         "templates/TECHNICAL_DEBT_BACKLOG.json",
         "templates/TECHNICAL_DEBT_HISTORY.jsonl",
+        "tooling/planning_reconciliation.py",
         "process/PHASE_RUN_PROTOCOL.md"
       ],
       "validation": "tooling/framework_completeness.py"

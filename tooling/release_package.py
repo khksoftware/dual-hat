@@ -46,20 +46,42 @@ def version() -> str:
 
 
 def source_files() -> dict[str, bytes]:
-    specification = json.loads((ROOT / "export/EXPORT_SOURCES.json").read_text(encoding="utf-8"))
-    included = tuple(str(path) for path in specification["included"])
+    canonical_specification = ROOT / "export/EXPORT_SOURCES.json"
+    publication_manifest = ROOT / ".dual-hat/export-manifest.json"
+    if canonical_specification.is_file():
+        specification = json.loads(canonical_specification.read_text(encoding="utf-8"))
+        included = tuple(str(path) for path in specification["included"])
+        expected_publication: set[str] | None = None
+    elif publication_manifest.is_file():
+        manifest = json.loads(publication_manifest.read_text(encoding="utf-8"))
+        records = manifest.get("content_files")
+        if not isinstance(records, list):
+            raise RuntimeError("published source manifest lacks content records")
+        included = tuple(
+            str(row["path"]) for row in records
+            if isinstance(row, dict) and row.get("origin") == "canonical_source"
+        )
+        expected_publication = {str(row["path"]) for row in records if isinstance(row, dict)} | {
+            ".dual-hat/export-manifest.json", ".dual-hat/published-state.json",
+        }
+    else:
+        raise RuntimeError("release packaging requires a canonical allowlist or published export manifest")
     actual = tuple(sorted(
         path.relative_to(ROOT).as_posix()
         for path in ROOT.rglob("*")
-        if path.is_file() and "__pycache__" not in path.parts
+        if path.is_file() and ".git" not in path.parts and "__pycache__" not in path.parts
         and path.relative_to(ROOT).as_posix() not in CONTROL_PATHS
         and not is_release_product(path.relative_to(ROOT).as_posix())
     ))
-    if tuple(sorted(included)) != actual:
+    expected = tuple(sorted(expected_publication)) if expected_publication is not None else tuple(sorted(included))
+    if expected != actual:
         raise RuntimeError(
-            f"release source classification mismatch; unclassified={sorted(set(actual) - set(included))}; "
-            f"stale={sorted(set(included) - set(actual))}"
+            f"release source classification mismatch; unclassified={sorted(set(actual) - set(expected))}; "
+            f"stale={sorted(set(expected) - set(actual))}"
         )
+    missing_inputs = sorted(set(included) - set(actual))
+    if missing_inputs:
+        raise RuntimeError(f"release source inputs are missing: {missing_inputs}")
     return {relative: normalized(ROOT / relative) for relative in sorted(included)}
 
 
