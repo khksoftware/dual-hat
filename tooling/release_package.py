@@ -120,33 +120,54 @@ def validate_archive(archive_path: Path) -> dict[str, object]:
 def build(output: Path, source_commit: str, external_publication_commit: str) -> dict[str, object]:
     release_version = version()
     basename = f"dual-hat-{release_version}.zip"
-    output.mkdir(parents=True, exist_ok=True)
+    manifest_name = f"dual-hat-{release_version}.release.json"
+    checksum_name = f"dual-hat-{release_version}.zip.sha256"
+    policy = TemporaryWorkspacePolicy(ROOT, namespace="dual-hat-release")
+    with policy.owned_run("package-build") as run:
+        staging = run.subdirectory("staging")
+        staged_archive = staging / basename
+        entries = package_entries()
+        _write_zip(staged_archive, entries)
+        validation = validate_archive(staged_archive)
+        release_manifest = {
+            "archive": basename,
+            "archive_bytes": staged_archive.stat().st_size,
+            "archive_entry_count": len(entries),
+            "archive_sha256": validation["archive_sha256"],
+            "archive_root": f"dual-hat-{release_version}/",
+            "canonical_source_commit": source_commit,
+            "external_publication_commit": external_publication_commit,
+            "files": [
+                {"bytes": len(data), "path": path, "sha256": sha256(data)}
+                for path, data in sorted(entries.items())
+            ],
+            "format": "zip",
+            "license_expression": "Apache-2.0",
+            "maturity": "functional_pre_1_0",
+            "schema": "dual-hat-release-manifest/1.0",
+            "version": release_version,
+        }
+        (staging / manifest_name).write_bytes(canonical_json(release_manifest))
+        (staging / checksum_name).write_text(
+            f"{validation['archive_sha256']}  {basename}\n", encoding="utf-8"
+        )
+        output.mkdir(parents=True, exist_ok=True)
+        published: list[Path] = []
+        try:
+            for name in (basename, manifest_name, checksum_name):
+                source = staging / name
+                destination = output / name
+                destination.write_bytes(source.read_bytes())
+                published.append(destination)
+                if sha256(destination.read_bytes()) != sha256(source.read_bytes()):
+                    raise RuntimeError(f"published release artifact hash mismatch: {name}")
+        except BaseException:
+            for path in published:
+                path.unlink(missing_ok=True)
+            raise
     archive_path = output / basename
-    entries = package_entries()
-    _write_zip(archive_path, entries)
-    validation = validate_archive(archive_path)
-    release_manifest = {
-        "archive": basename,
-        "archive_bytes": archive_path.stat().st_size,
-        "archive_entry_count": len(entries),
-        "archive_sha256": validation["archive_sha256"],
-        "archive_root": f"dual-hat-{release_version}/",
-        "canonical_source_commit": source_commit,
-        "external_publication_commit": external_publication_commit,
-        "files": [
-            {"bytes": len(data), "path": path, "sha256": sha256(data)}
-            for path, data in sorted(entries.items())
-        ],
-        "format": "zip",
-        "license_expression": "Apache-2.0",
-        "maturity": "functional_pre_1_0",
-        "schema": "dual-hat-release-manifest/1.0",
-        "version": release_version,
-    }
-    manifest_path = output / f"dual-hat-{release_version}.release.json"
-    manifest_path.write_bytes(canonical_json(release_manifest))
-    checksum_path = output / f"dual-hat-{release_version}.zip.sha256"
-    checksum_path.write_text(f"{validation['archive_sha256']}  {basename}\n", encoding="utf-8")
+    manifest_path = output / manifest_name
+    checksum_path = output / checksum_name
     return {
         **validation,
         "archive": archive_path.as_posix(),
