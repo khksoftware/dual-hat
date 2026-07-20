@@ -23,3 +23,5 @@ If independent development authority is later granted to the external repository
 ## Release packages
 
 The derived Git publication and a downloadable release are separate publication products. Release content, versioning, exclusions, deterministic layout, checksums, and authorization boundaries are governed by [Release Policy](RELEASE_POLICY.md). A release package is assembled from the canonical source allowlist, never by copying the external checkout. Creating a release-ready local ZIP does not create or imply a tag, a GitHub Release, a public asset upload, or 1.0 stability.
+
+The canonical local product location is `release/v<version>/` within the Dual Hat source folder. The ZIP, release manifest, and checksum stay together there. Version directories are excluded from source-export and package-input classification so a release cannot ingest itself.

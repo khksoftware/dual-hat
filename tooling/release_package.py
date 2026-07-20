@@ -15,6 +15,7 @@ import sys
 import zipfile
 
 from temporary_workspace import TemporaryWorkspacePolicy
+from release_artifacts import is_release_product
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +53,7 @@ def source_files() -> dict[str, bytes]:
         for path in ROOT.rglob("*")
         if path.is_file() and "__pycache__" not in path.parts
         and path.relative_to(ROOT).as_posix() not in CONTROL_PATHS
+        and not is_release_product(path.relative_to(ROOT).as_posix())
     ))
     if tuple(sorted(included)) != actual:
         raise RuntimeError(

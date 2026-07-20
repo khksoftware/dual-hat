@@ -15,9 +15,22 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
 import release_package  # noqa: E402
+from release_artifacts import is_release_product  # noqa: E402
 
 
 class ReleasePackageTests(unittest.TestCase):
+    def test_versioned_products_are_not_source_inputs(self) -> None:
+        self.assertTrue(is_release_product("release/v0.1.0/dual-hat-0.1.0.zip"))
+        self.assertTrue(is_release_product("release/v0.1.0/dual-hat-0.1.0.release.json"))
+        self.assertTrue(is_release_product("release/v0.1.0/dual-hat-0.1.0.zip.sha256"))
+        self.assertFalse(is_release_product("release/RELEASE_POLICY.md"))
+        self.assertFalse(is_release_product("release/v0.1.0/unrelated.json"))
+        if (ROOT / "export/EXPORT_SOURCES.json").is_file():
+            self.assertNotIn(
+                "release/v0.1.0/dual-hat-0.1.0.release.json",
+                release_package.source_files(),
+            )
+
     @unittest.skipIf(
         os.environ.get("DUAL_HAT_RELEASE_SELF_TEST_CHILD") == "1",
         "outer release self-test already proves deterministic packaging",

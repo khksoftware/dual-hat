@@ -9,6 +9,8 @@ import json
 import re
 from pathlib import Path
 
+from release_artifacts import is_release_product
+
 
 REQUIRED_DOMAIN_FIELDS = {
     "id", "responsibilities", "owner", "implementation_nature", "support",
@@ -122,6 +124,7 @@ def validate_framework(root: Path) -> tuple[str, ...]:
             for path in root.rglob("*")
             if path.is_file() and "__pycache__" not in path.parts
             and path.relative_to(root).as_posix() not in controls | RELEASE_CONTROL_PATHS
+            and not is_release_product(path.relative_to(root).as_posix())
         }
         declared = set(payload.get("included", ()))
         if actual != declared:
@@ -134,6 +137,8 @@ def validate_framework(root: Path) -> tuple[str, ...]:
         if not path.is_file() or any(part in {"__pycache__", ".git"} for part in path.parts):
             continue
         relative = path.relative_to(root).as_posix()
+        if is_release_product(relative):
+            continue
         if path.suffix.lower() not in {".md", ".py", ".json", ".jsonl"}:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
