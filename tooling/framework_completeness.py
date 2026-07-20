@@ -20,10 +20,10 @@ REQUIRED_DOMAIN_IDS = {
     "publication_and_closure", "documentation_and_help",
 }
 REQUIRED_GUIDES = {
-    "docs/ARCHITECTURE_OFFICE_GUIDE.md",
-    "docs/ENGINEERING_AGENT_GUIDE.md",
-    "docs/TASK_CONTEXT_RETRIEVAL.md",
-    "docs/COMMAND_REFERENCE.md",
+    "governance/ARCHITECTURE_OFFICE_GUIDE.md",
+    "governance/ENGINEERING_AGENT_GUIDE.md",
+    "sessions/TASK_CONTEXT_RETRIEVAL.md",
+    "reference/COMMAND_REFERENCE.md",
 }
 DOMAIN_OPERATIONAL_SUFFIXES = {
     "engineering_execution": (".schema.json", "templates/WORK_ORDER.md"),
@@ -38,6 +38,10 @@ FORBIDDEN_PRODUCT_PATTERNS = (
     re.compile(r"workspace/(?:alex|user|author)[^/]*/", re.IGNORECASE),
     re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]"),
 )
+RELEASE_CONTROL_PATHS = {
+    ".dual-hat-release/content-manifest.json",
+    ".dual-hat-release/SHA256SUMS",
+}
 
 
 def validate_framework(root: Path) -> tuple[str, ...]:
@@ -117,7 +121,7 @@ def validate_framework(root: Path) -> tuple[str, ...]:
             path.relative_to(root).as_posix()
             for path in root.rglob("*")
             if path.is_file() and "__pycache__" not in path.parts
-            and path.relative_to(root).as_posix() not in controls
+            and path.relative_to(root).as_posix() not in controls | RELEASE_CONTROL_PATHS
         }
         declared = set(payload.get("included", ()))
         if actual != declared:
@@ -133,7 +137,7 @@ def validate_framework(root: Path) -> tuple[str, ...]:
         if path.suffix.lower() not in {".md", ".py", ".json", ".jsonl"}:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        if relative == "docs/PUBLICATION_AND_DRIFT.md":
+        if relative in RELEASE_CONTROL_PATHS or relative == "release/PUBLICATION_AND_DRIFT.md":
             # A derived publication may identify its current canonical source;
             # this generated receipt is not framework authority.
             continue

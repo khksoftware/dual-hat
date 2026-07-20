@@ -15,6 +15,16 @@ python -m unittest discover -s tests
 
 The first command validates semantic ownership, required documentation, product-neutrality, and declared artifacts. The second validates examples and bootstrap surfaces. Both must pass in a standalone tree before publication.
 
+## Build and verify a release package
+
+From the framework root, first run the deterministic and extraction self-test:
+
+```text
+python tooling/release_package.py self-test
+```
+
+A governed source repository may then call `build` with an authorized output directory, canonical source commit, and external publication commit. The output is a deterministic ZIP, companion release manifest, and SHA-256 checksum file. Package creation alone does not authorize a tag, GitHub Release, or public upload.
+
 ## Stage and verify a governed publication
 
 From the derived publication repository, after applying and validating the export:

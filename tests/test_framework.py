@@ -83,10 +83,13 @@ class FrameworkTests(unittest.TestCase):
 
     def test_role_and_retrieval_help_is_first_class(self):
         expected = {
-            "ARCHITECTURE_OFFICE_GUIDE.md", "ENGINEERING_AGENT_GUIDE.md",
-            "TASK_CONTEXT_RETRIEVAL.md", "COMMAND_REFERENCE.md",
+            "governance/ARCHITECTURE_OFFICE_GUIDE.md",
+            "governance/ENGINEERING_AGENT_GUIDE.md",
+            "sessions/TASK_CONTEXT_RETRIEVAL.md",
+            "reference/COMMAND_REFERENCE.md",
         }
-        self.assertTrue(expected.issubset({path.name for path in (ROOT / "docs").iterdir()}))
+        self.assertTrue(all((ROOT / path).is_file() for path in expected))
+        self.assertFalse((ROOT / "docs").exists())
 
     def test_inventory_separates_required_domains(self):
         payload = json.loads((ROOT / "repository/FRAMEWORK_CAPABILITY_INVENTORY.json").read_text(encoding="utf-8"))
