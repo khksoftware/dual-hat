@@ -11,6 +11,8 @@ import subprocess
 from pathlib import Path
 from typing import Callable
 
+from release_artifacts import is_release_product
+
 
 MANIFEST = ".dual-hat/export-manifest.json"
 MARKER = ".dual-hat/published-state.json"
@@ -107,7 +109,9 @@ def _filesystem_files(root: Path) -> set[str]:
         directories[:] = [name for name in directories if name != ".git"]
         base = Path(current)
         for name in names:
-            files.add((base / name).relative_to(root).as_posix())
+            relative = (base / name).relative_to(root).as_posix()
+            if not is_release_product(relative):
+                files.add(relative)
     return files
 
 
