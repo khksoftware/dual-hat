@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://dual-hat.example/schemas/product-profile/1.0",
+  "title": "Dual Hat product profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "license_expression", "product_name", "canonical_branch", "roots", "publication_policy"],
+  "properties": {
+    "schema": {"const": "dual-hat-product-profile/1.0"},
+    "license_expression": {"const": "Apache-2.0"},
+    "product_name": {"type": "string", "minLength": 1},
+    "canonical_branch": {"type": "string", "minLength": 1},
+    "roots": {
+      "type": "object",
+      "required": ["product", "dual_hat", "engineering", "workspace"],
+      "additionalProperties": false,
+      "properties": {
+        "product": {"type": "string", "pattern": "^[^/].*/$"},
+        "dual_hat": {"type": "string", "pattern": "^[^/].*/$"},
+        "engineering": {"type": "string", "pattern": "^[^/].*/$"},
+        "workspace": {"type": "string", "pattern": "^[^/].*/$"}
+      }
+    },
+    "publication_policy": {"enum": ["branch_squash_forward_only", "transparent_forward_only"]}
+  }
+}

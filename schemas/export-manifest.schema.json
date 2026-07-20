@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://dual-hat.example/schemas/export-manifest/2.0",
+  "title": "Dual Hat deterministic export manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "framework", "license_expression", "source_commit", "files", "included_file_count", "generated_file_count", "excluded_file_count", "tree_sha256", "previous_export_identity", "authority", "drift_policy"],
+  "properties": {
+    "schema": {"const": "dual-hat-export-manifest/2.0"},
+    "framework": {"const": "Dual Hat"},
+    "license_expression": {"const": "Apache-2.0"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "files": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "bytes", "license", "origin"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[A-F0-9]{64}$"}, "bytes": {"type": "integer", "minimum": 0}, "license": {"const": "Apache-2.0"}, "origin": {"enum": ["canonical_source", "generated"]}}}},
+    "included_file_count": {"type": "integer", "minimum": 1},
+    "generated_file_count": {"type": "integer", "minimum": 1},
+    "excluded_file_count": {"type": "integer", "minimum": 0},
+    "tree_sha256": {"type": "string", "pattern": "^[A-F0-9]{64}$"},
+    "previous_export_identity": {"type": ["string", "null"]},
+    "authority": {"type": "string", "minLength": 1},
+    "drift_policy": {"type": "string", "minLength": 1}
+  }
+}

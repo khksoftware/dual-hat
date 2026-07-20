@@ -1,0 +1,9 @@
+{
+  "canonical_branch": "main",
+  "license_expression": "Apache-2.0",
+  "manifest_sha256": "345909D68751276C0330AACF06B17F7DBF8717B49C595447CB3806ECB5B5C0D6",
+  "previous_export_identity": null,
+  "schema": "dual-hat-published-state/1.0",
+  "source_commit": "4a632e76be8455d14e912aee033052d8a00200b7",
+  "tree_sha256": "259981596545812E21A7891EE13736B64AAA51064E3E99A34940D1C6A3585C7C"
+}
