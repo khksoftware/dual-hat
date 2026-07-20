@@ -2,20 +2,20 @@
   "authority": "canonical source repository; external derived publication",
   "content_files": [
     {
-      "bytes": 64,
+      "bytes": 77,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": ".gitignore",
-      "sha256": "7F3E1B4740E6826975FBD97EAC5C185E10AD0648CFEA1F29B356664E9189BA1D"
+      "sha256": "990EAF0B4E3A76A18B3020F71B4D4123C6CEC16225D71710A25FFD479C720366"
     },
     {
-      "bytes": 1763,
+      "bytes": 1889,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": "CHANGELOG.md",
-      "sha256": "B610EF6E2B9BCC643F06A7FE5BC2CAF6DCCF273338F2DAF9DDF0CD26C492AB97"
+      "sha256": "97D19DCC317CD1FA30215C03A9B724D1EDEF9AE9201159E381FA386A09F7EA61"
     },
     {
       "bytes": 11357,
@@ -354,20 +354,20 @@
       "sha256": "24F94D41D5F2610C85AFB8C675B23EB7A4A46E12D5FA42EB14E3000C2C838C56"
     },
     {
-      "bytes": 2370,
+      "bytes": 2612,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": "release/RELEASE_NOTES_v0.2.0.md",
-      "sha256": "E46BB70D359D12ED8EAFEF6046BCE8372125398392D38F6FE22CB3755CF96F1C"
+      "sha256": "BE9D18A6F7E65731A576B29195DF3D9D412DA9B7FBCD75C3230997AA456CC2CA"
     },
     {
-      "bytes": 2698,
+      "bytes": 2868,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": "release/RELEASE_POLICY.md",
-      "sha256": "CC8D926CCBC6720A37A6C93348C868309DACEC665554A7B084AE15ACB190431A"
+      "sha256": "413BDB7A5B7E248AE83A72AFC4FA6093B0FEFBB19946637A400EEADC817DCC23"
     },
     {
       "bytes": 248,
@@ -827,10 +827,10 @@
   "license_expression": "Apache-2.0",
   "license_sha256": "C71D239DF91726FC519C6EB72D318EC65820627232B2F796219E87DCF35D0AB4",
   "notice_sha256": "C316657F9FA7370B840DCBFCC5C1D1C15C422A91EEA96526A8F3EC5A40994280",
-  "previous_export_identity": "B6EE4926ADDCDC4E62C6D23BFF664A4FBA6137C83BAEC1FF08C83C388B4554FC",
+  "previous_export_identity": "FCB1103F758B215E2BFB6B60DC8919D9C57CAF285EFADC0D7D33FE69C910FC53",
   "schema": "dual-hat-export-manifest/3.0",
-  "source_commit": "960659a35fbb3fdb41016da10aad7d450ec7e3cb",
+  "source_commit": "05eb1051b30189100044a37bb7dc71a803112d9d",
   "third_party_notice_sha256": "05A902FE88C8667F19BA55A4D8F3BBB807D0FC1433DD9C508CBAAE5C3274B2DD",
   "total_file_count": 104,
-  "tree_sha256": "FCB1103F758B215E2BFB6B60DC8919D9C57CAF285EFADC0D7D33FE69C910FC53"
+  "tree_sha256": "DECCB13A58DEA407843C832A3CD9D4086634FAB269BB78A95BE489E18029C70B"
 }
