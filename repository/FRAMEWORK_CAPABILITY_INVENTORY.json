@@ -2,7 +2,7 @@
   "$comment": "SPDX-License-Identifier: Apache-2.0",
   "domains": [
     {
-      "documentation": "docs/OPERATING_GUIDE.md",
+      "documentation": "guides/OPERATING_GUIDE.md",
       "id": "architecture",
       "implementation_nature": "operational protocol",
       "owner": "architecture/OPERATING_MODEL.md",
@@ -33,7 +33,7 @@
       "validation": "tooling/framework_completeness.py"
     },
     {
-      "documentation": "docs/OPERATING_GUIDE.md",
+      "documentation": "guides/OPERATING_GUIDE.md",
       "id": "engineering_execution",
       "implementation_nature": "executable governance prompt",
       "owner": "prompts/ENGINEERING_AGENT_PROMPT.md",
@@ -62,7 +62,7 @@
       "validation": "tooling/framework_completeness.py"
     },
     {
-      "documentation": "docs/OPERATING_GUIDE.md",
+      "documentation": "guides/OPERATING_GUIDE.md",
       "id": "planning",
       "implementation_nature": "protocol and templates",
       "owner": "planning/PLANNING_MODEL.md",
@@ -92,7 +92,7 @@
       "validation": "tooling/framework_completeness.py"
     },
     {
-      "documentation": "docs/OPERATING_GUIDE.md",
+      "documentation": "guides/OPERATING_GUIDE.md",
       "id": "validation",
       "implementation_nature": "protocol schemas and tooling",
       "owner": "validation/VALIDATION_PROTOCOL.md",
@@ -113,18 +113,21 @@
         "evidence retention",
         "process and resource watchdogs",
         "subprocess cleanup",
-        "test-runtime and I/O monitoring"
+        "test-runtime and I/O monitoring",
+        "temporary workspace containment",
+        "owner-scoped temporary cleanup"
       ],
       "support": [
         "validation/PROCESS_WATCHDOG.md",
         "schemas/validation-run-manifest.schema.json",
         "schemas/delegated-validation-result.schema.json",
-        "templates/PHASE_HEALTH_REVIEW.md"
+        "templates/PHASE_HEALTH_REVIEW.md",
+        "tooling/temporary_workspace.py"
       ],
       "validation": "tooling/validate_framework.py"
     },
     {
-      "documentation": "docs/REPOSITORY_MAP.md",
+      "documentation": "repository/REPOSITORY_MAP.md",
       "id": "repository_governance",
       "implementation_nature": "protocol and repository contracts",
       "owner": "governance/REPOSITORY_GOVERNANCE.md",
@@ -158,7 +161,7 @@
       "validation": "tooling/framework_completeness.py"
     },
     {
-      "documentation": "docs/TASK_CONTEXT_RETRIEVAL.md",
+      "documentation": "sessions/TASK_CONTEXT_RETRIEVAL.md",
       "id": "sessions_and_continuity",
       "implementation_nature": "protocol schemas and templates",
       "owner": "sessions/SESSION_AND_HANDOVER_PROTOCOL.md",
@@ -215,17 +218,24 @@
         "rollback",
         "recovery",
         "phase closure",
-        "release and tag gates"
+        "release and tag gates",
+        "semantic versioning",
+        "deterministic release packaging",
+        "release manifests and checksums",
+        "source publication versus release separation"
       ],
       "support": [
         "governance/CONFORMANCE_POLICY.md",
         "templates/CONFORMANCE_REVIEW.md",
         "templates/EXIT_REPORT.md",
-        "docs/PUBLICATION.md",
-        "docs/BOOTSTRAP.md",
-        "docs/TROUBLESHOOTING.md",
+        "release/PUBLICATION.md",
+        "release/RELEASE_POLICY.md",
+        "release/VERSION.json",
+        "process/BOOTSTRAP.md",
+        "help/TROUBLESHOOTING.md",
         "governance/PROFILE_COMPOSITION.md",
-        "tooling/staged_publication.py"
+        "tooling/staged_publication.py",
+        "tooling/release_package.py"
       ],
       "validation": "tooling/validate_framework.py"
     },
@@ -233,7 +243,7 @@
       "documentation": "README.md",
       "id": "documentation_and_help",
       "implementation_nature": "role guides command reference examples and convergence contract",
-      "owner": "docs/OPERATING_GUIDE.md",
+      "owner": "guides/OPERATING_GUIDE.md",
       "profile_relationship": "profiles add product commands and help without weakening framework rules",
       "responsibilities": [
         "README",
@@ -251,12 +261,12 @@
       ],
       "support": [
         "README.md",
-        "docs/ARCHITECTURE_OFFICE_GUIDE.md",
-        "docs/ENGINEERING_AGENT_GUIDE.md",
-        "docs/TASK_CONTEXT_RETRIEVAL.md",
-        "docs/COMMAND_REFERENCE.md",
-        "docs/BOOTSTRAP.md",
-        "docs/TROUBLESHOOTING.md"
+        "governance/ARCHITECTURE_OFFICE_GUIDE.md",
+        "governance/ENGINEERING_AGENT_GUIDE.md",
+        "sessions/TASK_CONTEXT_RETRIEVAL.md",
+        "reference/COMMAND_REFERENCE.md",
+        "process/BOOTSTRAP.md",
+        "help/TROUBLESHOOTING.md"
       ],
       "validation": "tooling/validate_framework.py"
     }

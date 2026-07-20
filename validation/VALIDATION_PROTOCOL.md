@@ -17,6 +17,12 @@ Publication validation is additionally state-specific. Before commit, validate t
 
 The fingerprint binds base commit, complete candidate tracked-tree identity, changed-path digest, runtime/dependencies, schemas/inventories, protected assets, and profile. Caller path lists are optimization hints, never authority.
 
+## Temporary workspace containment
+
+Validation orchestration, detached worktrees, export checks, bootstrap proof, package assembly, temporary reports, logs, and subprocess state use `tooling/temporary_workspace.py`. Its default is a unique owner-marked run below the operating-system temporary directory. A profile may supply an absolute alternate root only when it does not overlap the source repository, an author/project/instance workspace, or a repository-sibling workspace. Relative, parent-traversing, and ambiguous caller roots are rejected.
+
+Each run owns only its unique directory. Cleanup executes after success, failure, interruption, and child-process failure, verifies absence, and never removes another active shard. Compact durable evidence is promoted explicitly to a governed evidence surface; raw temporary state is never made durable by leaving it in a workspace. Small in-process unit-test fixtures may call the language runtime's secure temporary-directory primitive directly, but orchestration and reusable framework operations may not invent a second path policy.
+
 ## Safe parallel validation
 
 Define the complete validation inventory first. Assign each group exactly once with command, environment, fixtures, writable state, ports, caches, external resources, owner, counts, skips, and log. Parallelize only isolated read-only or independently writable shards. Serialize global ordering, singletons, migrations, same-host retrieval, external publication, and shared mutation. Never hide retries; rerun suspicious failures serially and reconcile one authoritative result.

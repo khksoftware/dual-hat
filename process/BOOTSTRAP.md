@@ -10,4 +10,4 @@
 
 Bootstrap creates only mandatory surfaces. Optional architecture, data, migration, template, and archive areas appear when first needed. The template is product-neutral; do not copy example identities or paths into production. Product-specific paths and commands belong in the profile, not in framework source.
 
-Manual edits to a derived external framework publication are drift: stop, reconcile ownership, and publish forward from the canonical source. See [Publication](PUBLICATION.md).
+Manual edits to a derived external framework publication are drift: stop, reconcile ownership, and publish forward from the canonical source. See [Publication](../release/PUBLICATION.md).

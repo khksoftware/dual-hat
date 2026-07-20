@@ -9,3 +9,5 @@ Inspect PID, parent/children, command line, start time, duration, CPU, memory, d
 Terminate only clearly owned orphaned, duplicated, runaway, stale, or detached work after verifying it is not writing repository state, a database, package, export, snapshot, migration, or critical result. Prefer graceful termination. Never terminate ambiguous user or editor processes; ask when attribution is uncertain.
 
 Child launchers use guaranteed cleanup. Delegated workers report and clean children. Closure verifies no orphaned scanner, test, retrieval, or export process remains. Significant interventions record identity, ownership, observed use, reason, action, and result.
+
+Long-running temporary work must expose its owner marker and purpose through the canonical temporary-workspace resolver. The watchdog treats ownerless validation trees in product or sibling workspaces as containment defects, not reusable evidence. It must not clean another live shard merely because that shard shares the same approved base directory.

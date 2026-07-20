@@ -8,7 +8,7 @@ A prior manifest defines the owned external file set. Forward publication may ad
 
 ## Governed staging and push gate
 
-After applying and validating a forward export, inspect `git status --short` and use the manifest-owned staging command in the [Command Reference](COMMAND_REFERENCE.md). Publication must not use an unbounded staging command such as `git add -A`. The staging gate:
+After applying and validating a forward export, inspect `git status --short` and use the manifest-owned staging command in the [Command Reference](../reference/COMMAND_REFERENCE.md). Publication must not use an unbounded staging command such as `git add -A`. The staging gate:
 
 - scans the bounded publication tree while excluding `.git`;
 - rejects unowned files, missing governed files, bytecode, `__pycache__`, and common build or tool caches, including ignored residue;
@@ -19,3 +19,7 @@ After applying and validating a forward export, inspect `git status --short` and
 Review the reported staged paths before committing. After the transparent commit, run committed-tree verification against the exact commit and review its file count and identity before pushing. Do not push if the committed tree contains an unowned, missing, forbidden, hash-mismatched, or secret-bearing file. After pushing, fetch and verify local/remote alignment and a clean worktree.
 
 If independent development authority is later granted to the external repository, record that governance change explicitly before accepting manual divergence.
+
+## Release packages
+
+The derived Git publication and a downloadable release are separate publication products. Release content, versioning, exclusions, deterministic layout, checksums, and authorization boundaries are governed by [Release Policy](RELEASE_POLICY.md). A release package is assembled from the canonical source allowlist, never by copying the external checkout. Creating a release-ready local ZIP does not create or imply a tag, a GitHub Release, a public asset upload, or 1.0 stability.
