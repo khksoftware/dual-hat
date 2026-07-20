@@ -1,0 +1,64 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/planning-history-event.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "event_id": {
+      "pattern": "^[A-Z][A-Z0-9-]+$",
+      "type": "string"
+    },
+    "from_status": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "item_id": {
+      "pattern": "^[A-Z][A-Z0-9-]+$",
+      "type": "string"
+    },
+    "item_kind": {
+      "enum": [
+        "backlog",
+        "future_work"
+      ]
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema": {
+      "const": "dual-hat-planning-history-event/1.0"
+    },
+    "source_authority": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "to_status": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "event_id",
+    "item_id",
+    "item_kind",
+    "occurred_at",
+    "from_status",
+    "to_status",
+    "reason",
+    "actor",
+    "source_authority"
+  ],
+  "type": "object"
+}

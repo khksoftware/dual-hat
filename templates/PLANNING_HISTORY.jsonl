@@ -1,0 +1,1 @@
+{"schema":"dual-hat-planning-history-event/1.0","event_id":"EVENT-EXAMPLE","item_id":"WORK-0001","item_kind":"backlog","occurred_at":"1970-01-01T00:00:00Z","from_status":null,"to_status":"candidate","reason":"template row; remove before use","actor":"example","source_authority":"example work order"}

@@ -1,0 +1,32 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "items": [
+    {
+      "dependencies": [
+        "REQ-0001"
+      ],
+      "entry_criteria": [
+        "Requirement is accepted"
+      ],
+      "exit_criteria": [
+        "Current projection is deterministic"
+      ],
+      "id": "WORK-0001",
+      "objective": "Give operators one verified current-status projection.",
+      "owner": "Engineering Agent",
+      "requirements": [
+        "REQ-0001"
+      ],
+      "risks": [
+        "Two current authorities could diverge"
+      ],
+      "status": "ready",
+      "superseded_by": null,
+      "title": "Add bounded status reporting",
+      "validation": [
+        "Focused status-projection test passes"
+      ]
+    }
+  ],
+  "schema": "dual-hat-planning-backlog/1.0"
+}

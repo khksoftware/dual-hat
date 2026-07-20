@@ -10,7 +10,7 @@ Start with the [operating model](architecture/OPERATING_MODEL.md), [bootstrap gu
 
 - `architecture/`: authority, reasoning, decisions, requirements, and invariants.
 - `governance/`: conformance, repository boundaries, profiles, lifecycle, and human-decision rules.
-- `planning/`: roadmap, backlog, phases, milestones, triggers, and technical debt.
+- `planning/`: roadmap, reconciled backlog/history, phases, milestones, future-work triggers, and technical debt.
 - `process/`: capability/phase execution, context retrieval, publication, closure, and recovery.
 - `repository/`: blueprint, entrypoints, domain ownership, and completeness inventory.
 - `sessions/`: active-session and current-handover maintenance.

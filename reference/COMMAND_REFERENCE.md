@@ -15,6 +15,16 @@ python -m unittest discover -s tests
 
 The first command validates semantic ownership, required documentation, product-neutrality, and declared artifacts. The second validates examples and bootstrap surfaces. Both must pass in a standalone tree before publication.
 
+## Reconcile planning state
+
+After changing a backlog, future-work registry, or planning history, run:
+
+```text
+python tooling/planning_reconciliation.py --backlog <planning-backlog.json> --future-work <future-work.json> --history <planning-history.jsonl> --json
+```
+
+The command rejects incomplete items or triggers, duplicate current IDs or event IDs, broken status chains, non-monotonic per-item timestamps, missing history, and disagreement between current projections and the latest events. It validates planning consistency; it does not grant work authorization.
+
 ## Build and verify a release package
 
 From the framework root, first run the deterministic and extraction self-test:
