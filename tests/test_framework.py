@@ -131,6 +131,24 @@ class FrameworkTests(unittest.TestCase):
             with self.assertRaisesRegex(PublicationValidationError, "unknown"):
                 stage_manifest_owned(root)
 
+    def test_committed_release_products_coexist_with_source_publication(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self._publication_repo(root)
+            release = root / "release/v0.1.0"
+            release.mkdir(parents=True)
+            for name in (
+                "dual-hat-0.1.0.zip",
+                "dual-hat-0.1.0.release.json",
+                "dual-hat-0.1.0.zip.sha256",
+            ):
+                (release / name).write_bytes(b"release product")
+            self._git(root, "add", "release/v0.1.0")
+            self._git(root, "commit", "-m", "Publish release")
+            verified = verify_commit_tree(root)
+            self.assertEqual("passed", verified["status"])
+            self.assertEqual(3, verified["tree_file_count"])
+
     def test_staging_scans_manifest_owned_content_for_secrets(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

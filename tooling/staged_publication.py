@@ -149,7 +149,10 @@ def validate_staged(root: Path) -> dict:
     manifest_bytes = _index_bytes(root, MANIFEST)
     marker_bytes = _index_bytes(root, MARKER)
     manifest, owned = _validate_controls(manifest_bytes, marker_bytes)
-    index_paths = set(str(_git(root, "ls-files")).splitlines())
+    index_paths = {
+        path for path in str(_git(root, "ls-files")).splitlines()
+        if not is_release_product(path)
+    }
     staged = set(str(_git(root, "diff", "--cached", "--name-only", "--diff-filter=ACDMRTUXB")).splitlines())
     forbidden = sorted(path for path in index_paths | staged if _forbidden(path))
     unknown = sorted(index_paths - owned)
@@ -204,7 +207,10 @@ def verify_commit_tree(root: Path, revision: str = "HEAD") -> dict:
     manifest_bytes = _revision_bytes(root, revision, MANIFEST)
     marker_bytes = _revision_bytes(root, revision, MARKER)
     manifest, owned = _validate_controls(manifest_bytes, marker_bytes)
-    tree_paths = set(str(_git(root, "ls-tree", "-r", "--name-only", revision)).splitlines())
+    tree_paths = {
+        path for path in str(_git(root, "ls-tree", "-r", "--name-only", revision)).splitlines()
+        if not is_release_product(path)
+    }
     forbidden = sorted(path for path in tree_paths if _forbidden(path))
     unknown = sorted(tree_paths - owned)
     missing = sorted(owned - tree_paths)
