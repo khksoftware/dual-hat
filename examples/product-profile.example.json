@@ -1,0 +1,8 @@
+{
+  "schema": "dual-hat-product-profile/1.0",
+  "license_expression": "Apache-2.0",
+  "product_name": "Example Product",
+  "canonical_branch": "main",
+  "roots": {"product": "product/", "dual_hat": "dual-hat/", "engineering": "engineering/", "workspace": "workspace/"},
+  "publication_policy": "branch_squash_forward_only"
+}
