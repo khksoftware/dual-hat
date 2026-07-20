@@ -2,12 +2,12 @@
   "authority": "canonical source repository; external derived publication",
   "content_files": [
     {
-      "bytes": 64,
+      "bytes": 131,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": ".gitignore",
-      "sha256": "7F3E1B4740E6826975FBD97EAC5C185E10AD0648CFEA1F29B356664E9189BA1D"
+      "sha256": "D55B9DA6C3EB8BB77E673D5B8D500EF4BE6B6EB193141C76746A94EE0C3152D5"
     },
     {
       "bytes": 981,
@@ -298,12 +298,12 @@
       "sha256": "F4B604885682A1DE9090CB9A9D60C8109079B2BB8569166878185AF33B223DCD"
     },
     {
-      "bytes": 2974,
+      "bytes": 3104,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": "release/PUBLICATION.md",
-      "sha256": "7E73C4FC0EC4F955516D4E1F257F40733650EEDD20D811DCF02DDFBA8A25550F"
+      "sha256": "FEFA2CAE0B6832C08A2B8BBC6E46F67CB6960BE62192A6A048C84BEE68A0E1E9"
     },
     {
       "bytes": 1473,
@@ -322,12 +322,12 @@
       "sha256": "24F94D41D5F2610C85AFB8C675B23EB7A4A46E12D5FA42EB14E3000C2C838C56"
     },
     {
-      "bytes": 2314,
+      "bytes": 2394,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": "release/RELEASE_POLICY.md",
-      "sha256": "9E06A15909054A556F35D7CAB11508200201D4072F939BDADF930915420FA72D"
+      "sha256": "D64FEDBFBDE4189D1DD4930EC529C57934C1BDBE77FFFC6C1C2A7FE37E12C235"
     },
     {
       "bytes": 248,
@@ -723,10 +723,10 @@
   "license_expression": "Apache-2.0",
   "license_sha256": "C71D239DF91726FC519C6EB72D318EC65820627232B2F796219E87DCF35D0AB4",
   "notice_sha256": "C316657F9FA7370B840DCBFCC5C1D1C15C422A91EEA96526A8F3EC5A40994280",
-  "previous_export_identity": "01F6AF6B539C0B904FE584931525DEA35D18A3C9CFB930EF775F7ACDCDC89882",
+  "previous_export_identity": "A350CD14AEC84E3A6E590524E242F56DEC2DC4F9CA310B1283D1C3BC80182129",
   "schema": "dual-hat-export-manifest/3.0",
-  "source_commit": "5bd1c303a2611370bb5c7dbe9174b6890cf8eb2d",
+  "source_commit": "46db2b543c95b678d1ea998cfce3a9dc290bfcc1",
   "third_party_notice_sha256": "05A902FE88C8667F19BA55A4D8F3BBB807D0FC1433DD9C508CBAAE5C3274B2DD",
   "total_file_count": 91,
-  "tree_sha256": "A350CD14AEC84E3A6E590524E242F56DEC2DC4F9CA310B1283D1C3BC80182129"
+  "tree_sha256": "126EB528D816C734E01F36C977FEA4A30EF3A643CC763E7D912E82B04F4D152E"
 }
