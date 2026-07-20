@@ -16,7 +16,7 @@ def validate_profile(profile: Mapping[str, object], core_version: str) -> tuple[
     if profile.get("precedence") != "dual_hat_core_governs_profile_specializes": failures.append("platform profile precedence is invalid")
     guarantees = profile.get("guarantees", {})
     if not isinstance(guarantees, Mapping) or any(guarantees.get(key) is not True for key in GUARANTEES): failures.append("platform profile weakens or omits a core guarantee")
-    for field in ("profile_id", "profile_version", "supported_configuration", "applicability", "mandatory_capabilities", "monitoring", "temporary_workspace", "detached_validation", "authentication", "recovery", "validation"):
+    for field in ("profile_id", "profile_version", "supported_configuration", "applicability", "mandatory_capabilities", "monitoring", "temporary_workspace", "detached_validation", "authentication", "recovery", "architecture_boundary_review", "validation"):
         if not profile.get(field): failures.append(f"platform profile lacks {field}")
     capabilities = profile.get("mandatory_capabilities", {})
     if isinstance(capabilities, Mapping) and any(value is not True for value in capabilities.values()): failures.append("platform profile marks a mandatory core capability unsupported")

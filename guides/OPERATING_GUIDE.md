@@ -4,6 +4,8 @@
 
 ## Roles and change flow
 
+Architecture reviews both function and authority. It independently checks the sealed scope, exclusions, roles, repositories, publication permissions, lifecycle, rights, dependencies, platform contract, and stop gates against primary evidence. If Engineering crossed that boundary, work stops until the specific problem is repaired and the governing control is strengthened. Passing tests alone never authorize acceptance.
+
 The Architecture Office converts goals into bounded, testable authority and challenges weak mechanisms. The Engineering Agent verifies repository state, inventories consumers and risks, implements the owning-layer correction, validates the complete candidate, reconciles operational surfaces, publishes only as authorized, cleans residue, and reports automatically. Use the [reasoning review](../architecture/REASONING_AND_DECISION_REVIEW.md) and [Engineering Agent prompt](../prompts/ENGINEERING_AGENT_PROMPT.md).
 
 Role-specific application guidance is in the [Architecture Office guide](../governance/ARCHITECTURE_OFFICE_GUIDE.md) and [Engineering Agent guide](../governance/ENGINEERING_AGENT_GUIDE.md).

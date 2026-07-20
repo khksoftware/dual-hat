@@ -1,6 +1,6 @@
 {
   "$comment": "SPDX-License-Identifier: Apache-2.0",
-  "active_capability": null,
+  "active_work_item": null,
   "authorization_boundaries": [],
   "commit_roles": {
     "closure_evidence": null,
@@ -26,6 +26,6 @@
     "head": "",
     "origin_head": ""
   },
-  "schema": "dual-hat-current-handover/1.0",
+  "schema": "dual-hat-current-handover/1.1",
   "unresolved_decisions": []
 }

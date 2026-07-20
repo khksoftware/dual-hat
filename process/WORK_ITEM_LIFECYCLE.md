@@ -4,6 +4,8 @@
 
 New Capabilities and GOV items use the shared mode/role/state contract in [Operating Modes](../architecture/OPERATING_MODES.md). Existing archived records remain valid under their historical schemas.
 
+Capability and GOV are the built-in registered types, not a closed schema enum. A future type such as `defect` is added through `governance/WORK_ITEM_TYPE_REGISTRY.json` with a governed identity pattern, semantic owner, classification rule, lifecycle compatibility decision, documentation, and tests. Consumers accept registered identifiers generically and reject unregistered ones; extensions cannot blur existing Capability/GOV semantics.
+
 ## Sealing
 
 Before Engineering, persist the identifier/type, title, scope, exclusions, assumptions, stop gates, repositories/paths, mutation and destructive authority, validation, publication, approval state/time, and canonical content hash. Hash canonical content excluding the hash field. Material change returns to Architecture for revision, reapproval, and resealing; history is append-only. Ambiguous approval or a stale hash never authorizes mutation.

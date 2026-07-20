@@ -33,18 +33,34 @@ class OperatingModeTests(unittest.TestCase):
         self.assertTrue(architecture_direct_mutation_allowed(safe)); unsafe={**safe,"uncertain_reach":True}; self.assertFalse(architecture_direct_mutation_allowed(unsafe))
         self.assertTrue(archival_allowed("accepted")); self.assertTrue(archival_allowed("accepted_with_follow_up",follow_up_blocking=False)); self.assertFalse(archival_allowed("remediation_required")); self.assertFalse(archival_allowed("accepted",actor="engineering"))
     def test_profile_conformance_and_fallback(self):
-        profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8")); self.assertEqual((),validate_profile(profile,"1.0.0")); self.assertTrue(resolve_profile(profile,"1.0.0")["core_applies"])
-        with self.assertRaises(ValueError): resolve_profile(None,"1.0.0")
-        weak=copy.deepcopy(profile); weak["guarantees"]["security_not_weakened"]=False; self.assertTrue(validate_profile(weak,"1.0.0"))
+        profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8")); self.assertEqual((),validate_profile(profile,"1.0.1")); self.assertTrue(resolve_profile(profile,"1.0.1")["core_applies"])
+        with self.assertRaises(ValueError): resolve_profile(None,"1.0.1")
+        weak=copy.deepcopy(profile); weak["guarantees"]["security_not_weakened"]=False; self.assertTrue(validate_profile(weak,"1.0.1"))
     def test_preflight_blocks_known_gap_and_partial_conformance(self):
         profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
-        self.assertTrue(capability_preflight(profile,["sealed_work_order"],"1.0.0")["execution_authorized"])
-        result=capability_preflight(profile,["missing_mandatory_rule"],"1.0.0"); self.assertTrue(result["hard_stop"]); self.assertFalse(result["execution_authorized"])
-        profile["mandatory_capabilities"]["sealed_work_order"]=False; self.assertTrue(validate_profile(profile,"1.0.0"))
+        self.assertTrue(capability_preflight(profile,["sealed_work_order"],"1.0.1")["execution_authorized"])
+        result=capability_preflight(profile,["missing_mandatory_rule"],"1.0.1"); self.assertTrue(result["hard_stop"]); self.assertFalse(result["execution_authorized"])
+        profile["mandatory_capabilities"]["sealed_work_order"]=False; self.assertTrue(validate_profile(profile,"1.0.1"))
     def test_runtime_gap_generates_blocking_resumable_handoff(self):
         handoff={"active_role":"engineering","operating_mode":"integrated","work_item_id":"GOV-1","sealed_work_order_hash":"A"*64,"platform_profile":{"id":"p","version":"1"},"repository_and_remote_state":{},"dirty_worktree_state":{},"completed_steps":[],"pending_steps":[],"partial_outputs":[],"temporary_and_ignored_state":[],"containment_actions":[],"permitted_next_action":"await Architecture"}
         report=runtime_gap_stop_report(gap_kind="tool_defect",unmet_requirement="mandatory validation",limitation="validator unavailable",handoff=handoff)
         self.assertEqual("hard_stop",report["status"]); self.assertTrue(report["mutation_blocked"]); self.assertTrue(report["architecture_disposition_required"])
         with self.assertRaises(ValueError): runtime_gap_stop_report(gap_kind="tool_defect",unmet_requirement="x",limitation="y",handoff={})
+    def test_extensible_registered_work_item_types_fail_closed(self):
+        registered=load_work_item_types(ROOT/"governance/WORK_ITEM_TYPE_REGISTRY.json"); self.assertEqual(frozenset({"capability","gov"}),registered)
+        defect=order("gov"); defect["work_item_type"]="defect"; defect=seal(defect)
+        self.assertIn("unknown work-item type",validate_sealed(defect,registered_types=registered))
+        self.assertNotIn("unknown work-item type",validate_sealed(defect,registered_types=registered|{"defect"}))
+    def test_architecture_boundary_review_is_independent_and_blocks_acceptance(self):
+        review={"sealed_work_order_hash_verified":True,"primary_evidence_inspected":["diff","remote"],"engineering_self_report_only":False,"tests_only":False,"deviation_found":False,"material_violation_unresolved":False,"specific_remediation_obligation":None,"systemic_control_obligation":None,"analogous_gap_review":"recorded","architecture_disposition":"accepted"}
+        self.assertEqual((),boundary_review_failures(review))
+        violated={**review,"deviation_found":True,"material_violation_unresolved":True,"specific_remediation_obligation":None,"systemic_control_obligation":None,"analogous_gap_review":"","architecture_disposition":"accepted"}
+        failures=boundary_review_failures(violated); self.assertIn("acceptance is blocked by unresolved material boundary violation",failures); self.assertIn("boundary violation lacks specific remediation",failures); self.assertIn("boundary violation lacks systemic control strengthening",failures)
+        self.assertTrue(boundary_review_failures({**review,"engineering_self_report_only":True})); self.assertTrue(boundary_review_failures({**review,"tests_only":True}))
+    def test_current_handover_is_generic_and_historical_schema_is_retained(self):
+        schema=json.loads((ROOT/"schemas/current-handover.schema.json").read_text(encoding="utf-8")); template=json.loads((ROOT/"templates/CURRENT_HANDOVER.json").read_text(encoding="utf-8"))
+        self.assertEqual("dual-hat-current-handover/1.1",template["schema"]); self.assertIn("active_work_item",template); self.assertNotIn("active_capability",template)
+        self.assertIn("dual-hat-current-handover/1.0",schema["properties"]["schema"]["enum"])
+        self.assertEqual("^[a-z][a-z0-9_]*$",schema["properties"]["active_work_item"]["properties"]["work_item_type"]["pattern"])
 
 if __name__ == "__main__": unittest.main()

@@ -1,5 +1,18 @@
 {
-  "active_capability": null,
+  "active_work_item": {
+    "active_role": "architecture_review",
+    "lifecycle_state": "engineering_complete",
+    "operating_mode": "integrated",
+    "pending_decisions": [
+      "Architecture disposition"
+    ],
+    "permitted_next_action": "Architecture review only",
+    "title": "Example governance correction",
+    "work_item_id": "GOV-EXAMPLE",
+    "work_item_type": "gov",
+    "work_order_hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "work_order_revision": 1
+  },
   "authorization_boundaries": [
     "Do not open CAP-002"
   ],
@@ -33,6 +46,6 @@
     "head": "example",
     "origin_head": "example"
   },
-  "schema": "dual-hat-current-handover/1.0",
+  "schema": "dual-hat-current-handover/1.1",
   "unresolved_decisions": []
 }

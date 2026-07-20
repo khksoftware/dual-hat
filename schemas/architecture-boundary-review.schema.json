@@ -1,0 +1,66 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "analogous_gap_review": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "architecture_disposition": {
+      "enum": [
+        "accepted",
+        "accepted_with_follow_up",
+        "remediation_required",
+        "rejected"
+      ]
+    },
+    "deviation_found": {
+      "type": "boolean"
+    },
+    "engineering_self_report_only": {
+      "const": false
+    },
+    "material_violation_unresolved": {
+      "type": "boolean"
+    },
+    "primary_evidence_inspected": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "sealed_work_order_hash_verified": {
+      "type": "boolean"
+    },
+    "specific_remediation_obligation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "systemic_control_obligation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tests_only": {
+      "const": false
+    },
+    "work_item_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "work_item_id",
+    "sealed_work_order_hash_verified",
+    "primary_evidence_inspected",
+    "engineering_self_report_only",
+    "tests_only",
+    "deviation_found",
+    "material_violation_unresolved",
+    "specific_remediation_obligation",
+    "systemic_control_obligation",
+    "analogous_gap_review",
+    "architecture_disposition"
+  ],
+  "type": "object"
+}
