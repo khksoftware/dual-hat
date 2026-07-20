@@ -94,6 +94,8 @@ Accepted-with-follow-up archives only when follow-up is explicitly non-blocking 
 
 A Capability is a bounded increment to product runtime, data, workflow, operational behavior, or user-visible functionality. A GOV item is independently bounded framework work affecting authority, protocol, lifecycle, shared governance schema, cross-repository contract, or role-operating model. Necessary framework support may accompany a Capability; separable framework work uses GOV identity. Historical archives are not mass-rewritten.
 
+The handover uses a generic active work item rather than a Capability-only field. Future governed types—for example, a bounded `defect` type—can be registered without pretending they are Capabilities or redesigning continuity. Registration is explicit and fail-closed; an arbitrary label is not authority.
+
 ## Architecture-local change and Engineering repair
 
 Architecture may directly update an exclusively Architecture-owned record only after an impact scan proves no shared schema, external consumer, Engineering behavior, validator, generator, publication, topology, integration, or synchronized propagation effect. Uncertain reach defaults to Engineering execution.

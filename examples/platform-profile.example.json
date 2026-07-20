@@ -3,6 +3,14 @@
   "applicability": [
     "explicitly selected work items"
   ],
+  "architecture_boundary_review": {
+    "independent_primary_evidence": [
+      "repository state",
+      "publication state",
+      "generated artifacts"
+    ],
+    "self_report_only": false
+  },
   "authentication": {
     "credentials": "never retained in framework evidence"
   },
@@ -10,7 +18,7 @@
   "detached_validation": {
     "mechanism": "profile-defined metadata-capable checkout"
   },
-  "dual_hat_core_version": "1.0.0",
+  "dual_hat_core_version": "1.0.1",
   "guarantees": {
     "evidence_not_weakened": true,
     "monitoring_not_weakened": true,

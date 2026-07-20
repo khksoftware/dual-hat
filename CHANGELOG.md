@@ -4,6 +4,16 @@
 
 All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning; breaking core-contract changes require a major release.
 
+## 1.0.1 - 2026-07-20
+
+### Fixed
+
+- Replaced the current-handover contract's Capability-only active-state field with an extensible registered `active_work_item` that represents GOV items, Capabilities, future governed types, or no active item independently from the latest completed Capability.
+- Added mandatory independent Architecture boundary-conformance disposition, specific-remediation plus systemic-control obligations, and bounded analogous-gap review when a violation is found.
+- Preserved read compatibility for historical handover schema 1.0 while current schema 1.1 fails closed on unregistered work-item types.
+
+This is a backward-compatible correction to the 1.0 contracts, not a new authority model.
+
 ## 1.0.0 - 2026-07-20
 
 ### Added

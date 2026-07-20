@@ -29,7 +29,10 @@
         "architecture/REASONING_AND_DECISION_REVIEW.md",
         "architecture/OPERATING_MODES.md",
         "governance/ROLE_TRANSITIONS.md",
+        "governance/WORK_ITEM_TYPE_REGISTRY.json",
         "schemas/work-item.schema.json",
+        "schemas/architecture-boundary-review.schema.json",
+        "templates/ARCHITECTURE_BOUNDARY_REVIEW.json",
         "templates/REQUIREMENT.md",
         "templates/SPECIFICATION.md"
       ],

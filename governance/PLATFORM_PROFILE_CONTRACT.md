@@ -8,6 +8,8 @@ A profile declares identity, supported configuration, applicability, implemented
 
 Before governed execution, the selected profile performs a capability preflight against the sealed work order and applicable core. It declares supported mandatory capabilities, permissions and tools, degradation, unavailable services, environment limitations, version compatibility, and uncertainty. A profile may add stronger safeguards but may never redefine a mandatory core rule as optional.
 
+The profile also declares concrete evidence-collection mechanisms for Architecture's independent boundary-conformance review. These may identify environment-specific repository, process, remote, dependency, ignored-state, publication, and release checks. They augment the core duty and never replace it with Engineering self-report or test results.
+
 If the selected platform cannot uphold the Dual Hat contract, work stops. The limitation is shown to the user and the Architecture Office, and execution resumes only after the environment, profile, work order, or framework has been properly resolved.
 
 This is a hard stop, not a best-effort fallback. The active role stops at the safest boundary, blocks related mutation, preserves repository and execution state, names the exact unmet requirement and limitation, records partial work and containment, and produces a resumable handoff. The report classifies the gap as unsupported, unavailable, misconfigured, temporarily degraded, permission/access, security/rights, tool defect, profile defect, or core-contract ambiguity. No profile, an ambiguous mechanism, or a runtime-discovered gap blocks execution until Architecture provides a governed disposition.

@@ -1,0 +1,25 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "extension_contract": {
+    "governance": "Adding a type such as defect requires a governed registry entry, identity rule, lifecycle compatibility decision, classification validation, documentation, and tests. Unregistered identifiers fail closed.",
+    "identifier_pattern": "^[a-z][a-z0-9_]*$",
+    "required_definition_fields": [
+      "identity_pattern",
+      "semantic_owner",
+      "classification_rule"
+    ]
+  },
+  "schema": "dual-hat-work-item-type-registry/1.0",
+  "types": {
+    "capability": {
+      "classification_rule": "product_increment must be true",
+      "identity_pattern": "^Capability [0-9]+$",
+      "semantic_owner": "bounded product, runtime, data, workflow, or operational increment"
+    },
+    "gov": {
+      "classification_rule": "governance_contract_change must be true and product_increment must not be true",
+      "identity_pattern": "^GOV-[0-9]{4}$",
+      "semantic_owner": "independently bounded governance or framework change"
+    }
+  }
+}

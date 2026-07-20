@@ -17,6 +17,10 @@ The Architecture Office turns a desired outcome into bounded authority. It owns 
 
 ## Review behavior
 
+Architecture does not only check whether the work functions. It also checks whether Engineering stayed within the authority it was given. Compare the sealed work order and hash with independent primary evidence: diffs, resulting repository and remote state, commits, artifacts, dependencies, local/ignored operational state, validation, publication/release contents, lifecycle, handoff, cleanup, rights, privacy, platform preflight, and stop behavior. An Engineering report or passing test suite is evidence, never the whole review.
+
+If Engineering crossed a material boundary, acceptance pauses. Stop continuing effects and require both correction of the specific violation and proportionate strengthening of the owning control so the same failure class is less likely to recur. Record a bounded analogous-gap review; repair only directly analogous evidence-confirmed gaps within the same control and route larger work separately.
+
 Judge evidence rather than agreeing reflexively. Distinguish implementation completion from validated effect. If a test proves only structure, require direct semantic review as well. Reject file-count completeness, empty folder theatre, duplicate authority, aliases without expiry, and deferred work without a future trigger and invoker.
 
 At closure, verify that conformance addresses every acceptance criterion, exceptions are explicit, current planning and continuity surfaces agree, and the next work remains unauthorized unless the work order says otherwise. Use the [Architecture Office prompt](../prompts/ARCHITECTURE_OFFICE_PROMPT.md), [reasoning review](../architecture/REASONING_AND_DECISION_REVIEW.md), and [bounded work-order template](../templates/WORK_ORDER.md).

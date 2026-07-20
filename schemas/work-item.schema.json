@@ -99,14 +99,12 @@
       "type": "string"
     },
     "work_item_id": {
-      "pattern": "^(GOV-[0-9]{4}|Capability [0-9]+)$",
+      "minLength": 1,
       "type": "string"
     },
     "work_item_type": {
-      "enum": [
-        "gov",
-        "capability"
-      ]
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "type": "string"
     },
     "work_order_hash": {
       "pattern": "^[A-F0-9]{64}$",
