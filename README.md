@@ -20,7 +20,7 @@ Do not copy or dump the whole extracted release package into the product reposit
 
 Read [Repository and Product Onboarding](process/ONBOARDING.md) for the three repository scenarios and approval boundary, [Installation and Project Binding](guides/INSTALLATION_AND_BINDING.md) for setup/update/rollback/removal, and [Troubleshooting](help/TROUBLESHOOTING.md) when detection or binding stops safely.
 
-First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](help/TROUBLESHOOTING.md); and [1.7.0 release notes](release/RELEASE_NOTES_v1.7.0.md).
+First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](help/TROUBLESHOOTING.md); and [1.8.0 release notes](release/RELEASE_NOTES_v1.8.0.md).
 
 ## Choose how the roles work together
 
