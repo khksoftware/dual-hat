@@ -13,6 +13,41 @@
     "authentication": {
       "type": "object"
     },
+    "capability_evidence": {
+      "additionalProperties": {
+        "items": {
+          "pattern": "^(test|evidence):\\S",
+          "type": "string"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "required": [
+        "sealed_work_order",
+        "repository_state_preservation",
+        "explicit_user_and_architecture_reporting",
+        "resumable_handoff",
+        "detached_validation",
+        "governed_publication",
+        "quality_rule_discovery",
+        "independent_deep_review",
+        "canonical_path_containment",
+        "network_policy_validation",
+        "rights_readiness_validation",
+        "binary_secret_gate",
+        "committed_tree_release_binding",
+        "transactional_writes",
+        "post_run_residue_inspection"
+      ],
+      "type": "object"
+    },
+    "capability_evidence_rationale": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "object"
+    },
     "degraded_features": {
       "type": "array"
     },
@@ -43,7 +78,23 @@
       "additionalProperties": {
         "const": true
       },
-      "minProperties": 1,
+      "required": [
+        "sealed_work_order",
+        "repository_state_preservation",
+        "explicit_user_and_architecture_reporting",
+        "resumable_handoff",
+        "detached_validation",
+        "governed_publication",
+        "quality_rule_discovery",
+        "independent_deep_review",
+        "canonical_path_containment",
+        "network_policy_validation",
+        "rights_readiness_validation",
+        "binary_secret_gate",
+        "committed_tree_release_binding",
+        "transactional_writes",
+        "post_run_residue_inspection"
+      ],
       "type": "object"
     },
     "monitoring": {
@@ -51,6 +102,10 @@
     },
     "precedence": {
       "const": "dual_hat_core_governs_profile_specializes"
+    },
+    "preflight_artifact": {
+      "minLength": 1,
+      "type": "string"
     },
     "profile_id": {
       "minLength": 1,
@@ -92,6 +147,9 @@
     "precedence",
     "guarantees",
     "mandatory_capabilities",
+    "capability_evidence",
+    "capability_evidence_rationale",
+    "preflight_artifact",
     "required_permissions_and_tools",
     "degraded_features",
     "unavailable_external_services",

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Callable
 
 from release_artifacts import is_release_product
+from content_security import ContentSecurityError, inspect_content_set
 
 
 MANIFEST = ".dual-hat/export-manifest.json"
@@ -82,13 +83,6 @@ def _forbidden(path: str) -> bool:
     )
 
 
-def _secret_hits(path: str, data: bytes) -> list[str]:
-    if b"\x00" in data:
-        return []
-    text = data.decode("utf-8", errors="replace")
-    return [f"{path}:{pattern.pattern}" for pattern in SECRET_PATTERNS if pattern.search(text)]
-
-
 def _validate_controls(manifest_bytes: bytes, marker_bytes: bytes) -> tuple[dict, set[str]]:
     manifest = _json_bytes(manifest_bytes, MANIFEST)
     marker = _json_bytes(marker_bytes, MARKER)
@@ -131,16 +125,21 @@ def _index_bytes(root: Path, path: str) -> bytes:
 
 
 def _validate_payload(manifest: dict, read: Callable[[str], bytes]) -> list[str]:
-    secret_hits: list[str] = []
+    payload: dict[str, bytes] = {}
     for row in _records(manifest):
         path = str(row["path"])
         data = read(path)
         if _sha(data) != row.get("sha256"):
             raise PublicationValidationError(f"content hash mismatch: {path}")
-        secret_hits.extend(_secret_hits(path, data))
-    if secret_hits:
-        raise PublicationValidationError(f"possible secrets in publication content: {secret_hits}")
-    return secret_hits
+        payload[path] = data
+    attestations = manifest.get("binary_attestations", ())
+    if not isinstance(attestations, (list, tuple)):
+        raise PublicationValidationError("publication binary attestations are invalid")
+    try:
+        inspect_content_set(payload, binary_attestations=attestations)
+    except ContentSecurityError as exc:
+        raise PublicationValidationError(str(exc)) from exc
+    return []
 
 
 def validate_staged(root: Path) -> dict:

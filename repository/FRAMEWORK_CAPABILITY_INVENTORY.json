@@ -244,7 +244,10 @@
         "semantic versioning",
         "deterministic release packaging",
         "release manifests and checksums",
-        "source publication versus release separation"
+        "source publication versus release separation",
+        "lightweight continuity closeout",
+        "full-closure trigger selection",
+        "deferred-publication inventory"
       ],
       "support": [
         "governance/CONFORMANCE_POLICY.md",
@@ -254,12 +257,67 @@
         "release/RELEASE_POLICY.md",
         "release/VERSION.json",
         "process/BOOTSTRAP.md",
+        "process/CONTINUITY_CLOSEOUT.md",
+        "schemas/closeout-decision.schema.json",
+        "schemas/work-estimate.schema.json",
+        "tooling/continuity_closeout.py",
         "help/TROUBLESHOOTING.md",
         "governance/PROFILE_COMPOSITION.md",
         "tooling/staged_publication.py",
         "tooling/release_package.py"
       ],
       "validation": "tooling/validate_framework.py"
+    },
+    {
+      "documentation": "README.md",
+      "id": "repository_and_product_onboarding",
+      "implementation_nature": "plan-first deterministic workflow and bounded binding tooling",
+      "owner": "process/ONBOARDING.md",
+      "profile_relationship": "product profiles may specialize discovery and binding without bypassing approval or containment",
+      "responsibilities": [
+        "three repository scenarios",
+        "product discovery",
+        "Quick Standard and Deep onboarding",
+        "read-only trust inspection",
+        "approval before mutation",
+        "external installation",
+        "pinned project-local binding",
+        "binding migration",
+        "rollback removal and re-onboarding",
+        "dummy-product semantic acceptance"
+      ],
+      "support": [
+        "guides/INSTALLATION_AND_BINDING.md",
+        "schemas/onboarding-package.schema.json",
+        "schemas/project-binding.schema.json",
+        "tooling/onboarding.py",
+        "fixtures/onboarding/fixture-manifest.json",
+        "tests/test_onboarding.py"
+      ],
+      "validation": "tests/test_onboarding.py"
+    },
+    {
+      "documentation": "governance/MODEL_TIER_AND_RUNTIME_BINDING.md",
+      "id": "model_tiers_and_runtime_binding",
+      "implementation_nature": "portable policy plus local operational binding",
+      "owner": "governance/MODEL_TIER_AND_RUNTIME_BINDING.md",
+      "profile_relationship": "host adapters provide evidence and concrete local selections; production choices remain user-approved",
+      "responsibilities": [
+        "portable abstract model tiers",
+        "activity routing",
+        "development environment detection",
+        "environment-change remapping",
+        "manual switching fallback",
+        "mandatory-tier hard stop",
+        "explicit production provider and model configuration",
+        "atomic safe switching"
+      ],
+      "support": [
+        "schemas/model-routing.schema.json",
+        "tooling/model_routing.py",
+        "tests/test_model_routing.py"
+      ],
+      "validation": "tests/test_model_routing.py"
     },
     {
       "documentation": "README.md",

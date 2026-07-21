@@ -8,6 +8,10 @@ Dual Hat keeps design authority and implementation accountability distinct. Arch
 
 Four independent terms matter: **operating mode** is Integrated or Split; **active role** is Architecture, Engineering, or Architecture Review; **lifecycle state** records progress; **work-item type** is a product Capability or governance GOV item.
 
+Integrated Mode keeps Architecture and Engineering functions logically distinct in one host context. Role transitions are explicit; Engineering implements and assembles evidence but cannot accept its own work. The primary context owns shared mutation and integrates isolated review findings. Split Mode uses separate contexts or agents with a sealed handoff package and Architecture acceptance outside Engineering.
+
+Switch modes only at a safe lifecycle boundary. Preserve the sealed work order and hash, active role/lifecycle, repository branch/commit/upstream/dirty state, platform profile and concrete local tier selections, completed and pending steps, unresolved decisions, required local artifacts, current handover, rollback point, and exact continuation phrase. If this state is incomplete or conflicts with the repository, do not switch.
+
 ## Integrated Dual Hat Mode
 
 Integrated mode is the default. Architecture and Engineering use one connected Execution Host or Repository Workspace. The user approves a sealed work order, explicitly enters Engineering, and explicitly returns to Architecture Review. Direct repository evidence and current local state remain available without copying.

@@ -19,7 +19,8 @@ REQUIRED_DOMAIN_FIELDS = {
 REQUIRED_DOMAIN_IDS = {
     "architecture", "engineering_execution", "planning", "validation",
     "repository_governance", "sessions_and_continuity",
-    "publication_and_closure", "documentation_and_help",
+    "publication_and_closure", "repository_and_product_onboarding",
+    "model_tiers_and_runtime_binding", "documentation_and_help",
 }
 REQUIRED_GUIDES = {
     "architecture/OPERATING_MODES.md",

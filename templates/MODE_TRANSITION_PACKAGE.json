@@ -4,8 +4,13 @@
   "approved_work_order_hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
   "completed_steps": [],
   "continuation_phrase": "Resume this work item from the sealed handoff.",
+  "current_handover": "engineering/handoffs/CURRENT_HANDOVER.json",
   "current_mode": "integrated",
   "lifecycle_state": "engineering_paused",
+  "model_tier_binding": {
+    "abstract_tier": "tier_2_standard",
+    "concrete_selection_record": "local operational state"
+  },
   "pending_steps": [],
   "permitted_next_action": "resume approved execution",
   "platform_profile": {
@@ -20,6 +25,8 @@
     "upstream": "origin/main"
   },
   "required_local_artifacts": [],
+  "rollback_point": "replace with exact checkpoint commit",
+  "schema": "dual-hat-mode-transition/1.1",
   "target_mode": "split",
   "unresolved_decisions": [],
   "work_item_id": "GOV-0000",

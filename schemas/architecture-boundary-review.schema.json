@@ -27,6 +27,9 @@
       "minItems": 1,
       "type": "array"
     },
+    "reviewer_role": {
+      "const": "architecture"
+    },
     "sealed_work_order_hash_verified": {
       "type": "boolean"
     },
@@ -51,6 +54,7 @@
   },
   "required": [
     "work_item_id",
+    "reviewer_role",
     "sealed_work_order_hash_verified",
     "primary_evidence_inspected",
     "engineering_self_report_only",

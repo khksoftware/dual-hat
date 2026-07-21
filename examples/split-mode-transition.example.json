@@ -6,12 +6,21 @@
     "implementation"
   ],
   "continuation_phrase": "Resume the approved work item from this sealed transition package.",
+  "current_handover": "engineering/handoffs/CURRENT_HANDOVER.json",
   "current_mode": "integrated",
   "lifecycle_state": "engineering_paused",
+  "model_tier_binding": {
+    "abstract_tier": "tier_2_standard",
+    "concrete_selection_record": "operator-confirmed local state"
+  },
   "pending_steps": [
     "validation"
   ],
   "permitted_next_action": "run approved validation",
+  "platform_profile": {
+    "profile_id": "dual-hat-default",
+    "profile_version": "1.0"
+  },
   "repository": {
     "branch": "work-item",
     "commit": "abc123",
@@ -22,6 +31,8 @@
   "required_local_artifacts": [
     "operator-held fixture manifest"
   ],
+  "rollback_point": "abc123",
+  "schema": "dual-hat-mode-transition/1.1",
   "target_mode": "split",
   "unresolved_decisions": [],
   "work_item_id": "CAP-EXAMPLE",

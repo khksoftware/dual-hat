@@ -2,6 +2,27 @@
   "$comment": "SPDX-License-Identifier: Apache-2.0",
   "$id": "https://example.invalid/dual-hat/mode-transition-package.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema": {
+            "const": "dual-hat-mode-transition/1.1"
+          }
+        },
+        "required": [
+          "schema"
+        ]
+      },
+      "then": {
+        "required": [
+          "model_tier_binding",
+          "rollback_point",
+          "current_handover"
+        ]
+      }
+    }
+  ],
   "properties": {
     "active_role": {
       "enum": [
@@ -20,6 +41,9 @@
     "continuation_phrase": {
       "type": "string"
     },
+    "current_handover": {
+      "type": "string"
+    },
     "current_mode": {
       "enum": [
         "integrated",
@@ -28,6 +52,9 @@
     },
     "lifecycle_state": {
       "type": "string"
+    },
+    "model_tier_binding": {
+      "type": "object"
     },
     "pending_steps": {
       "type": "array"
@@ -54,6 +81,15 @@
     },
     "required_local_artifacts": {
       "type": "array"
+    },
+    "rollback_point": {
+      "type": "string"
+    },
+    "schema": {
+      "enum": [
+        "dual-hat-mode-transition/1.0",
+        "dual-hat-mode-transition/1.1"
+      ]
     },
     "target_mode": {
       "enum": [

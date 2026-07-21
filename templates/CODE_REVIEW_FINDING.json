@@ -1,0 +1,20 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "affected_paths": [
+    "path/to/artifact"
+  ],
+  "analogous_gap_applicability": "Describe the bounded analogous scan.",
+  "applied_rule_id": "REVIEW-TEST-001",
+  "category": "testing",
+  "closure_evidence": "",
+  "disposition": "open",
+  "effective_precedence": "architecture_default",
+  "evidence": "Describe reproducible primary evidence.",
+  "finding_id": "REVIEW-EXAMPLE-001",
+  "impact": "Describe the bounded impact.",
+  "owner": "Engineering",
+  "recommendation": "Describe remediation or disposition.",
+  "review_tier": "standard",
+  "rule_source": "Architecture default",
+  "severity": "medium"
+}

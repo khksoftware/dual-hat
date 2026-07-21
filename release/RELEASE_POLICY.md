@@ -4,6 +4,8 @@
 
 Dual Hat uses Semantic Versioning. Before 1.0.0, a minor release may change framework contracts or layout when the change is documented in the changelog and release notes; a patch release fixes defects without intentionally breaking the documented minor-line contract. Version 1.0.0 requires an Architecture Office determination that the public framework surface is stable enough for ordinary compatibility expectations.
 
+A production publication claim requires fresh remote evidence immediately before and after publication. The fetch and push endpoints are canonicalized independently and must resolve to the approved host, namespace, and repository even when they use different transports. Cached tracking refs and a successful push exit code are insufficient. Local HEAD, cached upstream, freshly queried remote branch, committed tree, export manifest, publication marker, release manifest, and checksums must reconcile exactly; credentials embedded in endpoint URLs are never retained in evidence. An unavailable or ambiguous remote blocks publication rather than falling back to cached state.
+
 A release candidate is assembled only from the canonical source allowlist in `export/EXPORT_SOURCES.json`. The source repository, derived Git publication, and downloadable release artifact are distinct products:
 
 - the canonical source is the development authority;

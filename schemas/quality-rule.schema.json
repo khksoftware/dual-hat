@@ -1,0 +1,291 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$defs": {
+    "rule": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "else": {
+                "not": {
+                  "required": [
+                    "target_rule_id"
+                  ]
+                }
+              },
+              "if": {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "ignore",
+                      "suppress",
+                      "replace",
+                      "adjust_severity",
+                      "accept_known_tradeoff",
+                      "defer_until_trigger",
+                      "exempt"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "target_rule_id"
+                ]
+              }
+            },
+            {
+              "else": {
+                "not": {
+                  "required": [
+                    "replacement"
+                  ]
+                }
+              },
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "replace"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "replacement"
+                ]
+              }
+            },
+            {
+              "else": {
+                "not": {
+                  "required": [
+                    "severity"
+                  ]
+                }
+              },
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "adjust_severity"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "severity"
+                ]
+              }
+            }
+          ],
+          "properties": {
+            "replacement": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "severity": {
+              "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low",
+                "informational"
+              ]
+            },
+            "target_rule_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "require",
+                "recommend",
+                "prohibit",
+                "ignore",
+                "suppress",
+                "replace",
+                "adjust_severity",
+                "require_evidence",
+                "require_manual_review",
+                "trigger_deeper_review",
+                "accept_known_tradeoff",
+                "defer_until_trigger",
+                "exempt"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        "conflict_behavior": {
+          "enum": [
+            "surface",
+            "fail_closed"
+          ]
+        },
+        "created_date": {
+          "format": "date",
+          "type": "string"
+        },
+        "lifecycle_state": {
+          "enum": [
+            "draft",
+            "active",
+            "suspended",
+            "superseded",
+            "archived"
+          ]
+        },
+        "modified_date": {
+          "format": "date",
+          "type": "string"
+        },
+        "owner": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "precedence": {
+          "enum": [
+            "architecture_default",
+            "repository_architecture",
+            "user",
+            "non_waivable"
+          ]
+        },
+        "provenance": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "review_tiers": {
+          "items": {
+            "enum": [
+              "light",
+              "standard",
+              "deep"
+            ]
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "revision": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "rule_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "scope": {
+          "additionalProperties": false,
+          "properties": {
+            "artifact_types": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "paths": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "repositories": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "review_categories": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "triggers": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "work_item_types": {
+              "$ref": "#/$defs/stringArray"
+            }
+          },
+          "type": "object"
+        },
+        "source": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "enabled",
+            "disabled"
+          ]
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "validity": {
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "format": "date",
+              "type": "string"
+            },
+            "until": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "rule_id",
+        "title",
+        "source",
+        "owner",
+        "rationale",
+        "status",
+        "scope",
+        "review_tiers",
+        "action",
+        "precedence",
+        "created_date",
+        "modified_date",
+        "revision",
+        "provenance",
+        "conflict_behavior",
+        "lifecycle_state"
+      ],
+      "type": "object"
+    },
+    "stringArray": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "$id": "https://dual-hat.local/schemas/quality-rule.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/rule"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "dual-hat-quality-rules/1.0"
+    }
+  },
+  "required": [
+    "schema",
+    "rules"
+  ],
+  "title": "Dual Hat quality-rule source",
+  "type": "object"
+}

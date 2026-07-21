@@ -1,0 +1,11 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "golden_semantics": [
+    "product_discovery_first",
+    "repository_creation_requires_approval",
+    "rollback_by_abandonment"
+  ],
+  "intended_product": "local-first task tracker",
+  "scenario": "no_repository",
+  "target_exists_before_approval": false
+}
