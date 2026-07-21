@@ -148,6 +148,12 @@ class OperatingModeTests(unittest.TestCase):
         violated={**review,"deviation_found":True,"material_violation_unresolved":True,"specific_remediation_obligation":None,"systemic_control_obligation":None,"analogous_gap_review":"","architecture_disposition":"accepted"}
         failures=boundary_review_failures(violated); self.assertIn("acceptance is blocked by unresolved material boundary violation",failures); self.assertIn("boundary violation lacks specific remediation",failures); self.assertIn("boundary violation lacks systemic control strengthening",failures)
         self.assertTrue(boundary_review_failures({**review,"engineering_self_report_only":True})); self.assertTrue(boundary_review_failures({**review,"tests_only":True}))
+    def test_architecture_proposes_next_work_after_acceptance_without_authorizing_it(self):
+        guide=(ROOT/"governance/ARCHITECTURE_OFFICE_GUIDE.md").read_text(encoding="utf-8")
+        prompt=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        for text in (guide,prompt):
+            self.assertIn("propose the next work to plan",text)
+            self.assertIn("does not authorize execution",text.replace("planning guidance distinct from execution authority","does not authorize execution"))
     def test_current_handover_is_generic_and_historical_schema_is_retained(self):
         schema=json.loads((ROOT/"schemas/current-handover.schema.json").read_text(encoding="utf-8")); template=json.loads((ROOT/"templates/CURRENT_HANDOVER.json").read_text(encoding="utf-8"))
         self.assertEqual("dual-hat-current-handover/1.1",template["schema"]); self.assertIn("active_work_item",template); self.assertNotIn("active_capability",template)
