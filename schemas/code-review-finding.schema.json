@@ -1,0 +1,93 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://dual-hat.local/schemas/code-review-finding.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "affected_paths": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "analogous_gap_applicability": {
+      "type": "string"
+    },
+    "applied_rule_id": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "closure_evidence": {
+      "type": "string"
+    },
+    "disposition": {
+      "enum": [
+        "open",
+        "remediated",
+        "accepted_debt",
+        "validly_suppressed",
+        "false_positive",
+        "intentional_design",
+        "future_trigger",
+        "blocked_architecture"
+      ]
+    },
+    "effective_precedence": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "string"
+    },
+    "finding_id": {
+      "type": "string"
+    },
+    "impact": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "recommendation": {
+      "type": "string"
+    },
+    "review_tier": {
+      "enum": [
+        "light",
+        "standard",
+        "deep"
+      ]
+    },
+    "rule_source": {
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "informational"
+      ]
+    }
+  },
+  "required": [
+    "finding_id",
+    "review_tier",
+    "applied_rule_id",
+    "rule_source",
+    "effective_precedence",
+    "affected_paths",
+    "category",
+    "severity",
+    "evidence",
+    "impact",
+    "recommendation",
+    "disposition",
+    "owner",
+    "closure_evidence",
+    "analogous_gap_applicability"
+  ],
+  "type": "object"
+}

@@ -4,6 +4,24 @@
 
 All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning; breaking core-contract changes require a major release.
 
+## 1.1.0 - 2026-07-20
+
+### Added
+
+- Persistent user-defined quality rules, precedence and tier-aware suppression, effective review plans, finding closure, pending immutable baselines, and direction-aware non-regression comparison.
+- Canonical containment, binary attestation and secret gates, complete work-order execution authorization, exact release-set validation, committed-tree provenance, and transactional export/release rollback.
+- Independent Deep review and systemic analogous-gap evidence contracts.
+- Plan-first repository/product onboarding for absent, nearly-empty, and existing projects at Quick, Standard, and Deep depths, with authority-bound approval and no mutation before approval.
+- External and bounded pinned project-local binding, update/migration/rollback/removal guidance, abstract four-tier model routing, evidence-backed development binding, and explicit production provider/model approval.
+- Safe Integrated/Split transitions, work-duration estimates and material revisions, continuity/full-close selection, batched publication inventories, and three local-first task-tracker semantic fixtures.
+
+### Changed
+
+- New executions use sealed work-order schema 1.1. Historical schema 1.0 remains readable but must be migrated, reapproved, and resealed before execution.
+- Stable 1.x release manifests now identify stable maturity instead of contradictory pre-1.0 maturity.
+
+This is a backward-compatible additive and security-strengthening minor release. No mandatory 1.x control is weakened.
+
 ## 1.0.1 - 2026-07-20
 
 ### Fixed

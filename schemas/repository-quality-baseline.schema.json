@@ -1,0 +1,257 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$defs": {
+    "finding": {
+      "additionalProperties": true,
+      "properties": {
+        "disposition": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "finding_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low",
+            "informational"
+          ]
+        }
+      },
+      "required": [
+        "finding_id",
+        "severity",
+        "disposition"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://dual-hat.local/schemas/repository-quality-baseline.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "accepted_exceptions": {
+      "type": "array"
+    },
+    "active_platform_profile": {
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile_sha256": {
+          "pattern": "^[A-F0-9]{64}$",
+          "type": "string"
+        },
+        "profile_version": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile_id",
+        "profile_version",
+        "profile_sha256"
+      ],
+      "type": "object"
+    },
+    "architecture_disposition_state": {
+      "enum": [
+        "pending_architecture_acceptance",
+        "accepted",
+        "superseded"
+      ]
+    },
+    "baseline_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "baseline_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "date": {
+      "format": "date",
+      "type": "string"
+    },
+    "debt_references": {
+      "type": "array"
+    },
+    "dual_hat_commit": {
+      "pattern": "^[A-Fa-f0-9]{40}$",
+      "type": "string"
+    },
+    "dual_hat_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$",
+      "type": "string"
+    },
+    "effective_plan_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "exclusions": {
+      "type": "array"
+    },
+    "final_findings": {
+      "items": {
+        "$ref": "#/$defs/finding"
+      },
+      "type": "array"
+    },
+    "governed_state_binding": {
+      "type": "object"
+    },
+    "non_waivable_controls": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "preliminary_findings_mapping": {
+      "type": "array"
+    },
+    "principal_metrics": {
+      "additionalProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "desired_direction": {
+            "enum": [
+              "increase",
+              "decrease",
+              "stable"
+            ]
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "value",
+          "desired_direction"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "remediated_findings": {
+      "items": {
+        "$ref": "#/$defs/finding"
+      },
+      "type": "array"
+    },
+    "replaced_rules": {
+      "type": "array"
+    },
+    "repository_commit": {
+      "pattern": "^[A-Fa-f0-9]{40}$",
+      "type": "string"
+    },
+    "residual_risk": {
+      "type": "array"
+    },
+    "review_methods": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "review_scope": {
+      "type": "array"
+    },
+    "risk_areas": {
+      "type": "array"
+    },
+    "rule_conflicts": {
+      "maxItems": 0,
+      "type": "array"
+    },
+    "rule_set_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "selected_review_tier": {
+      "const": "deep"
+    },
+    "severity_adjustments": {
+      "type": "array"
+    },
+    "suppressed_architecture_rules": {
+      "type": "array"
+    },
+    "tool_versions": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "unresolved_findings": {
+      "items": {
+        "$ref": "#/$defs/finding"
+      },
+      "type": "array"
+    },
+    "user_approved_tradeoffs": {
+      "type": "array"
+    },
+    "user_rule_sources": {
+      "type": "array"
+    },
+    "validation_evidence": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "baseline_id",
+    "repository_commit",
+    "dual_hat_commit",
+    "dual_hat_version",
+    "date",
+    "review_scope",
+    "exclusions",
+    "selected_review_tier",
+    "active_platform_profile",
+    "user_rule_sources",
+    "rule_set_hash",
+    "effective_plan_hash",
+    "suppressed_architecture_rules",
+    "replaced_rules",
+    "severity_adjustments",
+    "rule_conflicts",
+    "non_waivable_controls",
+    "review_methods",
+    "tool_versions",
+    "principal_metrics",
+    "risk_areas",
+    "accepted_exceptions",
+    "user_approved_tradeoffs",
+    "unresolved_findings",
+    "debt_references",
+    "validation_evidence",
+    "preliminary_findings_mapping",
+    "final_findings",
+    "remediated_findings",
+    "residual_risk",
+    "governed_state_binding",
+    "baseline_hash",
+    "architecture_disposition_state"
+  ],
+  "type": "object"
+}

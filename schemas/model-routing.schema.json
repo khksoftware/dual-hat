@@ -1,0 +1,137 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/model-routing.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "automatic_model_switch_supported": {
+          "const": false
+        },
+        "detection_evidence": {
+          "type": "object"
+        },
+        "eligible_candidates": {
+          "type": "object"
+        },
+        "environment_changed": {
+          "type": "boolean"
+        },
+        "environment_fingerprint": {
+          "pattern": "^[A-F0-9]{64}$",
+          "type": "string"
+        },
+        "manual_switch_instruction": {
+          "type": "string"
+        },
+        "portable_policy": {
+          "const": false
+        },
+        "schema": {
+          "const": "dual-hat-development-model-binding/1.0"
+        },
+        "tier_mapping": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "portable_policy",
+        "detection_evidence",
+        "environment_fingerprint",
+        "tier_mapping",
+        "eligible_candidates",
+        "environment_changed",
+        "automatic_model_switch_supported",
+        "manual_switch_instruction"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "approved_by_user": {
+          "const": true
+        },
+        "capability_evidence": {
+          "required": [
+            "source_type",
+            "authority_id",
+            "observation_id",
+            "verified_tiers",
+            "evidence_hash"
+          ],
+          "type": "object"
+        },
+        "configuration_hash": {
+          "pattern": "^[A-F0-9]{64}$",
+          "type": "string"
+        },
+        "cost_sensitivity": {
+          "type": "string"
+        },
+        "data_retention_restrictions": {
+          "type": "string"
+        },
+        "derived_from_development_detection": {
+          "const": false
+        },
+        "fallback": {
+          "type": "string"
+        },
+        "latency_preference": {
+          "type": "string"
+        },
+        "local_or_cloud": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "permitted_task_classes": {
+          "minItems": 1,
+          "type": "array"
+        },
+        "privacy_preference": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "reasoning_effort": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "dual-hat-production-model-configuration/1.0"
+        },
+        "status": {
+          "const": "approved"
+        },
+        "unavailable_model_behavior": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "schema",
+        "provider",
+        "model",
+        "reasoning_effort",
+        "fallback",
+        "privacy_preference",
+        "local_or_cloud",
+        "cost_sensitivity",
+        "latency_preference",
+        "data_retention_restrictions",
+        "permitted_task_classes",
+        "unavailable_model_behavior",
+        "capability_evidence",
+        "approved_by_user",
+        "derived_from_development_detection",
+        "configuration_hash"
+      ],
+      "type": "object"
+    }
+  ]
+}

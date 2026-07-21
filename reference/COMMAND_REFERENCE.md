@@ -2,6 +2,12 @@
 
 # Command Reference
 
+## Plan-first onboarding
+
+The portable onboarding API is `tooling/onboarding.py`. Generate and inspect an onboarding package without writing the target, obtain explicit user approval of its hash, then build and apply a bounded binding plan. Direct `scripts/bootstrap_product.py` remains the compatible low-level command for an already approved product-profile 1.0; its `--dry-run` mode shows planned files.
+
+Model routing is provided by `tooling/model_routing.py`; concrete development choices remain local operational state, while production configuration must be explicitly user-approved. Closeout selection and estimate records are provided by `tooling/continuity_closeout.py`.
+
 ## Human role and mode requests
 
 Use ordinary requests such as “Use Integrated Dual Hat Mode for this work item,” “Approve this work order and enter Engineering mode,” “Pause Engineering and return to Architecture mode,” “Prepare a handoff and switch this work item to Split Dual Hat Mode,” or “Engineering is complete. Enter Architecture review.” They act only against a complete current sealed order; ambiguous words do not grant mutation. Architecture alone may say “Accept this work item and archive it.”

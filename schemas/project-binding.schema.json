@@ -1,0 +1,88 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/project-binding.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approval_evidence": {
+      "type": "object"
+    },
+    "approved": {
+      "const": true
+    },
+    "binding_model": {
+      "enum": [
+        "external",
+        "pinned_project_local"
+      ]
+    },
+    "framework": {
+      "additionalProperties": false,
+      "properties": {
+        "checksum_method": {
+          "const": "canonical path-and-content tree SHA-256"
+        },
+        "checksum_verified": {
+          "const": true
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[A-F0-9]{64}$",
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "version",
+        "sha256",
+        "checksum_verified",
+        "checksum_method"
+      ],
+      "type": "object"
+    },
+    "migration_requires_governed_approval": {
+      "const": true
+    },
+    "onboarding_package_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "operation": {
+      "const": "apply"
+    },
+    "plan_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "project_footprint": {
+      "const": [
+        ".dual-hat/binding.json"
+      ]
+    },
+    "schema": {
+      "const": "dual-hat-project-binding/1.0"
+    },
+    "vendored_framework": {
+      "const": false
+    }
+  },
+  "required": [
+    "schema",
+    "binding_model",
+    "operation",
+    "framework",
+    "onboarding_package_hash",
+    "approved",
+    "approval_evidence",
+    "project_footprint",
+    "vendored_framework",
+    "migration_requires_governed_approval",
+    "plan_hash"
+  ],
+  "type": "object"
+}

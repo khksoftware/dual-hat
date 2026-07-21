@@ -8,7 +8,11 @@ A profile declares identity, supported configuration, applicability, implemented
 
 Before governed execution, the selected profile performs a capability preflight against the sealed work order and applicable core. It declares supported mandatory capabilities, permissions and tools, degradation, unavailable services, environment limitations, version compatibility, and uncertainty. A profile may add stronger safeguards but may never redefine a mandatory core rule as optional.
 
+Every mandatory capability names executable evidence whose principal purpose directly proves that capability. Test modules carry explicit capability-proof markers, and the profile records a semantic ownership rationale for every mapping. A missing marker, unrelated mapping, unexplained generic reuse, zero-test receipt, or mismatched active host causes preflight to hard-stop. A broad passing suite cannot be used to claim a capability it does not explicitly own.
+
 The profile also declares concrete evidence-collection mechanisms for Architecture's independent boundary-conformance review. These may identify environment-specific repository, process, remote, dependency, ignored-state, publication, and release checks. They augment the core duty and never replace it with Engineering self-report or test results.
+
+The independent Deep-review capability uses focused evidence that rejects Engineering-self-report-only and tests-only review, blocks acceptance while a material violation remains, requires specific remediation and systemic strengthening, requires analogous-gap review, and reserves disposition to Architecture.
 
 If the selected platform cannot uphold the Dual Hat contract, work stops. The limitation is shown to the user and the Architecture Office, and execution resumes only after the environment, profile, work order, or framework has been properly resolved.
 

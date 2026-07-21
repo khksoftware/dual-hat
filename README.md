@@ -2,13 +2,27 @@
 
 # Dual Hat
 
+## First use
+
+1. Obtain a versioned Dual Hat release package and its published checksum.
+2. Verify the package checksum before extraction.
+3. Extract the package outside the product repository you want to work on.
+4. Open the target product repository—or the intended project folder when no repository exists—in a supported agent environment.
+5. Tell the agent, in natural language: `Use the Dual Hat framework in <path> to onboard the repository currently open.`
+
+Do not copy or dump the whole extracted release package into the product repository. During onboarding, choose either an external/user-level installation or a bounded pinned project-local binding such as `.dual-hat/`; the approval package explains reproducibility, path-dependency, update, migration, and repository-footprint tradeoffs before any product mutation.
+
+Read [Repository and Product Onboarding](process/ONBOARDING.md) for the three repository scenarios and approval boundary, [Installation and Project Binding](guides/INSTALLATION_AND_BINDING.md) for setup/update/rollback/removal, and [Troubleshooting](help/TROUBLESHOOTING.md) when detection or binding stops safely.
+
+First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](help/TROUBLESHOOTING.md); and [1.1.0 release notes](release/RELEASE_NOTES_v1.1.0.md).
+
 ## Choose how the roles work together
 
 Dual Hat supports both **Integrated Mode** and **Split Mode**, with Integrated as the default. The plain-language [Integrated and Split Dual Hat Modes guide](guides/OPERATING_MODES.md) explains roles, pros and cons, approval, safe switching, recovery, review, acceptance, archival, platform profiles, and ordinary commands. The [platform-profile contract](governance/PLATFORM_PROFILE_CONTRACT.md) makes capability preflight and hard-stop behavior prominent.
 
 Dual Hat is a product-neutral operating framework for governed software development. The Architecture Office owns intent, requirements, boundaries, trade-offs, and acceptance; the Engineering Agent owns implementation, validation, publication, cleanup, and complete exit reporting.
 
-Start with the [operating model](architecture/OPERATING_MODEL.md), [bootstrap guide](process/BOOTSTRAP.md), and [operating guide](guides/OPERATING_GUIDE.md). The [Architecture Office guide](governance/ARCHITECTURE_OFFICE_GUIDE.md) and [Engineering Agent guide](governance/ENGINEERING_AGENT_GUIDE.md) explain role practice. [Canonical Entrypoints](repository/CANONICAL_ENTRYPOINTS.md) says where to begin; the [Canonical Domain Index](repository/CANONICAL_DOMAIN_INDEX.md) says which role owns each kind of truth. Use the [command reference](reference/COMMAND_REFERENCE.md) for standalone validation and bootstrap commands.
+Start with the [operating model](architecture/OPERATING_MODEL.md), [onboarding workflow](process/ONBOARDING.md), [bootstrap guide](process/BOOTSTRAP.md), and [operating guide](guides/OPERATING_GUIDE.md). The [Architecture Office guide](governance/ARCHITECTURE_OFFICE_GUIDE.md) and [Engineering Agent guide](governance/ENGINEERING_AGENT_GUIDE.md) explain role practice. [Canonical Entrypoints](repository/CANONICAL_ENTRYPOINTS.md) says where to begin; the [Canonical Domain Index](repository/CANONICAL_DOMAIN_INDEX.md) says which role owns each kind of truth. Use the [command reference](reference/COMMAND_REFERENCE.md) for standalone validation and bootstrap commands.
 
 ## Framework areas
 

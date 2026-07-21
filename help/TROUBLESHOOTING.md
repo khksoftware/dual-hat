@@ -2,6 +2,12 @@
 
 # Troubleshooting
 
+## Onboarding or model binding stopped
+
+An onboarding stop normally protects one of four boundaries: the approval package changed, a path crosses a symlink/reparse point, executable content has not passed trust review, or the requested abstract tier cannot be evidenced. Keep the generated package or handoff, correct the path or configuration, obtain the required approval or model capability, and resume from the recorded hash. Do not bypass the stop by directly running project scripts, installing dependencies, copying the full framework into the repository, selecting a production provider implicitly, or lowering a mandatory tier.
+
+If an external framework path is unavailable, restore the exact version/checksum or approve a governed migration. If `.dual-hat/` contains unknown files, do not use automatic removal; classify ownership first.
+
 - Conflicting mode or role: stop mutation, compare the sealed order and transition package, and return to the last safe boundary.
 - Stale work-order hash or ambiguous approval: do not enter Engineering; revise/reapprove/reseal or obtain unambiguous intent.
 - Context loss: reload repository state and governed handoff; never reconstruct authorization from memory.

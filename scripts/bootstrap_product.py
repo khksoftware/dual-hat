@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 
 FRAMEWORK_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(FRAMEWORK_ROOT / "tooling"))
+from path_containment import ContainmentError, contained_roots  # noqa: E402
 
 
 def _text(name: str) -> str:
@@ -24,7 +27,8 @@ def main() -> int:
     if profile.get("schema") != "dual-hat-product-profile/1.0" or set(profile.get("roots", {})) != required:
         raise SystemExit("profile does not satisfy the Dual Hat product-profile contract")
     target = args.target.resolve()
-    roots = {name: target / profile["roots"][name] for name in required}
+    try: roots = contained_roots(target, profile["roots"])
+    except ContainmentError as exc: raise SystemExit(f"profile root containment failed: {exc}") from exc
     profile_path = roots["engineering"] / "product-profile.json"
     payload = json.dumps(profile, indent=2, sort_keys=True) + "\n"
     files = {

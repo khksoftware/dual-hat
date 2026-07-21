@@ -2,6 +2,10 @@
 
 # Bootstrap
 
+Bootstrap is the low-level application step for an already approved product profile. First-use product/repository discovery and the no-mutation approval boundary are owned by [ONBOARDING.md](ONBOARDING.md). Do not invoke bootstrap to bypass a pending onboarding package, trust review, scaffold decision, or installation/binding choice.
+
+For first use, verify and extract the release outside the target repository, open the target folder, and ask the agent to use that framework path to onboard the currently open product. After approval, choose the external or bounded pinned binding described in [Installation and Project Binding](../guides/INSTALLATION_AND_BINDING.md).
+
 1. Copy or install the governed Dual Hat distribution and verify its manifest/license.
 2. Create a product profile from `examples/product-profile.example.json`.
 3. Run `python scripts/bootstrap_product.py --target <new-root> --profile <profile.json>`.

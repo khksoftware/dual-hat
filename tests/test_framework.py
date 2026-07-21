@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+DUAL_HAT_CAPABILITY_PROOFS = {"canonical_path_containment", "network_policy_validation", "rights_readiness_validation"}
+
 import hashlib
 import json
 import subprocess
@@ -101,7 +103,8 @@ class FrameworkTests(unittest.TestCase):
         self.assertEqual(
             {"architecture", "engineering_execution", "planning", "validation",
              "repository_governance", "sessions_and_continuity",
-             "publication_and_closure", "documentation_and_help"},
+             "publication_and_closure", "repository_and_product_onboarding",
+             "model_tiers_and_runtime_binding", "documentation_and_help"},
             ids,
         )
 

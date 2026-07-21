@@ -1,0 +1,24 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "bounded_findings": [
+    {
+      "class": "maintainability",
+      "evidence": "web/app.js mixes presentation and storage"
+    },
+    {
+      "class": "security",
+      "evidence": "web/app.js assigns persisted content through innerHTML"
+    }
+  ],
+  "required_semantics": [
+    "read_only_metadata",
+    "trust_review_required",
+    "implementation_mutation_false",
+    "tests_discovered",
+    "documentation_discovered",
+    "entrypoint_candidates_discovered",
+    "technical_debt_proposed_not_accepted",
+    "approval_before_binding"
+  ],
+  "scenario": "existing_project"
+}

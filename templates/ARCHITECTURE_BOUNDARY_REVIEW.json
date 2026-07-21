@@ -11,6 +11,7 @@
     "generated artifacts",
     "validation and publication evidence"
   ],
+  "reviewer_role": "architecture",
   "sealed_work_order_hash_verified": true,
   "specific_remediation_obligation": null,
   "systemic_control_obligation": null,

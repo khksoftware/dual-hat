@@ -1,0 +1,77 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://dual-hat.local/schemas/effective-review-plan.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "active_architecture_rules": {
+      "type": "array"
+    },
+    "active_user_rules": {
+      "type": "array"
+    },
+    "conflicts": {
+      "type": "array"
+    },
+    "context": {
+      "type": "object"
+    },
+    "effective_plan_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "non_waivable_controls": {
+      "type": "array"
+    },
+    "replaced_rules": {
+      "type": "array"
+    },
+    "review_authorized": {
+      "type": "boolean"
+    },
+    "rule_set_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "rule_set_revision": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "dual-hat-effective-review-plan/1.0"
+    },
+    "severity_adjustments": {
+      "type": "array"
+    },
+    "suppressed_rules": {
+      "type": "array"
+    },
+    "tier": {
+      "enum": [
+        "light",
+        "standard",
+        "deep"
+      ]
+    },
+    "validation_failures": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "tier",
+    "context",
+    "rule_set_revision",
+    "rule_set_hash",
+    "effective_plan_hash",
+    "active_architecture_rules",
+    "active_user_rules",
+    "suppressed_rules",
+    "replaced_rules",
+    "severity_adjustments",
+    "non_waivable_controls",
+    "conflicts",
+    "validation_failures",
+    "review_authorized"
+  ],
+  "type": "object"
+}
