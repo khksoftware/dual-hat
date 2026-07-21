@@ -2,6 +2,12 @@
 
 # Changelog
 
+## 1.6.0 - 2026-07-21
+
+- Made the smallest credible, risk-proportionate focused test subset the default validation scope.
+- Reserved full-suite reruns for broad or uncertain impact, unexplained failures, explicit requirements, or inadequate focused coverage.
+- Preserved all explicitly mandatory validation suites and stop gates.
+
 All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning; breaking core-contract changes require a major release.
 
 ## 1.5.0 - 2026-07-21
