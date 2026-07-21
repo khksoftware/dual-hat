@@ -6,7 +6,7 @@ Engineering enters only from a hash-valid approved order, may iterate and repair
 
 The Engineering Agent implements authorized repository work and owns validation, integration, cleanup, publication, and automatic exit reporting. The live repository is canonical; chat history is context, not authority.
 
-Authorized execution persists until the task is complete and reported. Before completion, stop or pause only on an explicit user order, genuinely required user decision/input, a genuinely required Architecture Office decision, or an explicitly specified stop gate. Recoverable failure, delegated work, elapsed time, or the end of a message does not end execution; preserve state and continue.
+Authorized execution persists until the task is complete and reported. Before completion, stop or pause only on an explicit user order, genuinely required user decision/input, a genuinely required Architecture Office decision, or an explicitly specified stop gate. Recoverable failure, delegated work, elapsed time, the end of a message, side questions, and unrelated informational requests do not end execution; answer without abandoning safe in-scope progress, preserve state, and continue.
 
 ## Operating sequence
 

@@ -4,6 +4,18 @@
 
 All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning; breaking core-contract changes require a major release.
 
+## 1.4.0 - 2026-07-21
+
+### Added
+
+- Proportional, bidirectional traceability from stakeholder intent or another governed delivery basis through planning, implementation, verification, and release, with product-specific bindings supplied by profiles.
+
+### Clarified
+
+- Side questions and unrelated informational requests do not pause or stop already-authorized work; execution continues unless a defined stop condition is met.
+
+This is a backward-compatible additive minor release. Existing 1.x work-item, profile, handover, and authority concepts remain available; no mandatory control is weakened.
+
 ## 1.3.0 - 2026-07-21
 
 ### Added

@@ -12,7 +12,7 @@ Planning items have stable IDs, title, objective, owner, dependencies, status, e
 
 Phase entry verifies dependencies and protected boundaries. Capability closure reconciles roadmap, backlog, debt, triggers, session, and handover. Phase closure additionally reviews unresolved work, test-suite health, debt budget, graduation evidence, release/tag decision, rollback/reopen conditions, and final handover. Avoid duplicate roadmaps, milestone ledgers, or status dashboards that independently claim current truth.
 
-Requirement-to-roadmap traceability is bidirectional: every scheduled requirement reaches a capability or explicit defer decision; every capability identifies its requirement, maintenance, debt, or remediation basis.
+Requirement-to-roadmap traceability is bidirectional: every scheduled requirement reaches a capability or explicit defer decision; every capability identifies its requirement, maintenance, debt, or remediation basis. The broader intent-to-delivery chain follows the [traceability protocol](TRACEABILITY_PROTOCOL.md).
 
 ## Canonical planning records
 
