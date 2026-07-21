@@ -33,7 +33,7 @@ def order(kind="gov"):
 def contexts(value):
     handover={"active_work_item":{"work_item_id":value["work_item_id"],"work_item_type":value["work_item_type"],"title":value["title"],"operating_mode":value["operating_mode"],"active_role":"engineering","lifecycle_state":"engineering","work_order_revision":value["current_revision"],"work_order_hash":value["work_order_hash"]}}
     profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
-    preflight=capability_preflight(profile,profile["mandatory_capabilities"],"1.1.0",ROOT,receipts(profile,ROOT))
+    preflight=capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT,receipts(profile,ROOT))
     preflight.update({"work_item_id":value["work_item_id"],"work_order_revision":value["current_revision"],"work_order_hash":value["work_order_hash"],"platform_profile_id":profile["profile_id"],"platform_profile_version":profile["profile_version"]})
     return handover, profile, preflight
 
@@ -56,6 +56,16 @@ class OperatingModeTests(unittest.TestCase):
         path=["architecture","work_order_ready","author_approved_for_execution","engineering","engineering_complete","architecture_review","accepted","archived"]
         self.assertTrue(all(transition_allowed(a,b) for a,b in zip(path,path[1:]))); self.assertFalse(transition_allowed("engineering_complete","accepted"))
         self.assertTrue(transition_allowed("architecture_review","remediation_required")); self.assertTrue(transition_allowed("remediation_required","engineering"))
+    def test_integrated_mode_requires_visible_single_hat_labels(self):
+        modes=(ROOT/"guides/OPERATING_MODES.md").read_text(encoding="utf-8")
+        transitions=(ROOT/"governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
+        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for text in (modes,transitions):
+            self.assertIn("[Architect Office]",text); self.assertIn("[Engineering Agent]",text)
+            self.assertIn("one hat",text.casefold())
+        self.assertIn("begin every assistant-authored chat message with `[Architect Office]`",architecture)
+        self.assertIn("begin every assistant-authored chat message with `[Engineering Agent]`",engineering)
     def test_mode_switch_package_and_dirty_block(self):
         package=json.loads((ROOT/"templates/MODE_TRANSITION_PACKAGE.json").read_text(encoding="utf-8")); self.assertEqual((),mode_switch_failures(package))
         self.assertEqual("dual-hat-mode-transition/1.1",package["schema"]); self.assertTrue(package["model_tier_binding"]); self.assertTrue(package["rollback_point"]); self.assertTrue(package["current_handover"])
@@ -68,25 +78,25 @@ class OperatingModeTests(unittest.TestCase):
         self.assertTrue(architecture_direct_mutation_allowed(safe)); unsafe={**safe,"uncertain_reach":True}; self.assertFalse(architecture_direct_mutation_allowed(unsafe))
         self.assertTrue(archival_allowed("accepted")); self.assertTrue(archival_allowed("accepted_with_follow_up",follow_up_blocking=False)); self.assertFalse(archival_allowed("remediation_required")); self.assertFalse(archival_allowed("accepted",actor="engineering"))
     def test_profile_conformance_and_fallback(self):
-        profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8")); self.assertEqual((),validate_profile(profile,"1.1.0")); self.assertTrue(resolve_profile(profile,"1.1.0")["core_applies"])
-        with self.assertRaises(ValueError): resolve_profile(None,"1.1.0")
-        weak=copy.deepcopy(profile); weak["guarantees"]["security_not_weakened"]=False; self.assertTrue(validate_profile(weak,"1.1.0"))
-        unexplained=copy.deepcopy(profile); unexplained["capability_evidence_rationale"].pop("independent_deep_review"); self.assertTrue(validate_profile(unexplained,"1.1.0"))
-        mismatch=copy.deepcopy(profile); mismatch["supported_configuration"]["operating_system"]="definitely-not-this-host"; self.assertTrue(runtime_profile_failures(mismatch)); self.assertTrue(capability_preflight(mismatch,["sealed_work_order"],"1.1.0",ROOT,receipts(mismatch,ROOT))["hard_stop"])
+        profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8")); self.assertEqual((),validate_profile(profile,DUAL_HAT_CORE_VERSION)); self.assertTrue(resolve_profile(profile,DUAL_HAT_CORE_VERSION)["core_applies"])
+        with self.assertRaises(ValueError): resolve_profile(None,DUAL_HAT_CORE_VERSION)
+        weak=copy.deepcopy(profile); weak["guarantees"]["security_not_weakened"]=False; self.assertTrue(validate_profile(weak,DUAL_HAT_CORE_VERSION))
+        unexplained=copy.deepcopy(profile); unexplained["capability_evidence_rationale"].pop("independent_deep_review"); self.assertTrue(validate_profile(unexplained,DUAL_HAT_CORE_VERSION))
+        mismatch=copy.deepcopy(profile); mismatch["supported_configuration"]["operating_system"]="definitely-not-this-host"; self.assertTrue(runtime_profile_failures(mismatch)); self.assertTrue(capability_preflight(mismatch,["sealed_work_order"],DUAL_HAT_CORE_VERSION,ROOT,receipts(mismatch,ROOT))["hard_stop"])
     def test_preflight_blocks_known_gap_and_partial_conformance(self):
         profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
-        self.assertTrue(capability_preflight(profile,["sealed_work_order"],"1.1.0",ROOT,receipts(profile,ROOT))["execution_authorized"])
-        result=capability_preflight(profile,["missing_mandatory_rule"],"1.1.0",ROOT,receipts(profile,ROOT)); self.assertTrue(result["hard_stop"]); self.assertFalse(result["execution_authorized"])
-        profile["mandatory_capabilities"]["sealed_work_order"]=False; self.assertTrue(validate_profile(profile,"1.1.0"))
+        self.assertTrue(capability_preflight(profile,["sealed_work_order"],DUAL_HAT_CORE_VERSION,ROOT,receipts(profile,ROOT))["execution_authorized"])
+        result=capability_preflight(profile,["missing_mandatory_rule"],DUAL_HAT_CORE_VERSION,ROOT,receipts(profile,ROOT)); self.assertTrue(result["hard_stop"]); self.assertFalse(result["execution_authorized"])
+        profile["mandatory_capabilities"]["sealed_work_order"]=False; self.assertTrue(validate_profile(profile,DUAL_HAT_CORE_VERSION))
         minimal=copy.deepcopy(profile); minimal["mandatory_capabilities"]={"sealed_work_order":True}; minimal["capability_evidence"]={"sealed_work_order":["test:fake.py"]}
-        self.assertIn("platform profile omits mandatory Dual Hat core capabilities",validate_profile(minimal,"1.1.0"))
+        self.assertIn("platform profile omits mandatory Dual Hat core capabilities",validate_profile(minimal,DUAL_HAT_CORE_VERSION))
         approved=order(); handover,profile,preflight=contexts(approved); preflight["capability_evidence_sha256"]="F"*64
         self.assertIn("platform preflight evidence binding is stale or forged",execution_contract_failures(approved,current_handover=handover,platform_profile=profile,platform_preflight=preflight,evidence_root=ROOT))
         fake=copy.deepcopy(profile); fake["capability_evidence"]={name:["test:missing-evidence.py"] for name in fake["mandatory_capabilities"]}
-        self.assertFalse(capability_preflight(fake,fake["mandatory_capabilities"],"1.1.0",ROOT)["execution_authorized"])
+        self.assertFalse(capability_preflight(fake,fake["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT)["execution_authorized"])
         misbound=copy.deepcopy(profile); misbound["capability_evidence"]["independent_deep_review"]=["test:tests/test_quality_review.py"]
-        self.assertIn("semantically misbound", " ".join(capability_preflight(misbound,misbound["mandatory_capabilities"],"1.1.0",ROOT,receipts(misbound,ROOT))["failures"]))
-        self.assertTrue(capability_preflight(profile,["independent_deep_review"],"1.1.0",ROOT,receipts(profile,ROOT))["execution_authorized"])
+        self.assertIn("semantically misbound", " ".join(capability_preflight(misbound,misbound["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT,receipts(misbound,ROOT))["failures"]))
+        self.assertTrue(capability_preflight(profile,["independent_deep_review"],DUAL_HAT_CORE_VERSION,ROOT,receipts(profile,ROOT))["execution_authorized"])
 
     def test_preflight_receipts_bind_test_bytes_profile_and_content_not_live_head(self):
         profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
@@ -95,19 +105,19 @@ class OperatingModeTests(unittest.TestCase):
             subprocess.run(("git","init"),cwd=root,check=True,capture_output=True); subprocess.run(("git","add","proof.py"),cwd=root,check=True,capture_output=True)
             profile["preflight_artifact"]="platform-preflight.json"
             profile["capability_evidence"]={name:["test:proof.py"] for name in profile["mandatory_capabilities"]}
-            bound=receipts(profile,root); first=capability_preflight(profile,profile["mandatory_capabilities"],"1.1.0",root,bound)
+            bound=receipts(profile,root); first=capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,bound)
             self.assertTrue(first["execution_authorized"]); self.assertNotIn("evidence_repository_commit",first)
             self.assertEqual(bound,receipts(profile,root)); self.assertTrue(first["runtime_profile_verified"])
             proof.write_bytes(proof.read_bytes().replace(b"\r\n",b"\n").replace(b"\n",b"\r\n"))
-            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],"1.1.0",root,bound)["execution_authorized"])
+            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,bound)["execution_authorized"])
             proof.write_text("DUAL_HAT_CAPABILITY_PROOFS="+repr(set(profile["mandatory_capabilities"]))+"\nimport unittest\nclass Proof(unittest.TestCase):\n def test_two(self): self.assertTrue(True)\n",encoding="utf-8")
-            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],"1.1.0",root,bound)["hard_stop"])
-            refreshed=receipts(profile,root); second=capability_preflight(profile,profile["mandatory_capabilities"],"1.1.0",root,refreshed)
+            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,bound)["hard_stop"])
+            refreshed=receipts(profile,root); second=capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,refreshed)
             self.assertNotEqual(first["verified_capability_evidence_sha256"],second["verified_capability_evidence_sha256"])
             contradictory=copy.deepcopy(refreshed); contradictory["test:proof.py"]["passed"]=2
-            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],"1.1.0",root,contradictory)["hard_stop"])
+            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,contradictory)["hard_stop"])
             changed=copy.deepcopy(profile); changed["profile_version"]="1.1.1"
-            self.assertNotEqual(second["platform_profile_sha256"],capability_preflight(changed,changed["mandatory_capabilities"],"1.1.0",root,refreshed)["platform_profile_sha256"])
+            self.assertNotEqual(second["platform_profile_sha256"],capability_preflight(changed,changed["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,refreshed)["platform_profile_sha256"])
     def test_runtime_gap_generates_blocking_resumable_handoff(self):
         handoff={"active_role":"engineering","operating_mode":"integrated","work_item_id":"GOV-1","sealed_work_order_hash":"A"*64,"platform_profile":{"id":"p","version":"1"},"repository_and_remote_state":{},"dirty_worktree_state":{},"completed_steps":[],"pending_steps":[],"partial_outputs":[],"temporary_and_ignored_state":[],"containment_actions":[],"permitted_next_action":"await Architecture"}
         report=runtime_gap_stop_report(gap_kind="tool_defect",unmet_requirement="mandatory validation",limitation="validator unavailable",handoff=handoff)
@@ -143,5 +153,20 @@ class OperatingModeTests(unittest.TestCase):
         self.assertEqual("dual-hat-current-handover/1.1",template["schema"]); self.assertIn("active_work_item",template); self.assertNotIn("active_capability",template)
         self.assertIn("dual-hat-current-handover/1.0",schema["properties"]["schema"]["enum"])
         self.assertEqual("^[a-z][a-z0-9_]*$",schema["properties"]["active_work_item"]["properties"]["work_item_type"]["pattern"])
+
+    def test_third_party_dependency_evaluation_is_mandatory_in_both_hats(self):
+        contract=(ROOT/"governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        for required in ("license", "cost", "reliability", "safety", "hardware", "support status", "pros/cons comparison"):
+            self.assertIn(required,contract)
+        for prompt in (engineering,architecture):
+            self.assertIn("third-party",prompt)
+            self.assertIn("license",prompt)
+            self.assertIn("cost",prompt)
+            self.assertIn("reliability",prompt)
+            self.assertIn("hardware",prompt)
+            self.assertIn("support status",prompt)
+            self.assertIn("pros/cons",prompt)
 
 if __name__ == "__main__": unittest.main()
