@@ -203,6 +203,7 @@ class OperatingModeTests(unittest.TestCase):
             self.assertIn("Architecture Office decision",guidance)
             self.assertIn("explicitly specified stop gate",guidance)
             self.assertIn("end of a message",guidance)
+            self.assertIn("side question",guidance)
         self.assertIn("transition directly to `[Architect Office]`",framework)
         self.assertIn("task is complete and reported",architecture)
 

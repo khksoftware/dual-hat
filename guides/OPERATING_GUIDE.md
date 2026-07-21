@@ -18,7 +18,7 @@ For bounded loading and freshness rules, follow the [task-context retrieval guid
 
 ## Planning and debt
 
-The [planning model](../planning/PLANNING_MODEL.md) separates roadmap, backlog, future triggers, phases, milestones, and capability authorization. Canonical JSON backlog and future-work projections reconcile against append-only JSONL history with `tooling/planning_reconciliation.py`; the [lifecycle example](../examples/planning-lifecycle.example.md) is runnable. [Technical debt](../planning/TECHNICAL_DEBT.md) requires stable ownership, lifecycle events, remediation triggers, validation, and closure evidence. Phase closure reviews test health and debt instead of optimizing for test count.
+The [planning model](../planning/PLANNING_MODEL.md) separates roadmap, backlog, future triggers, phases, milestones, and capability authorization. The [traceability protocol](../planning/TRACEABILITY_PROTOCOL.md) connects stakeholder intent and delivery basis through planning, implementation, verification, and release without requiring duplicate documents for trivial edits. Canonical JSON backlog and future-work projections reconcile against append-only JSONL history with `tooling/planning_reconciliation.py`; the [lifecycle example](../examples/planning-lifecycle.example.md) is runnable. [Technical debt](../planning/TECHNICAL_DEBT.md) requires stable ownership, lifecycle events, remediation triggers, validation, and closure evidence. Phase closure reviews test health and debt instead of optimizing for test count.
 
 ## Validation and operations
 
