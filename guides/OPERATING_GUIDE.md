@@ -10,6 +10,8 @@ The Architecture Office converts goals into bounded, testable authority and chal
 
 Role-specific application guidance is in the [Architecture Office guide](../governance/ARCHITECTURE_OFFICE_GUIDE.md) and [Engineering Agent guide](../governance/ENGINEERING_AGENT_GUIDE.md).
 
+All third-party dependency recommendations follow the [dependency evaluation contract](../governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md): current licensing and product implications, cost, reliability, safety, hardware/platform needs, support status, and a pros/cons comparison of multiple viable options before approval.
+
 Work begins from the active session, roadmap, bounded work order, and owning domain—not archives or previous chat memory. Use [context retrieval](../process/CONTEXT_AND_RETRIEVAL.md) and product-bound [entrypoints](../repository/CANONICAL_ENTRYPOINTS.md). Capabilities follow the [capability lifecycle](../process/CAPABILITY_LIFECYCLE.md); multi-capability phases follow the [phase-run protocol](../process/PHASE_RUN_PROTOCOL.md).
 
 For bounded loading and freshness rules, follow the [task-context retrieval guide](../sessions/TASK_CONTEXT_RETRIEVAL.md). Runnable standalone examples are in the [command reference](../reference/COMMAND_REFERENCE.md).

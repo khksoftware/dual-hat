@@ -11,7 +11,7 @@ from profile_conformance import capability_evidence_digest, validate_profile
 
 MODES = {"integrated", "split"}
 BUILTIN_TYPES = {"capability", "gov"}
-DUAL_HAT_CORE_VERSION = "1.1.0"
+DUAL_HAT_CORE_VERSION = "1.2.0"
 BUILTIN_REGISTRY = {
     "capability": {"identity_pattern": r"^Capability [0-9]+$", "semantic_owner": "bounded product increment", "classification_rule": "product_increment true and governance_contract_change false", "classification": {"required_true": ["product_increment"], "required_false": ["governance_contract_change"]}, "compatible_execution_lifecycles": ["author_approved_for_execution", "engineering", "remediation_required", "engineering_complete", "architecture_review"]},
     "gov": {"identity_pattern": r"^GOV-[0-9]{4}$", "semantic_owner": "bounded governance change", "classification_rule": "governance_contract_change true and product_increment false", "classification": {"required_true": ["governance_contract_change"], "required_false": ["product_increment"]}, "compatible_execution_lifecycles": ["author_approved_for_execution", "engineering", "remediation_required", "engineering_complete", "architecture_review"]},

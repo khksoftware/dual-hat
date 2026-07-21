@@ -16,4 +16,6 @@ Within a sealed approved order, Engineering may repeat `implement -> validate ->
 
 A design question during Engineering does not change role. Entering Engineering requires an approved, hash-valid sealed order and unambiguous execution intent. Dirty worktrees, interrupted mutations, stale remotes, missing local state, or stale order hashes block mode transfer until reconciled or explicitly packaged as unresolved state.
 
+In Integrated Mode, the active hat is visible in every assistant-authored chat message. Architecture and Architecture Review use `[Architect Office]`; Engineering uses `[Engineering Agent]`. The prefix is mandatory from the first character of interim updates, questions, decisions, reports, and final responses. One message carries one hat. Changing the label without a governed role transition does not change authority, and a role transition must change the label on the next message.
+
 A mode-transition package records mode, role, item identity/type, lifecycle, work-order hash, branch/commit/upstream/remote, dirty state, completed/pending steps, unresolved decisions, required ignored state, next permitted action, and continuation phrase. Architecture review should use a fresh Review Context or independent read-only reviewer for material work when proportionate.

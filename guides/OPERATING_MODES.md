@@ -16,6 +16,8 @@ Switch modes only at a safe lifecycle boundary. Preserve the sealed work order a
 
 Integrated mode is the default. Architecture and Engineering use one connected Execution Host or Repository Workspace. The user approves a sealed work order, explicitly enters Engineering, and explicitly returns to Architecture Review. Direct repository evidence and current local state remain available without copying.
 
+Every assistant-authored chat message in Integrated Mode MUST begin with exactly one active-hat label: `[Architect Office]` while performing Architecture or Architecture Review work, or `[Engineering Agent]` while performing Engineering work. The label applies to interim updates, questions, decisions, reports, and final responses. One message carries one hat; change the active role at a governed boundary before using the other label. Tool output and verbatim third-party content are evidence inside the labeled message, not a third role.
+
 Advantages: reduced copying; direct repository evidence; faster remediation loops; smoother pause/resume; lower stale-snapshot risk; easier automated handoff and archival.
 
 Risks: role contamination; self-review bias; accidental Architecture-mode mutation; inherited Engineering assumptions during review; dependence on strong transition and authorization controls.
@@ -38,9 +40,9 @@ Neither mode is inherently more conformant. Integrated is the usability default;
 2. Persist and hash the complete work order.
 3. The user approves that exact sealed order.
 4. Explicitly enter Engineering; a design question alone does not switch roles.
-5. Engineering implements, validates, diagnoses, repairs established-contract defects, revalidates, publishes when authorized, and reports.
+5. Prefix every Engineering chat message with `[Engineering Agent]`; Engineering implements, validates, diagnoses, repairs established-contract defects, revalidates, publishes when authorized, and reports.
 6. Engineering declares complete, paused, blocked, or aborted and seals resumable state when needed.
-7. Explicitly enter Architecture Review, preferably fresh for material work.
+7. Explicitly enter Architecture Review, preferably fresh for material work, and prefix every Architecture or Architecture Review chat message with `[Architect Office]`.
 8. Architecture accepts, accepts with non-blocking follow-up, requires remediation, or rejects.
 9. Only accepted work archives; required remediation stays active.
 

@@ -4,6 +4,20 @@
 
 All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning; breaking core-contract changes require a major release.
 
+## 1.2.0 - 2026-07-21
+
+### Added
+
+- Mandatory third-party dependency evaluation covering license and product implications, cost, reliability, safety and privacy, hardware/platform requirements, and active/stale/deprecated/out-of-support status.
+- Required concise pros/cons comparison tables when multiple viable dependency options exist.
+- Mandatory visible Integrated Mode hat labels on every assistant-authored message.
+
+### Changed
+
+- Dependency approval now binds the evaluated choice and use; material license, cost, data-flow, hardware, support, or dependency-class changes require renewed evaluation.
+
+This is a backward-compatible additive minor release. Existing 1.x work-item, profile, and handover concepts remain available; no mandatory control is weakened.
+
 ## 1.1.0 - 2026-07-20
 
 ### Added

@@ -213,7 +213,7 @@ class QualityReviewTests(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             root=Path(temporary); (root/"profile").mkdir(); (root/"quality/rules").mkdir(parents=True); (root/"dual-hat/release").mkdir(parents=True); (root/"work").mkdir()
             profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8")); (root/"profile/active.json").write_text(json.dumps(profile),encoding="utf-8")
-            (root/"dual-hat/release/VERSION.json").write_text(json.dumps({"version":"1.1.0"}),encoding="utf-8")
+            (root/"dual-hat/release/VERSION.json").write_text(json.dumps({"version":profile["dual_hat_core_version"]}),encoding="utf-8")
             sources={"sources":[{"source_id":"user","path":"quality/rules","required":True}]}; (root/"quality/sources.json").write_text(json.dumps(sources),encoding="utf-8")
             user_rule=rule("USER-1",precedence="user",action={"type":"require"}); (root/"quality/rules/user.json").write_text(json.dumps({"schema":"dual-hat-quality-rules/1.0","rules":[user_rule]}),encoding="utf-8")
             architecture_rule=rule("ARCH-1",precedence="non_waivable",action={"type":"require"}); (root/"quality/architecture.json").write_text(json.dumps({"schema":"dual-hat-quality-rules/1.0","rules":[architecture_rule]}),encoding="utf-8")
