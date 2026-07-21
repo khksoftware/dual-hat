@@ -4,6 +4,15 @@
 
 All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning; breaking core-contract changes require a major release.
 
+## 1.5.0 - 2026-07-21
+
+### Added
+
+- After fully accepting a work item, the Architecture Office proposes the next work to plan, including its outcome, smallest useful scope, and principal boundaries or decisions.
+- Post-acceptance planning guidance is explicitly distinct from execution authority.
+
+This is a backward-compatible additive minor release. Existing 1.x work-item, profile, handover, and authority concepts remain available; no mandatory control is weakened.
+
 ## 1.4.0 - 2026-07-21
 
 ### Added
