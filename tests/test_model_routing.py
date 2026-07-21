@@ -27,6 +27,18 @@ class ModelRoutingTests(unittest.TestCase):
         text = " ".join(str(value) for value in TIERS.values()).casefold()
         self.assertNotIn("provider", text); self.assertNotIn("model name", text)
 
+    def test_onboarding_and_project_lifecycle_require_current_project_mapping(self):
+        onboarding = (ROOT / "process/ONBOARDING.md").read_text(encoding="utf-8")
+        planning = (ROOT / "planning/PLANNING_MODEL.md").read_text(encoding="utf-8")
+        profile = (ROOT / "governance/PLATFORM_PROFILE_CONTRACT.md").read_text(encoding="utf-8")
+        handover = (ROOT / "sessions/SESSION_AND_HANDOVER_PROTOCOL.md").read_text(encoding="utf-8")
+        self.assertIn("Onboarding is incomplete when tiers remain abstract", onboarding)
+        self.assertIn("project-local model-tier mapping", onboarding)
+        self.assertIn("assigns the abstract model tier", planning)
+        self.assertIn("environment fingerprint", planning)
+        self.assertIn("model-tier mapping", profile)
+        self.assertIn("model-tier mapping identity and environment fingerprint", handover)
+
     def test_evidence_binding_remaps_and_hard_stops_missing_mandatory_tier(self):
         first = bind_development_environment(adapter_identity="test-host", tools=["files", "tests"], runtime_fingerprint={"os": "fixture"}, configured_models=self.models())
         second = bind_development_environment(adapter_identity="new-host", tools=["files"], runtime_fingerprint={"os": "fixture2"}, configured_models=self.models(), prior_binding=first)

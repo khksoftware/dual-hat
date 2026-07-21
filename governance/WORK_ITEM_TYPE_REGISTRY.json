@@ -22,7 +22,7 @@
           "product_increment"
         ]
       },
-      "classification_rule": "product_increment must be true",
+      "classification_rule": "product_increment must be true; independently bounded governance_contract_change must be false; tightly coupled governance may use extension_classification.coupled_governance_change",
       "compatible_execution_lifecycles": [
         "author_approved_for_execution",
         "engineering",

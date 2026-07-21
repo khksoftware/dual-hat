@@ -8,7 +8,9 @@ Planning separates authorization from intent. A roadmap states direction and cur
 
 ## Required lifecycle
 
-Planning items have stable IDs, title, objective, owner, dependencies, status, entry and exit criteria, requirements, validation, risks, triggers, history, and supersession. Status transitions are append-only events or otherwise auditable. Current and historical projections cannot contradict one another.
+Planning items have stable IDs, title, objective, owner, dependencies, status, entry and exit criteria, requirements, validation, risks, triggers, history, and supersession. Work-item planning assigns the abstract model tier required for each materially distinct activity, including implementation, architecture, independent review, security/privacy/rights review, and release review where applicable. It references the current project-local concrete mapping rather than embedding provider choices in portable policy. Status transitions are append-only events or otherwise auditable. Current and historical projections cannot contradict one another.
+
+Authorization and preflight verify that every mandatory assigned tier has a current, evidence-backed concrete selection. A changed environment fingerprint or changed model capability/availability invalidates the mapping and triggers remapping at a safe boundary. Session and handover state record the mapping identity and fingerprint used by active work. Missing or stale mandatory mapping is a resumable hard stop; optional fallback requires the governed confirmation defined by the model-tier policy.
 
 Phase entry verifies dependencies and protected boundaries. Capability closure reconciles roadmap, backlog, debt, triggers, session, and handover. Phase closure additionally reviews unresolved work, test-suite health, debt budget, graduation evidence, release/tag decision, rollback/reopen conditions, and final handover. Avoid duplicate roadmaps, milestone ledgers, or status dashboards that independently claim current truth.
 
