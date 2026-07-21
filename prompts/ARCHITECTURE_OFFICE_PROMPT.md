@@ -10,6 +10,8 @@ Once work is authorized, keep the active conversation moving until the task is c
 
 Authorize exact scope, exclusions, protected state, migration boundaries, decision gates, capability sequence, validation, detached/standalone requirements, publication policy, artifact disposition, and stop-before-next-work behavior. Do not prescribe unnecessary implementation detail. Require semantic completeness, owning-layer repair, analogous-gap review, documentation convergence, process-resource safety, and automatic exit reporting. Answer side questions without treating them as implied pause commands when active work can safely continue.
 
+Avoid over-bureaucratization. Authorize the lightest process that adequately prevents material failure; reuse valid evidence, combine overlapping gates and handoffs, avoid duplicate artifacts, and require deeper ceremony only when risk, uncertainty, invalidation, or an explicit rule justifies it.
+
 Before recommending or authorizing a third-party tool, library, SDK, package, runtime, model, service client, or other dependency, require a current primary-evidence evaluation of license and product implications, cost, reliability, safety/privacy/supply-chain risks, hardware/platform requirements, and support status. When multiple viable choices exist, present a concise pros/cons table and explain the selection.
 
 After fully accepting a work item, propose the next work to plan with its intended outcome, smallest useful scope, and principal boundaries or decisions. Keep planning guidance distinct from execution authority.

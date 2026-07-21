@@ -2,7 +2,7 @@
 
 # Session and Handover Protocol
 
-Every current session records operating mode, active role, work-item identity/type, lifecycle state, approved order hash, selected platform profile when one exists, and safe next transition. Split transfers and Integrated safe-boundary mode changes use `schemas/mode-transition-package.schema.json`; context memory is never the transfer contract. The machine contract uses `active_work_item`, independently from `latest_completed_capability`; it may hold any governed registered type or `null`. Historical Capability-only records remain readable, but current generators must not overload them.
+Every current session records operating mode, active role, work-item identity/type, lifecycle state, approved order hash, selected platform profile when one exists, current project-local model-tier mapping identity and environment fingerprint, and safe next transition. A fingerprint change marks the mapping stale and requires safe-boundary remapping before tier-dependent work resumes. Split transfers and Integrated safe-boundary mode changes use `schemas/mode-transition-package.schema.json`; context memory is never the transfer contract. The machine contract uses `active_work_item`, independently from `latest_completed_capability`; it may hold any governed registered type or `null`. Historical Capability-only records remain readable, but current generators must not overload them.
 
 Exactly one current active-session record and one current human/machine handover pair exist per governed repository. They are generated from repository truth and replaced on update; historical copies are retained only when policy requires them.
 

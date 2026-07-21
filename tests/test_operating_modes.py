@@ -33,8 +33,10 @@ def order(kind="gov"):
 def contexts(value):
     handover={"active_work_item":{"work_item_id":value["work_item_id"],"work_item_type":value["work_item_type"],"title":value["title"],"operating_mode":value["operating_mode"],"active_role":"engineering","lifecycle_state":"engineering","work_order_revision":value["current_revision"],"work_order_hash":value["work_order_hash"]}}
     profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
-    preflight=capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT,receipts(profile,ROOT))
-    preflight.update({"work_item_id":value["work_item_id"],"work_order_revision":value["current_revision"],"work_order_hash":value["work_order_hash"],"platform_profile_id":profile["profile_id"],"platform_profile_version":profile["profile_version"]})
+    expected=f"engineering/process/work-items/{value['work_item_id']}/PLATFORM_PREFLIGHT.json"
+    execution_profile=copy.deepcopy(profile); execution_profile["preflight_artifact"]=expected
+    preflight=capability_preflight(execution_profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT,receipts(execution_profile,ROOT))
+    preflight.update({"preflight_artifact":expected,"work_item_id":value["work_item_id"],"work_order_revision":value["current_revision"],"work_order_hash":value["work_order_hash"],"platform_profile_id":profile["profile_id"],"platform_profile_version":profile["profile_version"]})
     return handover, profile, preflight
 
 class OperatingModeTests(unittest.TestCase):
@@ -52,6 +54,8 @@ class OperatingModeTests(unittest.TestCase):
     def test_semantic_classification(self):
         self.assertEqual((),classification_failures(order("gov"))); self.assertEqual((),classification_failures(order("capability")))
         bad=order("gov"); bad["product_increment"]=True; self.assertTrue(classification_failures(bad))
+        coupled=order("capability"); coupled["extension_classification"]={"coupled_governance_change":True}; coupled=seal(coupled); self.assertEqual((),classification_failures(coupled))
+        invalid=order("gov"); invalid["extension_classification"]={"coupled_governance_change":True}; invalid=seal(invalid); self.assertTrue(classification_failures(invalid))
     def test_integrated_and_split_lifecycle(self):
         path=["architecture","work_order_ready","author_approved_for_execution","engineering","engineering_complete","architecture_review","accepted","archived"]
         self.assertTrue(all(transition_allowed(a,b) for a,b in zip(path,path[1:]))); self.assertFalse(transition_allowed("engineering_complete","accepted"))
@@ -92,6 +96,8 @@ class OperatingModeTests(unittest.TestCase):
         self.assertIn("platform profile omits mandatory Dual Hat core capabilities",validate_profile(minimal,DUAL_HAT_CORE_VERSION))
         approved=order(); handover,profile,preflight=contexts(approved); preflight["capability_evidence_sha256"]="F"*64
         self.assertIn("platform preflight evidence binding is stale or forged",execution_contract_failures(approved,current_handover=handover,platform_profile=profile,platform_preflight=preflight,evidence_root=ROOT))
+        handover,profile,preflight=contexts(approved); preflight["preflight_artifact"]="engineering/process/work-items/other/PLATFORM_PREFLIGHT.json"
+        self.assertIn("platform preflight contradicts work order or profile",execution_contract_failures(approved,current_handover=handover,platform_profile=profile,platform_preflight=preflight,evidence_root=ROOT))
         fake=copy.deepcopy(profile); fake["capability_evidence"]={name:["test:missing-evidence.py"] for name in fake["mandatory_capabilities"]}
         self.assertFalse(capability_preflight(fake,fake["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT)["execution_authorized"])
         misbound=copy.deepcopy(profile); misbound["capability_evidence"]["independent_deep_review"]=["test:tests/test_quality_review.py"]

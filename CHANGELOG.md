@@ -2,6 +2,16 @@
 
 # Changelog
 
+## 1.7.0 - 2026-07-21
+
+- Added a plain-language framework introduction before First Use.
+- Required consuming projects to map abstract model tiers to evidence-backed concrete selections during onboarding and to remap when the environment or verified availability changes.
+- Distinguished governance tightly coupled to a product capability from independently bounded GOV work.
+- Made minimum sufficient process cardinal: defer repeat-prone steps to the latest safe point, reuse valid evidence, and prefer delta/affected-surface reruns over whole-process repetition.
+- Made work-item preflight artifacts dynamically bound and self-excluding so persisted receipts remain reproducible instead of invalidating themselves.
+
+This is a backward-compatible additive minor governance release. Existing 1.x authority, lifecycle, mode, and readable historical work-item contracts remain available; no material safeguard is weakened.
+
 ## 1.6.0 - 2026-07-21
 
 - Made the smallest credible, risk-proportionate focused test subset the default validation scope.

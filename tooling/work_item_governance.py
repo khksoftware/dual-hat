@@ -11,9 +11,9 @@ from profile_conformance import capability_evidence_digest, validate_profile
 
 MODES = {"integrated", "split"}
 BUILTIN_TYPES = {"capability", "gov"}
-DUAL_HAT_CORE_VERSION = "1.6.0"
+DUAL_HAT_CORE_VERSION = "1.7.0"
 BUILTIN_REGISTRY = {
-    "capability": {"identity_pattern": r"^Capability [0-9]+$", "semantic_owner": "bounded product increment", "classification_rule": "product_increment true and governance_contract_change false", "classification": {"required_true": ["product_increment"], "required_false": ["governance_contract_change"]}, "compatible_execution_lifecycles": ["author_approved_for_execution", "engineering", "remediation_required", "engineering_complete", "architecture_review"]},
+    "capability": {"identity_pattern": r"^Capability [0-9]+$", "semantic_owner": "bounded product increment", "classification_rule": "product_increment true; independently bounded governance_contract_change false; tightly coupled governance may use extension_classification.coupled_governance_change", "classification": {"required_true": ["product_increment"], "required_false": ["governance_contract_change"]}, "compatible_execution_lifecycles": ["author_approved_for_execution", "engineering", "remediation_required", "engineering_complete", "architecture_review"]},
     "gov": {"identity_pattern": r"^GOV-[0-9]{4}$", "semantic_owner": "bounded governance change", "classification_rule": "governance_contract_change true and product_increment false", "classification": {"required_true": ["governance_contract_change"], "required_false": ["product_increment"]}, "compatible_execution_lifecycles": ["author_approved_for_execution", "engineering", "remediation_required", "engineering_complete", "architecture_review"]},
 }
 TRANSITIONS = {
@@ -178,9 +178,13 @@ def execution_contract_failures(
         else:
             from profile_conformance import capability_preflight
             receipts = platform_preflight.get("capability_test_receipts")
-            derived_preflight = capability_preflight(platform_profile, capabilities.keys() if isinstance(capabilities, Mapping) else (), DUAL_HAT_CORE_VERSION, evidence_root, receipts if isinstance(receipts, Mapping) else None)
+            expected_preflight_artifact = f"engineering/process/work-items/{order.get('work_item_id')}/PLATFORM_PREFLIGHT.json"
+            verification_profile = dict(platform_profile)
+            verification_profile["preflight_artifact"] = expected_preflight_artifact
+            derived_preflight = capability_preflight(verification_profile, capabilities.keys() if isinstance(capabilities, Mapping) else (), DUAL_HAT_CORE_VERSION, evidence_root, receipts if isinstance(receipts, Mapping) else None)
             supported = platform_preflight.get("supported_mandatory_requirements", ())
-            if (platform_preflight.get("work_item_id") != order.get("work_item_id")
+            if (platform_preflight.get("preflight_artifact") != expected_preflight_artifact
+                    or platform_preflight.get("work_item_id") != order.get("work_item_id")
                     or platform_preflight.get("work_order_revision") != order.get("current_revision")
                     or platform_preflight.get("work_order_hash") != order.get("work_order_hash")
                     or platform_preflight.get("platform_profile_id") != platform_profile.get("profile_id")
@@ -211,6 +215,10 @@ def classification_failures(order: Mapping[str, object], *, type_registry: Mappi
         return order.get(name)
     failures = [f"{kind} classification requires {field}=true" for field in classification.get("required_true", ()) if value(field) is not True]
     failures.extend(f"{kind} classification requires {field}=false" for field in classification.get("required_false", ()) if value(field) is not False)
+    extension = order.get("extension_classification")
+    coupled = extension.get("coupled_governance_change") if isinstance(extension, Mapping) else None
+    if coupled is not None and not isinstance(coupled, bool): failures.append("coupled governance classification must be boolean")
+    if coupled is True and kind != "capability": failures.append("coupled governance classification is valid only for a capability")
     compatible = definition.get("compatible_execution_lifecycles", ())
     if order.get("lifecycle_state") not in compatible:
         failures.append(f"{kind} lifecycle is incompatible with registered execution semantics")
