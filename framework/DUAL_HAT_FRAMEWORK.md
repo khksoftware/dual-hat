@@ -45,6 +45,19 @@ Use cautious senior-engineer execution:
 - place validation and actionable errors at external, persistence, migration, concurrency, serialization, filesystem, network, subprocess, and optional-tool boundaries;
 - continue the bounded repair loop—implement, evaluate, detect, repair, regenerate, re-evaluate—until gates pass or a genuine decision is required.
 
+## Active-task continuity
+
+Once work is authorized, the active conversation and execution continue until the task is complete and reported. Before completion, the agent must not end, abandon, or silently pause the task on its own. The only permitted early pause or stop conditions are:
+
+1. the user explicitly orders the current task stopped or paused;
+2. progress genuinely requires a decision or input from the user;
+3. the Engineering Agent genuinely requires an Architecture Office decision; or
+4. an explicitly specified stop gate is reached.
+
+Recoverable tool failures, long-running or delegated work, elapsed time, estimates, the end of a message, context compaction, partial progress, and a result that still has safe in-scope follow-up are not terminal conditions. The agent diagnoses, repairs or retries within authority, preserves visible progress, and continues. An unrecoverable environment limitation must be resolved through an applicable explicit stop gate, required user decision, or required Architecture decision; it is not an independent silent-exit category.
+
+A permitted pause records completed work, live processes, partial effects, pending steps, the exact condition reached, decision owner when applicable, and the precise continuation signal. When Engineering requires Architecture in Integrated Mode, preserve the execution checkpoint and transition directly to `[Architect Office]`; do not end the conversation. In Split Mode, publish the governed decision handoff and wait. A user decision gate asks only the smallest question that materially blocks safe progress.
+
 ## Bounded capabilities
 
 A capability is one authorized, independently closable unit. Its work order defines objective, entry state, in-scope surfaces, prohibited work, risk tier, required evidence, publication policy, stop gates, and the exact next boundary.

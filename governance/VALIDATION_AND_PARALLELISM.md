@@ -15,4 +15,20 @@ The fingerprint includes base commit, complete candidate tree, changed-path dige
 
 Before sharding, inventory every required group exactly once. Workers receive isolated writable state and deterministic commands. The integration owner records counts, skips, omissions, duplicates, failures, retries, and logs, then centrally reconciles one authoritative result.
 
+Prefer delegating long-running execution and monitoring to a dedicated sub-agent so the primary agent can continue independent tasks within the current work item. The primary agent retains integration ownership and must not manufacture parallel work: when every remaining task is blocked on the long-running result, monitor or await that result instead. Delegation must preserve the original authority, safety, privacy, writable-boundary, evidence, and cleanup requirements.
+
+## Delegated progress visibility
+
+Delegation never transfers user-communication accountability. Before launch, the primary agent states the delegated task, scope, owner, expected next milestone, heartbeat interval, and terminal conditions. It then:
+
+- keeps the active workflow open or uses a product-supported persistent watcher that can surface updates automatically;
+- does not send a final response that would make an active worker's progress or completion invisible, unless the user explicitly requests background execution or the platform guarantees automatic resume and notification;
+- polls at the platform-required cadence or, when none exists, at least every five minutes;
+- reports launch, material milestones or scope changes, abnormal resource behavior, intervention, completion, failure, and cancellation; unchanged heartbeats stay compact;
+- reports a terminal event at the next available message boundary and no later than one heartbeat interval, without waiting for the user to ask;
+- drains worker messages and checks live worker state before every status or final response; and
+- if monitoring or notification fails, immediately reconstructs state, reports the visibility gap, and resumes from verified evidence.
+
+The primary agent remains responsible for reconciliation, evidence, cleanup, and truthful status even when a sub-agent executes and monitors the task.
+
 All orchestrated writable state uses the canonical temporary-workspace resolver. Every shard receives a unique owner-scoped run directory below an approved operating-system temporary root; repository, author, project, instance, and repository-sibling workspaces are prohibited. A shard cleans only its own directory in guaranteed finalization, and the integration owner verifies no run directory, worktree registration, child process, cache, or raw log remains.
