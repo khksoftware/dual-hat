@@ -22,7 +22,7 @@ The [planning model](../planning/PLANNING_MODEL.md) separates roadmap, backlog, 
 
 ## Validation and operations
 
-The [validation protocol](../validation/VALIDATION_PROTOCOL.md) covers automated tests, semantic checks, risk-based detached validation, standalone export, safe sharding, evidence, flake handling, and phase-end suite health. The [process watchdog](../validation/PROCESS_WATCHDOG.md) bounds I/O, monitors owned processes, and prevents orphaned scans. Suspicious parallel failures rerun serially; one integration owner reconciles all results.
+The [validation protocol](../validation/VALIDATION_PROTOCOL.md) covers automated tests, semantic checks, risk-based detached validation, standalone export, safe sharding, evidence, flake handling, and phase-end suite health. Prefer assigning long-running execution and monitoring to a dedicated sub-agent while the primary agent continues independent current-work-item tasks; wait when all remaining work depends on the result. The primary agent still owns user-visible heartbeats and terminal notification, must consume worker messages before status/final responses, and must not strand an unreported result behind a closed workflow. The [process watchdog](../validation/PROCESS_WATCHDOG.md) bounds I/O, monitors owned processes, and prevents orphaned scans. Suspicious parallel failures rerun serially; one integration owner reconciles all results.
 
 ## Repository, sessions, and closure
 

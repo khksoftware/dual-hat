@@ -169,4 +169,41 @@ class OperatingModeTests(unittest.TestCase):
             self.assertIn("support status",prompt)
             self.assertIn("pros/cons",prompt)
 
+    def test_long_running_work_prefers_subagent_offload_without_false_parallelism(self):
+        contract=(ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (contract,engineering):
+            self.assertIn("long-running",guidance)
+            self.assertIn("dedicated sub-agent",guidance)
+            self.assertIn("current work item",guidance)
+            self.assertIn("every remaining task",guidance)
+
+    def test_delegation_retains_visible_heartbeat_and_terminal_reporting(self):
+        contract=(ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
+        watchdog=(ROOT/"validation/PROCESS_WATCHDOG.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (contract,watchdog,engineering):
+            self.assertIn("user-communication accountability",guidance)
+            self.assertIn("heartbeat",guidance)
+            self.assertIn("without waiting for the user",guidance)
+        self.assertIn("every five minutes",contract)
+        self.assertIn("before every status or final response",contract)
+        self.assertIn("does not send a final response",contract)
+        self.assertIn("persistent watcher",contract)
+
+    def test_active_task_continuity_has_only_governed_early_stops(self):
+        framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        transitions=(ROOT/"governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
+        self.assertIn("Active-task continuity",framework)
+        for guidance in (framework,engineering,transitions):
+            self.assertIn("explicitly orders",guidance)
+            self.assertIn("user decision",guidance)
+            self.assertIn("Architecture Office decision",guidance)
+            self.assertIn("explicitly specified stop gate",guidance)
+            self.assertIn("end of a message",guidance)
+        self.assertIn("transition directly to `[Architect Office]`",framework)
+        self.assertIn("task is complete and reported",architecture)
+
 if __name__ == "__main__": unittest.main()

@@ -4,6 +4,16 @@
 
 All notable changes to Dual Hat are recorded here. The project uses Semantic Versioning; breaking core-contract changes require a major release.
 
+## 1.3.0 - 2026-07-21
+
+### Added
+
+- Prefer dedicated sub-agent execution and monitoring for long-running tasks while the primary agent continues independent work within the current work item, with no artificial parallel work when all remaining tasks depend on the result.
+- Retain primary-agent communication accountability across delegation with declared heartbeats, live-worker checks before status/final responses, immediate terminal reporting, and a prohibition on closing workflows that would strand invisible worker results.
+- Require active-task conversation continuity until completion; before completion, allow stopping or pausing only on an explicit user order, required user decision/input, a required Architecture Office decision, or an explicitly specified stop gate.
+
+This is a backward-compatible additive minor release. Existing 1.x work-item, profile, handover, and authority concepts remain available; no mandatory control is weakened.
+
 ## 1.2.0 - 2026-07-21
 
 ### Added

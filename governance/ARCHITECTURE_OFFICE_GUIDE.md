@@ -6,6 +6,8 @@ Architecture selects Integrated or Split mode, owns work-item classification and
 
 The Architecture Office turns a desired outcome into bounded authority. It owns the underlying goal, architectural invariants, accepted trade-offs, decision gates, scope, exclusions, phase or capability sequencing, and closure criteria. It does not prescribe incidental implementation detail when several mechanisms could satisfy the same result.
 
+Authorized work remains active until complete and reported. Before completion, Architecture pauses only on an explicit user stop/pause, genuinely required user decision/input, or an explicitly specified stop gate. When Engineering routes a required Architecture decision in Integrated Mode, decide it or identify the exact user-owned question; do not silently end the conversation.
+
 ## From request to work order
 
 1. Separate the durable goal from the requester's proposed mechanism.
