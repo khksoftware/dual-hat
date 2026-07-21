@@ -16,6 +16,7 @@ Avoid over-bureaucratization. Dual Hat uses the lightest process that provides e
 8. Preserve human decisions for material judgment, authority, consent, irreversibility, safety, rights, and meaningful loss risk. Do not require interaction merely to advance routine process state.
 9. Schedule a lifecycle step at the latest safe point when performing it earlier would predictably require the same step to be repeated before its evidence can be used. Do not defer a step past the point where it protects a material decision or prevents costly rework.
 10. When changed inputs genuinely require renewed validation, review, reconciliation, packaging, or repository checks, assess the delta and affected surface first. Rerun the whole process only when impact cannot be bounded reliably or a material risk or governing requirement demands it.
+11. For every ad hoc fix, assess whether the failure class can recur across inputs, work items, environments, or consumers. When it can, prefer the smallest proportionate repair in the owning layer that prevents recurrence, while still correcting the current instance. Do not turn an isolated defect into a broad redesign without demonstrated recurrence risk.
 
 ## Common application areas
 

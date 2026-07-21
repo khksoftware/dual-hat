@@ -6,6 +6,8 @@ Engineering completion enters Architecture Review. Only an Architecture-owned `a
 
 Branch and push behavior comes from the active work order and product profile. Use forward-only correction: do not rewrite published history, force-push, or overwrite unexplained external work. Before publication, verify branch, remotes, history, cleanliness, prior governed marker, target drift, credentials, and authorization.
 
+When a profile uses short-lived work branches, closure integrates the accepted work into its authorized target and retires or repurposes the completed branch before unrelated work continues. Retaining a completed branch requires an explicit owner, purpose, and retirement trigger. A new work item does not silently continue on the prior item's branch.
+
 Publication compares the candidate with the prior owned file set, reports adds/changes/removals/renames, applies only governed changes, commits transparently, pushes when authorized, fetches, and verifies HEAD/upstream alignment plus a clean worktree. A failed push leaves the local commit intact and is reported as blocked, never as success.
 
 Closure inventory covers every created, modified, moved, split, generated, exported, archived, deleted, and temporary artifact. Reproducible staging, caches, worktrees, process logs, and export debris are removed. Rollback states which commit, migration reversal, external action, or restored marker is safe; recovery never assumes chat history.

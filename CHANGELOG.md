@@ -2,6 +2,15 @@
 
 # Changelog
 
+## 1.8.0 - 2026-07-21
+
+- Required every ad hoc fix to be assessed for a recurring failure class across inputs, work items, environments, or consumers.
+- Prefer the smallest proportionate owning-layer systemic repair when recurrence is credible, while still repairing the current instance.
+- Guarded the rule against speculative expansion: an isolated defect does not justify a broad redesign without demonstrated recurrence risk.
+- Required completed short-lived work branches to be integrated and retired before unrelated work continues, unless a governed retention exception exists.
+
+This is a backward-compatible behavioral governance release. Existing 1.x interfaces, authority boundaries, and mandatory safeguards remain unchanged.
+
 ## 1.7.0 - 2026-07-21
 
 - Added a plain-language framework introduction before First Use.
