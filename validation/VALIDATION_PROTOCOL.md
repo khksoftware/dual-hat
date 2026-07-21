@@ -6,11 +6,13 @@ Validation must prove profile preflight blocks known mandatory gaps, runtime gap
 
 Testable products require automated unit, integration, regression, schema/contract, and appropriate end-to-end tests. Validation also includes semantic review, repository and dependency checks, documentation, migration, packaging, security, rights, and operator-visible behavior. Tests are owned by the subsystem whose defects they detect.
 
+Default to the minimal necessary, risk-proportionate focused subset that credibly validates the changed surfaces, affected contracts and direct consumers, known failure modes, and critical integrations. Do not run a full suite merely because work is reaching handoff or closure. Escalate to broader or full-suite validation only when the blast radius is broad or cannot be bounded confidently, a focused check produces an unexplained failure, an explicit work-order or release policy requires it, or the focused subset cannot provide credible coverage. An explicit mandatory suite remains mandatory until its governing work order or release policy is changed; this default does not waive a declared gate.
+
 ## Profiles
 
 - Focused: changed owners and direct consumers during development.
 - Integration: affected regressions plus repository, schema, documentation, and dependency checks for the final candidate.
-- Full live: the complete governed live suite once per unchanged validation fingerprint.
+- Full live: the complete governed live suite when an escalation condition or explicit mandatory gate requires it, once per unchanged validation fingerprint.
 - Committed tree: clean detached checkout when risk policy requires it.
 - Export/standalone: isolated distribution with no source-repository dependency.
 - Post-commit/post-push: identity, cleanliness, evidence, and alignment only.
