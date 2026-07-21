@@ -1,0 +1,906 @@
+{
+  "archive": "dual-hat-1.2.0.zip",
+  "archive_bytes": 249555,
+  "archive_entry_count": 175,
+  "archive_root": "dual-hat-1.2.0/",
+  "archive_sha256": "822F98B99E7953F13870779D0262FFFCB97F9F4C87D041A2420969748BB1E7D9",
+  "canonical_source_commit": "9d055e65509d3fecb020aba61dcbda17e1becc4f",
+  "external_publication_commit": "c76746ad0ea5cb8772baa20f84c1e0a2d8df6c51",
+  "files": [
+    {
+      "bytes": 17617,
+      "path": "dual-hat-1.2.0/.dual-hat-release/SHA256SUMS",
+      "sha256": "07C98178AF15E1C5EB6C1DDEB18E66F4C364BEA24844773739F1EC4AD50D8287"
+    },
+    {
+      "bytes": 29419,
+      "path": "dual-hat-1.2.0/.dual-hat-release/content-manifest.json",
+      "sha256": "54713C44D8B9C1D6A1FC4C86C6A71F40C21F4CE9554ECAB1EFB64E56DF124A03"
+    },
+    {
+      "bytes": 77,
+      "path": "dual-hat-1.2.0/.gitignore",
+      "sha256": "990EAF0B4E3A76A18B3020F71B4D4123C6CEC16225D71710A25FFD479C720366"
+    },
+    {
+      "bytes": 5491,
+      "path": "dual-hat-1.2.0/CHANGELOG.md",
+      "sha256": "6F677949E85F6E0C35ED4DD45DCFD9F81DFCF189DE83C164296CFE2DD3FC0ED9"
+    },
+    {
+      "bytes": 11357,
+      "path": "dual-hat-1.2.0/LICENSE",
+      "sha256": "C71D239DF91726FC519C6EB72D318EC65820627232B2F796219E87DCF35D0AB4"
+    },
+    {
+      "bytes": 111,
+      "path": "dual-hat-1.2.0/NOTICE",
+      "sha256": "C316657F9FA7370B840DCBFCC5C1D1C15C422A91EEA96526A8F3EC5A40994280"
+    },
+    {
+      "bytes": 4570,
+      "path": "dual-hat-1.2.0/README.md",
+      "sha256": "1362E94FCA5DB5D26C0ED048332B3B20B85477E95126CAD0F54BFDBCE879FAC8"
+    },
+    {
+      "bytes": 352,
+      "path": "dual-hat-1.2.0/THIRD_PARTY_NOTICES.md",
+      "sha256": "05A902FE88C8667F19BA55A4D8F3BBB807D0FC1433DD9C508CBAAE5C3274B2DD"
+    },
+    {
+      "bytes": 727,
+      "path": "dual-hat-1.2.0/architecture/EXTENSION_MODEL.md",
+      "sha256": "2BB0421B481BA548871D980A5D3CDB865D58C05EF1BC3850EF2406262FA20390"
+    },
+    {
+      "bytes": 3194,
+      "path": "dual-hat-1.2.0/architecture/OPERATING_MODEL.md",
+      "sha256": "5860EC884A799394FFBC8653D7C7297EBEB217820C569BF6F3BF77E81C71C721"
+    },
+    {
+      "bytes": 3236,
+      "path": "dual-hat-1.2.0/architecture/OPERATING_MODES.md",
+      "sha256": "048F055244B201A0367A6400CA2E39DCB44F85DC03840F0F2224FFF287C4C401"
+    },
+    {
+      "bytes": 1966,
+      "path": "dual-hat-1.2.0/architecture/REASONING_AND_DECISION_REVIEW.md",
+      "sha256": "DF0F92AB39D71EA188BA8D61A2402EFBB5B7F700848A5014E1A5AA768181FED0"
+    },
+    {
+      "bytes": 586,
+      "path": "dual-hat-1.2.0/examples/bounded-task.example.json",
+      "sha256": "18696443C5AEA46E2FF2FC9BB8E085D7360181C868976CFE35B3FD76B29A55D0"
+    },
+    {
+      "bytes": 660,
+      "path": "dual-hat-1.2.0/examples/context-pack.example.json",
+      "sha256": "197F803BD126A837823BF826CADD37FDB1354C99F61FBB8853F5EA435436CE5F"
+    },
+    {
+      "bytes": 1355,
+      "path": "dual-hat-1.2.0/examples/current-handover.example.json",
+      "sha256": "0717DB1715DC02048B56F2CCD44B9F7F7DE052E80672293C834A3502224EA398"
+    },
+    {
+      "bytes": 1091,
+      "path": "dual-hat-1.2.0/examples/future-work.example.json",
+      "sha256": "4AA4F987EF05D2C6AD5C391DD997AE821A6348E4C9E87ACEB6FAABEBA3460901"
+    },
+    {
+      "bytes": 1850,
+      "path": "dual-hat-1.2.0/examples/integrated-work-item.example.json",
+      "sha256": "C452B0D490E91E58C49AEEB730AC428A759CFBAD35BFC79D94AA720A4242205C"
+    },
+    {
+      "bytes": 775,
+      "path": "dual-hat-1.2.0/examples/planning-backlog.example.json",
+      "sha256": "EA904FCC01721529015F5F2AC361CFEC083F75EB169A075784CB4FD4B0DE600D"
+    },
+    {
+      "bytes": 928,
+      "path": "dual-hat-1.2.0/examples/planning-history.example.jsonl",
+      "sha256": "4B290DF53A2D986A98E61516965DEC2668649401DCD0ED765A767D414B70B867"
+    },
+    {
+      "bytes": 1038,
+      "path": "dual-hat-1.2.0/examples/planning-lifecycle.example.md",
+      "sha256": "0C9B88A076EB0A3D3DD5891BFCC9B71DC13A4793E5E3129821A72122CD4DFC22"
+    },
+    {
+      "bytes": 4924,
+      "path": "dual-hat-1.2.0/examples/platform-profile.example.json",
+      "sha256": "3642653FADF609775A25561E13CD9F295F62AAAFDAF489CBE7AC8367C9457F39"
+    },
+    {
+      "bytes": 795,
+      "path": "dual-hat-1.2.0/examples/product-profile.example.json",
+      "sha256": "0F5F7A54EADD9F02124F71255F1DABE1254400F8663B2E6BD2A89CD92858B2CF"
+    },
+    {
+      "bytes": 889,
+      "path": "dual-hat-1.2.0/examples/quality-rules.example.json",
+      "sha256": "8FDAB7243A496519AD0A8DBD662EDA00DE5B327D47EA7418DEF1107DBD568199"
+    },
+    {
+      "bytes": 447,
+      "path": "dual-hat-1.2.0/examples/roadmap-and-phase.example.md",
+      "sha256": "32F3D89CB779826387902177E9F9AC0F4B0870AC3C3E6515DFA4C6AA9389BD94"
+    },
+    {
+      "bytes": 1238,
+      "path": "dual-hat-1.2.0/examples/split-mode-transition.example.json",
+      "sha256": "E8506CC41D80150B4A73E7C70A65345E66DE4B181E55A588E73D0C4DC1A5393E"
+    },
+    {
+      "bytes": 733,
+      "path": "dual-hat-1.2.0/examples/technical-debt.example.json",
+      "sha256": "AA1679A2C23C196370D84BCBC76F4B3BA8C5213748D9A0077BEAD47192FB039F"
+    },
+    {
+      "bytes": 737,
+      "path": "dual-hat-1.2.0/examples/validation-run.example.json",
+      "sha256": "6283F3396E4E1EEA9DBA7ED23CDEF7F97C2BA8BA322A621D96073465EBCB84AE"
+    },
+    {
+      "bytes": 177,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/existing-imperfect-task-tracker/README.md",
+      "sha256": "916AB48356DFE9BADFC180FCB1AD0C97B452D6888B9EA48008E8988DC0018DB8"
+    },
+    {
+      "bytes": 180,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/existing-imperfect-task-tracker/cli.py",
+      "sha256": "B025D6604ACAD2F769505732A4C1FC7BCB5D3ED502B0E1E038FA50E53B8D14A4"
+    },
+    {
+      "bytes": 635,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/existing-imperfect-task-tracker/golden-semantic-expectations.json",
+      "sha256": "B0A493B51040291170382CC27B3B7EBC73D15A4B5317CDFFA8AF61C0B64EB66A"
+    },
+    {
+      "bytes": 474,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/existing-imperfect-task-tracker/task_tracker.py",
+      "sha256": "3F7C1B2E9C3DE301ABE6E90E10C1502DA405351F7E57AE6582F2B947DDE4F189"
+    },
+    {
+      "bytes": 213,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/existing-imperfect-task-tracker/test_task_tracker.py",
+      "sha256": "0F48C5A706D83111FFB342BCD78FA8E6F406DDECC8FA6D1798829BE1D674F2B9"
+    },
+    {
+      "bytes": 219,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/existing-imperfect-task-tracker/web/app.js",
+      "sha256": "A79F5F4F0C4D88B27EE911A5E007A4DCE21189A77B48248DE7AF89CB10C7CB70"
+    },
+    {
+      "bytes": 139,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/existing-imperfect-task-tracker/web/index.html",
+      "sha256": "1C8D0210295C9D9D5FD2689189FEA3E10117F8DEFD5B984BC9432D32187E87E0"
+    },
+    {
+      "bytes": 867,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/fixture-manifest.json",
+      "sha256": "03DB393F027D6FE770F69BD7B5DA6C887DC52752B2D75211E91E501BA9733054"
+    },
+    {
+      "bytes": 17,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/nearly-empty/.gitignore",
+      "sha256": "2E1FF782DE9305DD78A61D7FD7D394D14116E5A37C63810A101861094BF51180"
+    },
+    {
+      "bytes": 185,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/nearly-empty/README.md",
+      "sha256": "4F4E4CDDDD256EE48B1E22596CF17A79228D9480CD6783C94822720FBE531AD4"
+    },
+    {
+      "bytes": 263,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/nearly-empty/golden-semantic-expectations.json",
+      "sha256": "A6E8653938C028C368EA7BA72E7913DF7A6F191D380162C204F7D7C620AA32FA"
+    },
+    {
+      "bytes": 314,
+      "path": "dual-hat-1.2.0/fixtures/onboarding/no-repository/scenario.json",
+      "sha256": "7F59D436771D0D2583905487B622BD7DF51033E8033EBDACD19902105DDFB489"
+    },
+    {
+      "bytes": 6871,
+      "path": "dual-hat-1.2.0/framework/DUAL_HAT_FRAMEWORK.md",
+      "sha256": "AB746451AC58AD6ADF4B175AD3D5C86CC11852C53D87BBFD272B058F3EA52365"
+    },
+    {
+      "bytes": 3264,
+      "path": "dual-hat-1.2.0/governance/ARCHITECTURE_OFFICE_GUIDE.md",
+      "sha256": "E0BB8F2B0BE17CC0E680D4AF587D4A75325C6D4575912549FBF6F090FA17FCC4"
+    },
+    {
+      "bytes": 4054,
+      "path": "dual-hat-1.2.0/governance/CODE_REVIEW_CONTRACT.md",
+      "sha256": "4913F890E258E9F664752DD0A443BB608450008B976A0C29BE61CC3D307168B3"
+    },
+    {
+      "bytes": 2702,
+      "path": "dual-hat-1.2.0/governance/CONFORMANCE_POLICY.md",
+      "sha256": "38FD0F2A680DD861F609215A23DEFA429AE74870791CBB0498758069EC28638F"
+    },
+    {
+      "bytes": 2504,
+      "path": "dual-hat-1.2.0/governance/ENGINEERING_AGENT_GUIDE.md",
+      "sha256": "FBF391EFFED6360D925D89854C1D63B471BD7F6E1A17DA1A9C84FC0451E15F01"
+    },
+    {
+      "bytes": 1551,
+      "path": "dual-hat-1.2.0/governance/HANDOVER_PUBLICATION_AND_ROLLBACK.md",
+      "sha256": "98038A42761A1488A2DA0FAC7D4F4FFB9552DF35F78F6B0C1F72305729199F7F"
+    },
+    {
+      "bytes": 3157,
+      "path": "dual-hat-1.2.0/governance/MODEL_TIER_AND_RUNTIME_BINDING.md",
+      "sha256": "E80F9F4D9C37B7F2025A550F3E9076C3C0B46B9A7B0F1680B1A3C2670DD8FF4C"
+    },
+    {
+      "bytes": 3392,
+      "path": "dual-hat-1.2.0/governance/PLATFORM_PROFILE_CONTRACT.md",
+      "sha256": "3A74B0F1CED2F66AE105D635F486E563DA46F4356F56B55CEF7ED3CD607C4703"
+    },
+    {
+      "bytes": 1220,
+      "path": "dual-hat-1.2.0/governance/PROFILE_COMPOSITION.md",
+      "sha256": "29520D218F2252A197A1A12C42EC9A982CF6D742C142B116FD11DBD874578CA7"
+    },
+    {
+      "bytes": 1486,
+      "path": "dual-hat-1.2.0/governance/REPOSITORY_BOUNDARIES.md",
+      "sha256": "149061DB6AB568413C2B3F6DE012086A864518479A2069D69BAB53390155953E"
+    },
+    {
+      "bytes": 1999,
+      "path": "dual-hat-1.2.0/governance/REPOSITORY_GOVERNANCE.md",
+      "sha256": "DF75BDD7D52B2EFC8543ABC6CCA963D57C1C564F24917C4D58C4AE14D7EF28E9"
+    },
+    {
+      "bytes": 2617,
+      "path": "dual-hat-1.2.0/governance/ROLE_TRANSITIONS.md",
+      "sha256": "ACFFCD33C1219BB0B3684CAB8E9F31196E119FD71E64EF55971730E1BF46F50D"
+    },
+    {
+      "bytes": 1902,
+      "path": "dual-hat-1.2.0/governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md",
+      "sha256": "F167E40CCA2E3D0A7272877AA4A10B0D6F693BE253F64BA4E732AF48BE4D1345"
+    },
+    {
+      "bytes": 3052,
+      "path": "dual-hat-1.2.0/governance/USER_QUALITY_RULES.md",
+      "sha256": "C8AD30BC8A6C35F49E3C3F08C536503EC1C085E2F72494A118766C0D85E9BC28"
+    },
+    {
+      "bytes": 1688,
+      "path": "dual-hat-1.2.0/governance/VALIDATION_AND_PARALLELISM.md",
+      "sha256": "9EAC20298E88EF2D54AF38FF1AA471E0A2A0D867E64E6C60431BF9E266AF397A"
+    },
+    {
+      "bytes": 1916,
+      "path": "dual-hat-1.2.0/governance/WORK_ITEM_TYPE_REGISTRY.json",
+      "sha256": "4051A1B806174AB76EC2C630B8B206CCED69BA8A7DCFBB5A410DE70521839F23"
+    },
+    {
+      "bytes": 2313,
+      "path": "dual-hat-1.2.0/guides/INSTALLATION_AND_BINDING.md",
+      "sha256": "277DDFA30646996756F269A7C60BF53B081D712B46BC5376344683173931E7D6"
+    },
+    {
+      "bytes": 4225,
+      "path": "dual-hat-1.2.0/guides/OPERATING_GUIDE.md",
+      "sha256": "7182502C22B09715B583477352C3E65C588A81F581178F68F428F4252E7DAFB9"
+    },
+    {
+      "bytes": 12170,
+      "path": "dual-hat-1.2.0/guides/OPERATING_MODES.md",
+      "sha256": "2700F70C8083F998F5FDD54A56DA8FB9C69397AEA7E3348078D4F1C12C77CB75"
+    },
+    {
+      "bytes": 2757,
+      "path": "dual-hat-1.2.0/help/TROUBLESHOOTING.md",
+      "sha256": "99FC3DC522918A0D8548BD5EE6FA939CABF4E25FA23ACDF1D9C4EFF499DCE14C"
+    },
+    {
+      "bytes": 3858,
+      "path": "dual-hat-1.2.0/planning/PLANNING_MODEL.md",
+      "sha256": "5BA1D4FA9501895BC3B8F705A8C6A572C01EC754BC3A01F50176D167C3F8792A"
+    },
+    {
+      "bytes": 1347,
+      "path": "dual-hat-1.2.0/planning/TECHNICAL_DEBT.md",
+      "sha256": "5F7608298A7C084659128F1A7F656B3E6FEAD73F8773D7E62E246E15009051A3"
+    },
+    {
+      "bytes": 2113,
+      "path": "dual-hat-1.2.0/process/BOOTSTRAP.md",
+      "sha256": "8A538D27F2AB861FF9F4E5C9182C53F1938A732E410C5F4EA69658B95151C338"
+    },
+    {
+      "bytes": 1867,
+      "path": "dual-hat-1.2.0/process/CAPABILITY_LIFECYCLE.md",
+      "sha256": "1F0AD49C74E14E8FEA28A3125B76E8685EAB9A98CFDCFF2674E338DBFCD70049"
+    },
+    {
+      "bytes": 1828,
+      "path": "dual-hat-1.2.0/process/CONTEXT_AND_RETRIEVAL.md",
+      "sha256": "525D140513B10C55292098A04DF422B1ED3FE8EC957050074966DC2AB33E1511"
+    },
+    {
+      "bytes": 2025,
+      "path": "dual-hat-1.2.0/process/CONTINUITY_CLOSEOUT.md",
+      "sha256": "D6A7B97103CBDF73F047E566711EB7499E68D4EDD9C2ECA6A7AA70C2D1A5E732"
+    },
+    {
+      "bytes": 4076,
+      "path": "dual-hat-1.2.0/process/ONBOARDING.md",
+      "sha256": "C378FC3FEC6B2E670E177B2D334E1E614A8AA0FB17BC4AE3ED017D963C17906F"
+    },
+    {
+      "bytes": 1663,
+      "path": "dual-hat-1.2.0/process/PHASE_RUN_PROTOCOL.md",
+      "sha256": "44BF55DCCDC028408BD5682D5C968E5A5C6D0175ED832B77A01F93615D7D66B6"
+    },
+    {
+      "bytes": 1361,
+      "path": "dual-hat-1.2.0/process/PUBLICATION_AND_CLOSURE.md",
+      "sha256": "BB78B81A8AF576FF9069614D90C9589911F71AB747B5F6DD0A684DBFA19473C7"
+    },
+    {
+      "bytes": 2331,
+      "path": "dual-hat-1.2.0/process/WORK_ITEM_LIFECYCLE.md",
+      "sha256": "717EC0A1BFFD54FB56964689C795F023BDEB2E4E6D63FC7BACEBAA50A571F0C7"
+    },
+    {
+      "bytes": 1960,
+      "path": "dual-hat-1.2.0/prompts/ARCHITECTURE_OFFICE_PROMPT.md",
+      "sha256": "239B96759934BAB9066856B4A7DB73A517762E502F4E100DFB86F1B2FE630D5D"
+    },
+    {
+      "bytes": 3427,
+      "path": "dual-hat-1.2.0/prompts/ENGINEERING_AGENT_PROMPT.md",
+      "sha256": "E410A0725B175B569F85B2F6DE7902D42AA571978753365CB8A11B8B304F0C29"
+    },
+    {
+      "bytes": 2817,
+      "path": "dual-hat-1.2.0/quality/REPOSITORY_BASELINE_AND_NON_REGRESSION.md",
+      "sha256": "3E3588E6BC9207B448E8EAEA9B069571FCB070D6B134CFA140A932F473679CBB"
+    },
+    {
+      "bytes": 4648,
+      "path": "dual-hat-1.2.0/reference/COMMAND_REFERENCE.md",
+      "sha256": "C9D0A2C4F41064477311EE417E7F08165128B0CB8E5C75000D7416702708607E"
+    },
+    {
+      "bytes": 3285,
+      "path": "dual-hat-1.2.0/release/PUBLICATION.md",
+      "sha256": "E2459A3EDEDA66515EF5026F8B55E4FDD11AEB2AB22F4C4A230F042CE4457CED"
+    },
+    {
+      "bytes": 1166,
+      "path": "dual-hat-1.2.0/release/RELEASE_NOTES_v0.1.0.md",
+      "sha256": "24F94D41D5F2610C85AFB8C675B23EB7A4A46E12D5FA42EB14E3000C2C838C56"
+    },
+    {
+      "bytes": 2612,
+      "path": "dual-hat-1.2.0/release/RELEASE_NOTES_v0.2.0.md",
+      "sha256": "BE9D18A6F7E65731A576B29195DF3D9D412DA9B7FBCD75C3230997AA456CC2CA"
+    },
+    {
+      "bytes": 1488,
+      "path": "dual-hat-1.2.0/release/RELEASE_NOTES_v1.0.0.md",
+      "sha256": "C7F43882DB8B093360F0D2C49D785720FC206F399E4EAD93B57FABF99457FB22"
+    },
+    {
+      "bytes": 1017,
+      "path": "dual-hat-1.2.0/release/RELEASE_NOTES_v1.0.1.md",
+      "sha256": "25FC0C2461F629C4C3C0EF1699BDAFF0A6DE983035F031743895055048853E10"
+    },
+    {
+      "bytes": 3319,
+      "path": "dual-hat-1.2.0/release/RELEASE_NOTES_v1.1.0.md",
+      "sha256": "18E494736A69E138F8B24A13425B1BBDF114422E93F9CA11776EBF93E478447B"
+    },
+    {
+      "bytes": 1263,
+      "path": "dual-hat-1.2.0/release/RELEASE_NOTES_v1.2.0.md",
+      "sha256": "CE10F8C7AF169D3AE7960305AB6258193540C7291230372EF122324529E7921A"
+    },
+    {
+      "bytes": 3563,
+      "path": "dual-hat-1.2.0/release/RELEASE_POLICY.md",
+      "sha256": "926651718225E7AF09E106916F209678728F2E69A63EF36B005735415D4E72B5"
+    },
+    {
+      "bytes": 266,
+      "path": "dual-hat-1.2.0/release/VERSION.json",
+      "sha256": "7510DF7CC492FB32D75405B3284DC5172E76EC0289D3D72F3F129810B40C798C"
+    },
+    {
+      "bytes": 862,
+      "path": "dual-hat-1.2.0/repository/CANONICAL_DOMAIN_INDEX.md",
+      "sha256": "9B15DCA9FBED468BB7C7E95F96CAF840D70B5C7BA1D9031FB95F7A45C8C1DEFF"
+    },
+    {
+      "bytes": 1449,
+      "path": "dual-hat-1.2.0/repository/CANONICAL_ENTRYPOINTS.md",
+      "sha256": "96674E4CEB5FEB194B85499927924F16553A299D73633A185C295162B145DE4A"
+    },
+    {
+      "bytes": 1351,
+      "path": "dual-hat-1.2.0/repository/ENGINEERING_BLUEPRINT.md",
+      "sha256": "2B5A1BAC89009240ED680AF37A782EC92A38DD4F7DE102F6406DAF179E46394C"
+    },
+    {
+      "bytes": 13217,
+      "path": "dual-hat-1.2.0/repository/FRAMEWORK_CAPABILITY_INVENTORY.json",
+      "sha256": "C5598E919180196595369B50C6826BA1837C8315B38029538766CAAF96047B58"
+    },
+    {
+      "bytes": 1384,
+      "path": "dual-hat-1.2.0/repository/REPOSITORY_MAP.md",
+      "sha256": "46DCE3FD758A7EBEE3A8C84FD300E970DE0CD020F57AAA43E661B73D161398EE"
+    },
+    {
+      "bytes": 5780,
+      "path": "dual-hat-1.2.0/review/ARCHITECTURE_DEFAULT_RULES.json",
+      "sha256": "31A93DF2457DA3F47AC290DCE301C002B618EF1E1711D30F1909DFECC4E2E663"
+    },
+    {
+      "bytes": 928,
+      "path": "dual-hat-1.2.0/schemas/active-session.schema.json",
+      "sha256": "BA49A54211261DDB0E53DEDE1316DCFECBC0ABD5A5AE90FA41A6A9F0E13B76CF"
+    },
+    {
+      "bytes": 1510,
+      "path": "dual-hat-1.2.0/schemas/architecture-boundary-review.schema.json",
+      "sha256": "6E510BE79264F096A0C72E7DF180B51C6F664316988FC795E601B863FC2CC262"
+    },
+    {
+      "bytes": 1270,
+      "path": "dual-hat-1.2.0/schemas/artifact-classification.schema.json",
+      "sha256": "29080AE03213CBC5E97DF27C59F6C81525C5B4C96CC16B828EB41CA8016539FB"
+    },
+    {
+      "bytes": 918,
+      "path": "dual-hat-1.2.0/schemas/bounded-task.schema.json",
+      "sha256": "9C1D6829E092FF7997B76242AE533EE20E1B99F4FE00D8001DFBBF5F5EFE4D41"
+    },
+    {
+      "bytes": 1362,
+      "path": "dual-hat-1.2.0/schemas/closeout-decision.schema.json",
+      "sha256": "9B1FA6DFC9345804F5ECB8B4ECAF0884ACC6E3EF1A913D592F7C3970C200A91D"
+    },
+    {
+      "bytes": 1779,
+      "path": "dual-hat-1.2.0/schemas/code-review-finding.schema.json",
+      "sha256": "C0A85DEC1EDE78E02D4087447F692933C87A75C5886E4847AF48A5D209BD27C1"
+    },
+    {
+      "bytes": 1342,
+      "path": "dual-hat-1.2.0/schemas/context-pack.schema.json",
+      "sha256": "A4CC9CD20DA9BCDFA82A26640ABBB3BB008839B65D7C0095349319E67745F0DB"
+    },
+    {
+      "bytes": 3897,
+      "path": "dual-hat-1.2.0/schemas/current-handover.schema.json",
+      "sha256": "16328CE99CB560219816D9B26557349AF8B5DE895BC8E4873E367918F03FC456"
+    },
+    {
+      "bytes": 1301,
+      "path": "dual-hat-1.2.0/schemas/delegated-validation-result.schema.json",
+      "sha256": "6142DCD97FBECBAB73222E71A52AD1B7C02C89E70B6DC1BE14C53C704E410C9E"
+    },
+    {
+      "bytes": 1602,
+      "path": "dual-hat-1.2.0/schemas/effective-review-plan.schema.json",
+      "sha256": "EC71B8411B397B5C33BD0A05198602420B295C66AD12E18D17142DEA654F81B7"
+    },
+    {
+      "bytes": 2830,
+      "path": "dual-hat-1.2.0/schemas/export-manifest.schema.json",
+      "sha256": "5140A438BFED452C26C644825E1531E9FB382F7F9081D784F0316AB191374CC2"
+    },
+    {
+      "bytes": 3586,
+      "path": "dual-hat-1.2.0/schemas/future-work.schema.json",
+      "sha256": "2B97B0B15B0CF3020A0E840FF1D5627FD84CE2C98684A00EB920CBA56D93CA39"
+    },
+    {
+      "bytes": 2554,
+      "path": "dual-hat-1.2.0/schemas/mode-transition-package.schema.json",
+      "sha256": "8637C13192E02702A158A8AB52587E1B1448F072C3C57CDB4C118E7E4DACE149"
+    },
+    {
+      "bytes": 3371,
+      "path": "dual-hat-1.2.0/schemas/model-routing.schema.json",
+      "sha256": "847868EDC4FBD998D5DAA68661AF3F2CE8156D535C463400FA2EAE45AED43FB6"
+    },
+    {
+      "bytes": 2828,
+      "path": "dual-hat-1.2.0/schemas/onboarding-package.schema.json",
+      "sha256": "4A30EC166B5C1C2D971510065E25C3C8BE6CFEEF9E274CC92FF3E9FB2FCA735F"
+    },
+    {
+      "bytes": 2285,
+      "path": "dual-hat-1.2.0/schemas/planning-backlog.schema.json",
+      "sha256": "71CB95AFF3EB7A6254329CAFCF6EDE266536202D8CF1B229AE2096A0FF296BD8"
+    },
+    {
+      "bytes": 1247,
+      "path": "dual-hat-1.2.0/schemas/planning-history-event.schema.json",
+      "sha256": "38F7896E6DD986613AA2B781E9EC2F4DFFC51C3CD7414469FA4BFF1E258C436D"
+    },
+    {
+      "bytes": 1190,
+      "path": "dual-hat-1.2.0/schemas/platform-contract-stop-report.schema.json",
+      "sha256": "810F7F929D4D24612F4A1BD101758E639B5F35603326162936606F2AD69737B1"
+    },
+    {
+      "bytes": 4178,
+      "path": "dual-hat-1.2.0/schemas/platform-profile.schema.json",
+      "sha256": "6EFCC4C2FF25DD598A8D49E3B52B0B038280CFB96401BBBC068D9665C872A92F"
+    },
+    {
+      "bytes": 2917,
+      "path": "dual-hat-1.2.0/schemas/product-profile.schema.json",
+      "sha256": "2E9CFCCC2914EE0F6E35A43ED02874D6CD942D53361C2471179FF40B6AA3142A"
+    },
+    {
+      "bytes": 1898,
+      "path": "dual-hat-1.2.0/schemas/project-binding.schema.json",
+      "sha256": "43087C16AA839D174E8A8C34396916A1D3F0C928B7CD351DD4C1C142DCEC2D36"
+    },
+    {
+      "bytes": 974,
+      "path": "dual-hat-1.2.0/schemas/quality-rule-sources.schema.json",
+      "sha256": "D2F7B38C0FB321A4EA4662E05D4D10044D397C2F02531E84D7518F233393D5D2"
+    },
+    {
+      "bytes": 6792,
+      "path": "dual-hat-1.2.0/schemas/quality-rule.schema.json",
+      "sha256": "6E56847AFC77227D12480DA7F2A56F9B230BC270D638963311E918FED515E6AE"
+    },
+    {
+      "bytes": 5463,
+      "path": "dual-hat-1.2.0/schemas/repository-quality-baseline.schema.json",
+      "sha256": "84EE0E35B04E0902A943A507D3CD5698C7501DF4B455A2FEB40FF16992DF580A"
+    },
+    {
+      "bytes": 1557,
+      "path": "dual-hat-1.2.0/schemas/technical-debt.schema.json",
+      "sha256": "C1F32C4AAC0BC7BED9F8AE800AF1EA79D04E52302009AF6BBC026166D5710288"
+    },
+    {
+      "bytes": 1375,
+      "path": "dual-hat-1.2.0/schemas/validation-run-manifest.schema.json",
+      "sha256": "55875991B31C9A99A3BDE30B408692CF15F773E2F9975598F8D4CD896B7ECA50"
+    },
+    {
+      "bytes": 1243,
+      "path": "dual-hat-1.2.0/schemas/work-estimate.schema.json",
+      "sha256": "ADA828D29964E9D60499E46BFAB5C66A3E49DDE4FC80E7FB71278AD7A4D8A850"
+    },
+    {
+      "bytes": 5962,
+      "path": "dual-hat-1.2.0/schemas/work-item.schema.json",
+      "sha256": "64D27136A267F85CDC7ACFE01382A49802192D959B3A2C3BAF193E1AE534FF70"
+    },
+    {
+      "bytes": 4057,
+      "path": "dual-hat-1.2.0/scripts/bootstrap_product.py",
+      "sha256": "2D10508FEDCCA1C7B0E416F15E5F4C0362AF1A58075841ADA72807650A8972C5"
+    },
+    {
+      "bytes": 2552,
+      "path": "dual-hat-1.2.0/sessions/SESSION_AND_HANDOVER_PROTOCOL.md",
+      "sha256": "BD7E4067AAF697C254E592EF6184D29A68C59A2718DCF9DAF8C5B098C2F64A8A"
+    },
+    {
+      "bytes": 1671,
+      "path": "dual-hat-1.2.0/sessions/TASK_CONTEXT_RETRIEVAL.md",
+      "sha256": "2CEA06170B20A79A5A1C252ADD4EE5AA06065DE9599B87AD24D885C0BE83E66E"
+    },
+    {
+      "bytes": 384,
+      "path": "dual-hat-1.2.0/templates/ACTIVE_SESSION.md",
+      "sha256": "C972393EA7DC14516E2346AE5BB68A60C1D6AC3683E98986856BF21508A1FE9D"
+    },
+    {
+      "bytes": 662,
+      "path": "dual-hat-1.2.0/templates/ARCHITECTURE_BOUNDARY_REVIEW.json",
+      "sha256": "DFB7A064989FED7D6D3F5D8FF7F6392079199E5FB3AA1D999990C61BA129BB36"
+    },
+    {
+      "bytes": 276,
+      "path": "dual-hat-1.2.0/templates/CANONICAL_DOMAIN_INDEX.md",
+      "sha256": "6C01B9815EA4D5EEFA832E09FE37A3B69376E2BD73BC2F47A93CBF33728A02C7"
+    },
+    {
+      "bytes": 451,
+      "path": "dual-hat-1.2.0/templates/CANONICAL_ENTRYPOINTS.md",
+      "sha256": "CE8A982AA9C9FA250C5D40244BB36B3C3FB9F65A04CFD15356335BF7EBD0F668"
+    },
+    {
+      "bytes": 664,
+      "path": "dual-hat-1.2.0/templates/CODE_REVIEW_FINDING.json",
+      "sha256": "534D7DC2B79909FBA4AEBC4DEC74B583B4DB430E166C9CE5439DA4EDBCDBCC0B"
+    },
+    {
+      "bytes": 737,
+      "path": "dual-hat-1.2.0/templates/CONFORMANCE_REVIEW.md",
+      "sha256": "D021752BBF0490635416E52787ABD1AEE1E9847FB5869CDDDA4EA0EF03DAA568"
+    },
+    {
+      "bytes": 488,
+      "path": "dual-hat-1.2.0/templates/CONTEXT_PACK.md",
+      "sha256": "7F167AD53F4081FC0135DAF6D08356DB0787B2DF8D300B3518DB763559EF5196"
+    },
+    {
+      "bytes": 724,
+      "path": "dual-hat-1.2.0/templates/CURRENT_HANDOVER.json",
+      "sha256": "0A9C1D6017F5D57CC20C3DCFDE9F3D9C09566AC29FBDBF9569049ED46BFB329E"
+    },
+    {
+      "bytes": 703,
+      "path": "dual-hat-1.2.0/templates/CURRENT_HANDOVER.md",
+      "sha256": "87C19E7E5D956C02ADE728D8E1E0AC7ACA917667902FD12482BEDEAC53B5735C"
+    },
+    {
+      "bytes": 307,
+      "path": "dual-hat-1.2.0/templates/DOCUMENT_METADATA.md",
+      "sha256": "116FBBC375DF831796C31A802F4D01913AC6713850906AE565906C68918C861C"
+    },
+    {
+      "bytes": 720,
+      "path": "dual-hat-1.2.0/templates/EXIT_REPORT.md",
+      "sha256": "3798EEDF8F8CFC7958816FE2CA4B697ADD630A3A179AF7B973F9C5696ED8FD5E"
+    },
+    {
+      "bytes": 111,
+      "path": "dual-hat-1.2.0/templates/FUTURE_WORK_REGISTRY.json",
+      "sha256": "1125D7B191838E624C5F4D98281F5C35CE1510C295CFDE3AFC0852012DE1BCFD"
+    },
+    {
+      "bytes": 1149,
+      "path": "dual-hat-1.2.0/templates/MODE_TRANSITION_PACKAGE.json",
+      "sha256": "2F5F9773AB10F0CF3F6B61D5779D3E1596CA5ACB236FCA640EFA371745D0C842"
+    },
+    {
+      "bytes": 413,
+      "path": "dual-hat-1.2.0/templates/PHASE_HEALTH_REVIEW.md",
+      "sha256": "76092C6127414FF1A6E8E03FFB6596515FE8598654C0AD58E9C3BB323A7C6F82"
+    },
+    {
+      "bytes": 116,
+      "path": "dual-hat-1.2.0/templates/PLANNING_BACKLOG.json",
+      "sha256": "3629074BB66BA037CCDE5F788C7DB6C6683031F2F03D1A1945966BCD66935401"
+    },
+    {
+      "bytes": 301,
+      "path": "dual-hat-1.2.0/templates/PLANNING_HISTORY.jsonl",
+      "sha256": "99DB8B1766E94C15883767088B937879D5BF946CA503AA71CFFC3BB7DA997D82"
+    },
+    {
+      "bytes": 946,
+      "path": "dual-hat-1.2.0/templates/PLATFORM_CONTRACT_STOP_REPORT.json",
+      "sha256": "5B960F1592E461D46AFF23BD1B37768EA447133FB9C50CF70D1CF9F52FC52290"
+    },
+    {
+      "bytes": 868,
+      "path": "dual-hat-1.2.0/templates/PRODUCT_REPOSITORY.md",
+      "sha256": "E6921010C4A46D6B9E2DA06C7497E72C7F7B17714036701F88477DE578DF9C4E"
+    },
+    {
+      "bytes": 113,
+      "path": "dual-hat-1.2.0/templates/QUALITY_RULES.json",
+      "sha256": "4AB643FDF986C4B57822AD0250B20D5A063162D13053EDF9DAD3978D4596980A"
+    },
+    {
+      "bytes": 1418,
+      "path": "dual-hat-1.2.0/templates/QUALITY_RULE_EXAMPLE.md",
+      "sha256": "37F84F0E0BB1D6EE949F879AA0185623F49B4085F2BE16DA3FCDCDBAF5044D5F"
+    },
+    {
+      "bytes": 281,
+      "path": "dual-hat-1.2.0/templates/QUALITY_RULE_SOURCES.json",
+      "sha256": "4447029BA7AF6E8C791DAF2FDD6CCFE748393BEE5CDC79B57A63E6A90D5D0882"
+    },
+    {
+      "bytes": 1046,
+      "path": "dual-hat-1.2.0/templates/REPOSITORY_QUALITY_BASELINE.json",
+      "sha256": "B6AABA36584CE36D05F8F24DF3456079AD1438417E4B75F7890B732ADB9BECFC"
+    },
+    {
+      "bytes": 348,
+      "path": "dual-hat-1.2.0/templates/REQUIREMENT.md",
+      "sha256": "76E88BE41983A7AB963775EF3ED227462E794FC0CA54D9BB93FA042DB680D064"
+    },
+    {
+      "bytes": 457,
+      "path": "dual-hat-1.2.0/templates/ROADMAP.md",
+      "sha256": "11446E74C07A3942EEC456D05D8C1557F7800A51FFBD1581D0B301507CFF42EB"
+    },
+    {
+      "bytes": 426,
+      "path": "dual-hat-1.2.0/templates/SPECIFICATION.md",
+      "sha256": "E37B42A79CD66F3BB6150C02CE20B3EF51166F155FF3C48A8A45B1B8342FC150"
+    },
+    {
+      "bytes": 122,
+      "path": "dual-hat-1.2.0/templates/TECHNICAL_DEBT_BACKLOG.json",
+      "sha256": "BF36CC43776A5231C0D38AB6537C23AD70CB752322A89F56DC20CB9AA33CBDA9"
+    },
+    {
+      "bytes": 242,
+      "path": "dual-hat-1.2.0/templates/TECHNICAL_DEBT_HISTORY.jsonl",
+      "sha256": "530657C90409766DD3FD237891A9029D3D57BA2DBC629BDDC65D437E105D299B"
+    },
+    {
+      "bytes": 1310,
+      "path": "dual-hat-1.2.0/templates/WORK_ORDER.md",
+      "sha256": "80956F471F58EB050EF59AD37D23C525BE3DDD40CA29B61AC09BD4B1312EF5C2"
+    },
+    {
+      "bytes": 3075,
+      "path": "dual-hat-1.2.0/tests/test_continuity_closeout.py",
+      "sha256": "A910498F2DBBC174AFDF13D70F86663DB1BAAAEA66F4BDC9CBDA264EDB0EBEF7"
+    },
+    {
+      "bytes": 7520,
+      "path": "dual-hat-1.2.0/tests/test_framework.py",
+      "sha256": "92E314ABA77C97D777B0B47185C042FB676281414002F120208C491FB1F81AD0"
+    },
+    {
+      "bytes": 2296,
+      "path": "dual-hat-1.2.0/tests/test_independent_deep_review.py",
+      "sha256": "A7A444596720BE00F38E14D71F694BAE26396530D739CDD316EC43087BD4298C"
+    },
+    {
+      "bytes": 6396,
+      "path": "dual-hat-1.2.0/tests/test_model_routing.py",
+      "sha256": "F147E01F77B40FB82F26C4D329C8365930B5D8470945479652A43D05360E9E97"
+    },
+    {
+      "bytes": 12781,
+      "path": "dual-hat-1.2.0/tests/test_onboarding.py",
+      "sha256": "7861EDA1E22E17626EA34A59EFB74F6C10DCBD3E75038A3F843E06A5D39D91B0"
+    },
+    {
+      "bytes": 22135,
+      "path": "dual-hat-1.2.0/tests/test_operating_modes.py",
+      "sha256": "5EAC35704904EC206F8DC1DBA59049E4F32CDB5A08B97D27856A720B05B28162"
+    },
+    {
+      "bytes": 4059,
+      "path": "dual-hat-1.2.0/tests/test_planning.py",
+      "sha256": "9A45ACB0C4B5004515F45433F38AA17ADCFD45DF533F16822476E293F5D03993"
+    },
+    {
+      "bytes": 25596,
+      "path": "dual-hat-1.2.0/tests/test_quality_review.py",
+      "sha256": "EBF159B37E28F85BF6BB19A43902FD34298B0FECB6BF23546D60354E5BACE335"
+    },
+    {
+      "bytes": 14053,
+      "path": "dual-hat-1.2.0/tests/test_release_package.py",
+      "sha256": "EFF5F3FA735850A7015A2002E65DDED4DE5A4579C0D008AD746D4460C6CFD953"
+    },
+    {
+      "bytes": 2579,
+      "path": "dual-hat-1.2.0/tests/test_temporary_workspace.py",
+      "sha256": "F092EBEE94A51E5160F369D19D43972F511F82FB38740A7E323423237CD1D9A6"
+    },
+    {
+      "bytes": 89,
+      "path": "dual-hat-1.2.0/tooling/__init__.py",
+      "sha256": "7463D5AC730539E953BB7BF0CC27FE9FD33F801FA33D7FE56242AD0E3C37C794"
+    },
+    {
+      "bytes": 4053,
+      "path": "dual-hat-1.2.0/tooling/content_security.py",
+      "sha256": "6F29B816E574F86BD3A59B4E0468F1969F008DCE97F321984037C2CEBC546E8A"
+    },
+    {
+      "bytes": 4346,
+      "path": "dual-hat-1.2.0/tooling/continuity_closeout.py",
+      "sha256": "C401D9462C70CB395C4ACC3A10A54A2DB530697BEBC37F761384D3576468749A"
+    },
+    {
+      "bytes": 8030,
+      "path": "dual-hat-1.2.0/tooling/framework_completeness.py",
+      "sha256": "CB97932CB08F17989EEE73B903139074A89BD00DDA8CEBADDBAD50590E60860B"
+    },
+    {
+      "bytes": 9656,
+      "path": "dual-hat-1.2.0/tooling/model_routing.py",
+      "sha256": "E30A5F142427845DAFA692A774D09554B13DA51EA29E2E064655C6FC8FEF3747"
+    },
+    {
+      "bytes": 25078,
+      "path": "dual-hat-1.2.0/tooling/onboarding.py",
+      "sha256": "87762FC31F6A4A9528713B61D904EE5735C32426B46AB383B3A03B765DD9F6C5"
+    },
+    {
+      "bytes": 3460,
+      "path": "dual-hat-1.2.0/tooling/path_containment.py",
+      "sha256": "5314DC02994A9AC452EC54B02E7829E3541BAED1D16B7223E826F3D6AF149E8E"
+    },
+    {
+      "bytes": 10391,
+      "path": "dual-hat-1.2.0/tooling/planning_reconciliation.py",
+      "sha256": "30E2E3A698F5DDD2CF3179BD10787D7C8A786F97B0E3CC9C24A078947B9D6CAB"
+    },
+    {
+      "bytes": 20621,
+      "path": "dual-hat-1.2.0/tooling/profile_conformance.py",
+      "sha256": "4603053A6E5D4B09958ADE6751F0DD254805D8D2ACF06654A8EF3B3F22492313"
+    },
+    {
+      "bytes": 48238,
+      "path": "dual-hat-1.2.0/tooling/quality_review.py",
+      "sha256": "2E854930182118E2BA823A0FE926FFE92DD0E2E68EEFA6393D852878943B0802"
+    },
+    {
+      "bytes": 544,
+      "path": "dual-hat-1.2.0/tooling/release_artifacts.py",
+      "sha256": "B3C9CD6C105758D596F741D77C38B659BA2324862B64A820F4FD18838988CD24"
+    },
+    {
+      "bytes": 27902,
+      "path": "dual-hat-1.2.0/tooling/release_package.py",
+      "sha256": "7A927528F0946F462E110D95796F360DE74EE544F49239536393FD1CEC4877FD"
+    },
+    {
+      "bytes": 10193,
+      "path": "dual-hat-1.2.0/tooling/staged_publication.py",
+      "sha256": "950BFA1E239D9A2C89934998EE4D36572D6142A23009050512EFCF1D96F9C88C"
+    },
+    {
+      "bytes": 4877,
+      "path": "dual-hat-1.2.0/tooling/temporary_workspace.py",
+      "sha256": "049C567D2FFD22F384DE04B2353C4F36FE7113F2423C4B55D54CB4278DFAE77C"
+    },
+    {
+      "bytes": 967,
+      "path": "dual-hat-1.2.0/tooling/validate_framework.py",
+      "sha256": "0A9B97F0ED982F174D49F25D0AAC6B8A33FF503F691987E0EF51FD465BD99D4D"
+    },
+    {
+      "bytes": 23168,
+      "path": "dual-hat-1.2.0/tooling/work_item_governance.py",
+      "sha256": "0FA938760CB60E8837FB942E18D7C1636E1A71A72B89C06D1289DCBA0110693A"
+    },
+    {
+      "bytes": 1745,
+      "path": "dual-hat-1.2.0/validation/PROCESS_WATCHDOG.md",
+      "sha256": "B5863F6AF3D2334C4208889A4D78379E7A0DFDC440D156414A3DF76E2DA51BAA"
+    },
+    {
+      "bytes": 3957,
+      "path": "dual-hat-1.2.0/validation/VALIDATION_PROTOCOL.md",
+      "sha256": "FE203AC9C90775FF1DAC8014480C9558257522EE99C425630D83638DF1B4381C"
+    }
+  ],
+  "format": "zip",
+  "license_expression": "Apache-2.0",
+  "maturity": "stable_1_x",
+  "publication_provenance": {
+    "branch": "main",
+    "canonical_source_commit": "9d055e65509d3fecb020aba61dcbda17e1becc4f",
+    "external_publication_commit": "c76746ad0ea5cb8772baa20f84c1e0a2d8df6c51",
+    "fetch_endpoint_identity": "github.com/khksoftware/dual-hat",
+    "fresh_remote_commit": "c76746ad0ea5cb8772baa20f84c1e0a2d8df6c51",
+    "manifest_sha256": "CDCF7BDBD50D9E26EC88D76856539F3C7CB3F34ABC9558A343FB0875BB85D9F3",
+    "manifest_tree_sha256": "C36664B949C33BA8322E562E7832E721961E742C81C4394B9D8F6D76BC2C2905",
+    "publication_tree": "1c790b6df5444a9501eea407c511539ce5fda7a2",
+    "push_endpoint_identity": "github.com/khksoftware/dual-hat",
+    "remote": "origin",
+    "remote_ref": "refs/heads/main",
+    "schema": "dual-hat-remote-publication-provenance/1.0"
+  },
+  "release_mode": "production_standalone",
+  "schema": "dual-hat-release-manifest/1.0",
+  "version": "1.2.0"
+}
