@@ -56,6 +56,8 @@ Once work is authorized, the active conversation and execution continue until th
 
 Recoverable tool failures, long-running or delegated work, elapsed time, estimates, the end of a message, context compaction, partial progress, side questions, unrelated informational requests, and a result that still has safe in-scope follow-up are not terminal conditions. A question pauses execution only when its answer is genuinely required for progress or the user explicitly orders a pause. The agent diagnoses, repairs or retries within authority, preserves visible progress, and continues. An unrecoverable environment limitation must be resolved through an applicable explicit stop gate, required user decision, or required Architecture decision; it is not an independent silent-exit category.
 
+A side question creates a concurrent response obligation, never a suspension of the execution lane. Answer it promptly, identify the concrete work that remains active or resumes immediately, and continue milestone reporting. Do not end the turn merely because the side question has been answered. If work continues through tools or delegated execution, report the next meaningful milestone without requiring the user to ask again.
+
 A permitted pause records completed work, live processes, partial effects, pending steps, the exact condition reached, decision owner when applicable, and the precise continuation signal. When Engineering requires Architecture in Integrated Mode, preserve the execution checkpoint and transition directly to `[Architect Office]`; do not end the conversation. In Split Mode, publish the governed decision handoff and wait. A user decision gate asks only the smallest question that materially blocks safe progress.
 
 ## Bounded capabilities

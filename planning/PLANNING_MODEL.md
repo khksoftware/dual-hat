@@ -6,6 +6,8 @@ New planning items declare `work_item_type` as `capability` or `gov`. Capability
 
 Planning separates authorization from intent. A roadmap states direction and current sequencing; a backlog stores bounded candidate work; a future-work registry stores trigger-governed planning; phases group related outcomes; milestones state observable graduation; capabilities are atomic authorized changes. None authorizes execution without an active work order or equivalent decision.
 
+Execution authorization also does not settle consequential design details that the existing decision record leaves open. Before an implementation-ready specification fixes a material product, user-experience, workflow, commercial, privacy, or architectural choice, Architecture uses the lightest useful discussion artifact to expose and resolve the meaningful options. This is a decision-quality control, not a mandatory separate capability or ceremony.
+
 ## Required lifecycle
 
 Planning items have stable IDs, title, objective, owner, dependencies, status, entry and exit criteria, requirements, validation, risks, triggers, history, and supersession. Work-item planning assigns the abstract model tier required for each materially distinct activity, including implementation, architecture, independent review, security/privacy/rights review, and release review where applicable. It references the current project-local concrete mapping rather than embedding provider choices in portable policy. Status transitions are append-only events or otherwise auditable. Current and historical projections cannot contradict one another.
