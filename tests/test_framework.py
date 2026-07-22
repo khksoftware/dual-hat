@@ -97,6 +97,12 @@ class FrameworkTests(unittest.TestCase):
         self.assertTrue(all((ROOT / path).is_file() for path in expected))
         self.assertFalse((ROOT / "docs").exists())
 
+    def test_research_iterations_do_not_require_capability_churn(self):
+        proportionality = (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
+        lifecycle = (ROOT / "process/CAPABILITY_LIFECYCLE.md").read_text(encoding="utf-8")
+        self.assertIn("prefer explicit iterations within the same capability", proportionality)
+        self.assertIn("does not require a separate capability identity", lifecycle)
+
     def test_inventory_separates_required_domains(self):
         payload = json.loads((ROOT / "repository/FRAMEWORK_CAPABILITY_INVENTORY.json").read_text(encoding="utf-8"))
         ids = {domain["id"] for domain in payload["domains"]}

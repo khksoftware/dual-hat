@@ -219,4 +219,9 @@ class OperatingModeTests(unittest.TestCase):
         self.assertIn("transition directly to `[Architect Office]`",framework)
         self.assertIn("task is complete and reported",architecture)
 
+    def test_closure_requires_proactive_delivery_of_promised_results(self):
+        closure=(ROOT/"process/PUBLICATION_AND_CLOSURE.md").read_text(encoding="utf-8")
+        for required in ("explicitly promised stakeholder-facing", "proactively presented", "archiving an artifact is not delivery", "do not wait for the stakeholder"):
+            self.assertIn(required,closure)
+
 if __name__ == "__main__": unittest.main()
