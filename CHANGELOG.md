@@ -2,6 +2,14 @@
 
 # Changelog
 
+## 1.10.0 - 2026-07-22
+
+- Required a brief human-readable Architecture report at every governed phase or subphase transition.
+- Required the report to summarize activities, outcomes, limitations or carried-forward work, and the rationale for the next destination.
+- Clarified that machine closure evidence and bare status announcements do not satisfy the stakeholder-facing transition obligation.
+
+This is a backward-compatible additive governance release. Existing 1.x authority, lifecycle, schema, and compatibility contracts remain unchanged.
+
 ## 1.9.1 - 2026-07-21
 
 - Moved the Integrated/Split role-selection explanation before First Use so adopters choose the operating arrangement before following onboarding instructions.

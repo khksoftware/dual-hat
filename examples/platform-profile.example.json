@@ -82,7 +82,7 @@
   "detached_validation": {
     "mechanism": "profile-defined metadata-capable checkout"
   },
-  "dual_hat_core_version": "1.9.1",
+  "dual_hat_core_version": "1.10.0",
   "guarantees": {
     "evidence_not_weakened": true,
     "monitoring_not_weakened": true,
@@ -118,7 +118,7 @@
   "precedence": "dual_hat_core_governs_profile_specializes",
   "preflight_artifact": "platform-preflight.json",
   "profile_id": "example-toolchain",
-  "profile_version": "1.9.1",
+  "profile_version": "1.10.0",
   "recovery": {
     "context_loss": "reload sealed state and repository evidence"
   },
