@@ -2,6 +2,14 @@
 
 # Changelog
 
+## 1.11.0 - 2026-07-22
+
+- Required active and output locations to contain only current operationally consumed artifacts.
+- Required capability- and phase-scoped outputs to be classified at closure or supersession as current, historical, or disposable.
+- Required historical evidence to move to governed archives with traceability and disposable duplication to be removed from current product surfaces.
+
+This is a backward-compatible additive governance release. Existing 1.x authority, lifecycle, schema, and compatibility contracts remain unchanged.
+
 ## 1.10.0 - 2026-07-22
 
 - Required a brief human-readable Architecture report at every governed phase or subphase transition.
