@@ -224,4 +224,13 @@ class OperatingModeTests(unittest.TestCase):
         for required in ("explicitly promised stakeholder-facing", "proactively presented", "archiving an artifact is not delivery", "do not wait for the stakeholder"):
             self.assertIn(required,closure)
 
+    def test_closure_dispositions_scoped_outputs_off_current_surfaces(self):
+        closure=(ROOT/"process/PUBLICATION_AND_CLOSURE.md").read_text(encoding="utf-8")
+        phase=(ROOT/"process/PHASE_RUN_PROTOCOL.md").read_text(encoding="utf-8")
+        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for required in ("only current operationally consumed artifacts", "historical evidence", "disposable duplication"):
+            self.assertIn(required,closure)
+        self.assertIn("Capability chronology must not remain mixed into current product output",phase)
+        self.assertIn("active/output locations limited to current operational artifacts",prompt)
+
 if __name__ == "__main__": unittest.main()
