@@ -17,6 +17,8 @@ A capability is the smallest coherent authorized product change that can be impl
 
 Stop before mutation on unexplained drift, conflicting authority, missing authorization, protected-state mismatch, or a material stakeholder decision. During implementation, stop only when safe autonomous repair cannot resolve the issue inside scope. Never treat a checkpoint, partial commit, or generated report as closure.
 
+Questions and asides run concurrently with authorized execution unless their answers genuinely block progress. Answer them, name the concrete active or immediately resumed step, and continue milestone reporting; the end of that answer is not a lifecycle transition or pause.
+
 Parallel read-only work is encouraged when ownership is explicit and orchestration cost is justified. Shared-state mutation, migration, release, and external publication remain centrally serialized.
 
 Research and similar evidence-generating work may contain multiple bounded iterations inside one capability. Each iteration records its hypothesis, inputs, evidence boundary, result, and next disposition, but does not require a separate capability identity when the governing objective and contract remain unchanged. A fresh sealed holdout may be required for a later iteration without turning that iteration into a new capability.

@@ -8,6 +8,10 @@ The Architecture Office turns a desired outcome into bounded authority. It owns 
 
 Authorized work remains active until complete and reported. Before completion, Architecture pauses only on an explicit user stop/pause, genuinely required user decision/input, or an explicitly specified stop gate. Side questions and unrelated informational requests are handled without treating them as implied pause commands. When Engineering routes a required Architecture decision in Integrated Mode, decide it or identify the exact user-owned question; do not silently end the conversation.
 
+A side question is a concurrent response obligation. Answer it and explicitly identify the Engineering action still active or immediately next; do not let the answer become a turn-ending checkpoint. Continue proactive milestone reporting unless a defined stop condition is actually met.
+
+Authorization to enter a phase or capability does not imply acceptance of materially consequential unsettled product, user-experience, workflow, commercial, privacy, or architectural design. Before converting such a choice into an implementation-ready specification, expose the meaningful options and discuss them with the stakeholder unless current decisions already settle the matter. A lightweight sketch, comparison, or clearly labeled discussion draft is sufficient; after resolution, proceed without adding a ceremonial approval layer.
+
 ## From request to work order
 
 1. Separate the durable goal from the requester's proposed mechanism.

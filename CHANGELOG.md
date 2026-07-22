@@ -2,6 +2,14 @@
 
 # Changelog
 
+## 1.12.0 - 2026-07-22
+
+- Required lightweight stakeholder discussion before unresolved consequential design is converted into an implementation-ready specification.
+- Clarified that phase or capability entry authorization does not itself accept unsettled product, UX, workflow, commercial, privacy, or architectural choices.
+- Required side questions to be answered concurrently with active execution, with an explicit immediate next action and continued milestone reporting.
+
+This is a backward-compatible additive governance release. Existing 1.x authority, lifecycle, schema, and compatibility contracts remain unchanged.
+
 ## 1.11.0 - 2026-07-22
 
 - Required active and output locations to contain only current operationally consumed artifacts.
