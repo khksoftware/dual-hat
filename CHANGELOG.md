@@ -2,6 +2,14 @@
 
 # Changelog
 
+## 1.9.0 - 2026-07-21
+
+- Required forward-looking planning, backlog, debt, and trigger artifacts to be groomed at defined progression points and material changes.
+- Required promised stakeholder-facing reports, comparisons, recommendations, and decision summaries to be delivered proactively before terminal disposition.
+- Preferred explicit research and experimentation iterations inside one capability when the objective and governing contract remain unchanged.
+
+This is a backward-compatible additive governance release. Existing 1.x interfaces, historical work items, authority boundaries, and mandatory safeguards remain unchanged.
+
 ## 1.8.0 - 2026-07-21
 
 - Required every ad hoc fix to be assessed for a recurring failure class across inputs, work items, environments, or consumers.
