@@ -2,6 +2,12 @@
 
 # Changelog
 
+## 1.9.1 - 2026-07-21
+
+- Moved the Integrated/Split role-selection explanation before First Use so adopters choose the operating arrangement before following onboarding instructions.
+
+This is a documentation-order patch. It changes no authority, lifecycle, schema, tooling, or compatibility contract.
+
 ## 1.9.0 - 2026-07-21
 
 - Required forward-looking planning, backlog, debt, and trigger artifacts to be groomed at defined progression points and material changes.
