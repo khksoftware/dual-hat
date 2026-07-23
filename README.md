@@ -42,7 +42,3 @@ First-use map: [no-repository, nearly-empty, and existing-project onboarding](pr
 - `release/`: version, release policy, release notes, packaging, and publication rules.
 
 The framework is Apache-2.0 licensed. Product profiles may add or narrow rules without duplicating or weakening generic authority. A source repository may remain canonical while an external Dual Hat repository is a forward-only derived publication; see [publication](release/PUBLICATION.md).
-
-## Contact
-
-Questions and framework feedback: [khksoftware@gmail.com](mailto:khksoftware@gmail.com).
