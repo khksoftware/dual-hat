@@ -15,6 +15,36 @@ Closely coupled or routine low-risk work does not require multiple reviewers;
 do not turn specialist separation into ceremony when one bounded independent
 review is sufficient.
 
+The standard specialist roster is Architecture/Design, UX, and QA.
+Architecture/Design challenges system boundaries, integration, extensibility,
+and maintainability. UX challenges author workflows, information architecture,
+accessibility, presentation, and recovery behavior. QA challenges acceptance
+behavior, state transitions, failure paths, migrations, releases, and material
+privacy or security boundaries. Select only the specialties whose risks are
+material; the roster does not create three mandatory gates for ordinary work.
+
+Every independent specialist takes a bounded falsification-oriented posture:
+actively seek disconfirming primary evidence, challenge unsupported claims and
+happy-path assumptions, and exercise relevant failure paths. This is not a
+license to invent hypothetical defects, expand the approved scope, or pursue
+unrelated hardening.
+
+Independent specialists and delegated agents are also subject to the
+correction-to-control loop in
+[Process Proportionality](PROCESS_PROPORTIONALITY.md). When their own error,
+omission, or inaccurate claim is identified, they must correct the instance,
+generalize the failure mode, identify the owning cause, apply a proportionate
+reusable countermeasure, and report directly analogous current-session impact.
+
+External-source scope restrictions are a mandatory prospective independent
+review class. Before a proposed discovery stop, sampling substitution,
+source/media exclusion, or ingestion filter is applied, a sealed reviewer
+independent of the proposing Architecture or Engineering role approves or
+rejects it from primary evidence. The finding binds the affected population,
+selection rule, evidence, blind spots, alternatives, and item-level or
+population-level disposition. Batch review is permitted only when every item
+and applied rule remains traceable.
+
 ## Risk-proportionate tiers
 
 - Light: localized, narrow, low-risk behavior. Inspect the diff, clarity, established patterns, obvious correctness/error/security/lifecycle hazards, test relevance, duplication, dead code, and sealed scope.

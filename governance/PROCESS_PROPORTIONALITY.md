@@ -20,6 +20,16 @@ Avoid over-bureaucratization. Dual Hat uses the lightest process that provides e
 12. When research, experimentation, tuning, or similar repeated work pursues one bounded objective under the same authority and acceptance contract, prefer explicit iterations within the same capability. Do not create a sequence of capabilities merely to number successive attempts. Open a new capability only when the objective, authority, product boundary, rollback unit, or acceptance contract materially changes.
 13. Capability preflight evidence is content-addressed and invalidation-driven. Reuse a passing receipt when its evidence bytes, interpreter/tool identity, applicable profile rule, environment fingerprint, and governed consumer boundary remain valid. Rerun only receipts invalidated by a changed input or expired condition, and record reused versus refreshed evidence. Do not recompute an unchanged catalog merely to bind a new work-item identifier.
 14. A stakeholder may grant standing authorization for a precisely bounded class of dependencies, models, tools, or equivalent candidates. Reuse that authority while every candidate satisfies its declared license, cost, reliability, safety, hardware, support, privacy, integrity, and scope conditions; re-escalate only when a condition is absent or exceeded. Preserve rejected-candidate evidence and remove rejected installed candidates promptly instead of retaining them until a replacement exists.
+15. When a stakeholder or another agent identifies a real mistake, omission,
+inaccuracy, or process failure, the responsible role must not stop at
+acknowledgment or instance repair. Generalize the error mode, identify the
+owning root cause, select the smallest reasonable countermeasure, apply it to
+the current work, and codify it at the lowest reusable authority that can
+prevent or reliably detect similar recurrence. Check directly analogous
+current-session state and report the disposition. Keep the response
+proportionate: trivial slips need only a lightweight behavioral correction
+unless they reveal a recurring or materially harmful failure class; do not use
+the rule to create speculative controls or unrelated scope.
 
 ## Common application areas
 

@@ -30,3 +30,23 @@ Detached committed-tree validation is required when clean-checkout behavior may 
 ## Reporting
 
 Every completed bounded run produces an automatic self-contained exit report. The report identifies commits, branch, publication/alignment, worktrees, phase or release state, changes, validation, detached decision, resource observations, protected assets, artifact dispositions, unresolved boundaries, required stakeholder action, and next authorized work. A canonical conformance artifact is retained when policy requires it; chat delivery does not replace repository authority.
+
+A claim such as `complete`, `all`, `none remaining`, or an equivalent universal
+statement is valid only against an explicitly named scope or authoritative
+inventory. Reconcile that scope by count and disposition before making the
+claim, and state the material remainder. Completion of a sample, batch, wave,
+medium, or other bounded subset must be reported as subset completion, never as
+completion of its parent objective. If the parent inventory is unknown or not
+yet reconciled, report the status as partial or unknown rather than inferring
+completion. Reuse an existing manifest or ledger for this check; do not create a
+new ceremony solely to support the wording.
+
+A representative sample supports conclusions about the sampled items and,
+only when a preregistered sampling design justifies inference, the declared
+population. It does not support source-, channel-, site-, feed-, corpus-, or
+catalog-wide exclusion merely because sampled items were redundant, weak, or
+out of scope. When a finite or enumerable corpus is intended for broad intake,
+inventory its items first, then track catalog completeness, triage
+completeness, and mining or processing completeness separately. Apply
+relevance and exclusion item by item; use a population-wide disposition only
+for a demonstrated population-wide condition or a valid sampling inference.
