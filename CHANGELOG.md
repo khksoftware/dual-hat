@@ -2,6 +2,19 @@
 
 # Changelog
 
+## 1.13.0 - 2026-07-24
+
+- Added proportional specialist-review separation for material work whose acceptance depends on genuinely distinct architecture, UX, security, accessibility, data, or domain judgments.
+- Required isolated reviewers to inspect primary evidence independently before Architecture integrates and dispositions their findings.
+- Kept routine and closely coupled work on the existing bounded-review path to avoid ceremony.
+- Made capability preflight receipt reuse content-addressed and
+  invalidation-driven so unchanged platform evidence is not recomputed merely
+  for a new work-item identity.
+- Consolidated troubleshooting and command lookup under `help/` and added the
+  framework contact address to the README.
+
+This is a backward-compatible additive governance release. Existing 1.x authority, lifecycle, schema, and compatibility contracts remain unchanged.
+
 ## 1.12.0 - 2026-07-22
 
 - Required lightweight stakeholder discussion before unresolved consequential design is converted into an implementation-ready specification.

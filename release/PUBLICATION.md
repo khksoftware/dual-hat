@@ -8,7 +8,7 @@ A prior manifest defines the owned external file set. Forward publication may ad
 
 ## Governed staging and push gate
 
-After applying and validating a forward export, inspect `git status --short` and use the manifest-owned staging command in the [Command Reference](../reference/COMMAND_REFERENCE.md). Publication must not use an unbounded staging command such as `git add -A`. The staging gate:
+After applying and validating a forward export, inspect `git status --short` and use the manifest-owned staging command in the [Command Reference](../help/COMMAND_REFERENCE.md). Publication must not use an unbounded staging command such as `git add -A`. The staging gate:
 
 - scans the bounded publication tree while excluding `.git`;
 - rejects unowned files, missing governed files, bytecode, `__pycache__`, and common build or tool caches, including ignored residue;

@@ -10,6 +10,15 @@ Before governed execution, the selected profile performs a capability preflight 
 
 Every mandatory capability names executable evidence whose principal purpose directly proves that capability. Test modules carry explicit capability-proof markers, and the profile records a semantic ownership rationale for every mapping. A missing marker, unrelated mapping, unexplained generic reuse, zero-test receipt, or mismatched active host causes preflight to hard-stop. A broad passing suite cannot be used to claim a capability it does not explicitly own.
 
+Preflight receipts are content-addressed evidence, not work-item ceremonies.
+A profile may reuse a passing receipt when the evidence bytes, executing
+tool/interpreter identity, relevant profile rule, environment fingerprint,
+and governed consumer boundary are unchanged and still within any declared
+validity period. It reruns only invalidated receipts, records the reuse basis,
+and binds both reused and refreshed receipts into the current preflight.
+Changing only the work-item identifier, narrative, or unrelated repository
+state does not invalidate otherwise applicable evidence.
+
 The profile also declares concrete evidence-collection mechanisms for Architecture's independent boundary-conformance review. These may identify environment-specific repository, process, remote, dependency, ignored-state, publication, and release checks. They augment the core duty and never replace it with Engineering self-report or test results.
 
 The independent Deep-review capability uses focused evidence that rejects Engineering-self-report-only and tests-only review, blocks acceptance while a material violation remains, requires specific remediation and systemic strengthening, requires analogous-gap review, and reserves disposition to Architecture.

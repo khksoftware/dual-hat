@@ -31,7 +31,7 @@ REQUIRED_GUIDES = {
     "guides/OPERATING_MODES.md",
     "process/WORK_ITEM_LIFECYCLE.md",
     "sessions/TASK_CONTEXT_RETRIEVAL.md",
-    "reference/COMMAND_REFERENCE.md",
+    "help/COMMAND_REFERENCE.md",
 }
 REQUIRED_PLANNING_SUPPORT = {
     "schemas/planning-backlog.schema.json",

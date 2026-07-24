@@ -4,6 +4,17 @@ Every Engineering handoff classifies its change as behavior-affecting, documenta
 
 Architecture review is conditional but independent. Passing tests and Engineering self-review are evidence, not substitutes. Architecture examines the sealed work order, diff and final source, relevant tests, dependencies, generated and local effects, failure and cleanup paths, repository and remote state, effective quality-rule plan, and boundary conformance.
 
+When material acceptance depends on genuinely distinct specialist judgments,
+such as architecture, user experience, security, accessibility, data, or
+domain correctness, use separate isolated read-only reviewers when the
+available environment supports them and the added independence is
+proportionate. Each reviewer receives the same relevant primary evidence and
+scope boundary but not another specialist's conclusions. The Architecture
+Office integrates, deduplicates, and dispositions the reports afterward.
+Closely coupled or routine low-risk work does not require multiple reviewers;
+do not turn specialist separation into ceremony when one bounded independent
+review is sufficient.
+
 ## Risk-proportionate tiers
 
 - Light: localized, narrow, low-risk behavior. Inspect the diff, clarity, established patterns, obvious correctness/error/security/lifecycle hazards, test relevance, duplication, dead code, and sealed scope.

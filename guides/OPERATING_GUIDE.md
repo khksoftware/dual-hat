@@ -14,7 +14,7 @@ All third-party dependency recommendations follow the [dependency evaluation con
 
 Work begins from the active session, roadmap, bounded work order, and owning domain—not archives or previous chat memory. Use [context retrieval](../process/CONTEXT_AND_RETRIEVAL.md) and product-bound [entrypoints](../repository/CANONICAL_ENTRYPOINTS.md). Capabilities follow the [capability lifecycle](../process/CAPABILITY_LIFECYCLE.md); multi-capability phases follow the [phase-run protocol](../process/PHASE_RUN_PROTOCOL.md).
 
-For bounded loading and freshness rules, follow the [task-context retrieval guide](../sessions/TASK_CONTEXT_RETRIEVAL.md). Runnable standalone examples are in the [command reference](../reference/COMMAND_REFERENCE.md).
+For bounded loading and freshness rules, follow the [task-context retrieval guide](../sessions/TASK_CONTEXT_RETRIEVAL.md). Runnable standalone examples are in the [command reference](../help/COMMAND_REFERENCE.md).
 
 ## Planning and debt
 
