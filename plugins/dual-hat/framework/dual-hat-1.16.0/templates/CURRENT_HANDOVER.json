@@ -1,0 +1,31 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "active_work_item": null,
+  "authorization_boundaries": [],
+  "commit_roles": {
+    "closure_evidence": null,
+    "corrected": null,
+    "detached_validation": null,
+    "final_published": "",
+    "generation_input": "",
+    "implementation": null,
+    "starting": ""
+  },
+  "external_repositories": [],
+  "identity": "example-product",
+  "latest_completed_capability": null,
+  "next_allowed_work": [],
+  "phase_or_release": {
+    "id": "",
+    "status": ""
+  },
+  "protected_assets": [],
+  "repository": {
+    "branch": "main",
+    "clean": true,
+    "head": "",
+    "origin_head": ""
+  },
+  "schema": "dual-hat-current-handover/1.1",
+  "unresolved_decisions": []
+}

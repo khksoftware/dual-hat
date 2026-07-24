@@ -1,0 +1,142 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "applicability": [
+    "explicitly selected work items"
+  ],
+  "architecture_boundary_review": {
+    "independent_primary_evidence": [
+      "repository state",
+      "publication state",
+      "generated artifacts"
+    ],
+    "self_report_only": false
+  },
+  "authentication": {
+    "credentials": "never retained in framework evidence"
+  },
+  "capability_evidence": {
+    "binary_secret_gate": [
+      "test:tests/test_release_package.py"
+    ],
+    "canonical_path_containment": [
+      "test:tests/test_framework.py"
+    ],
+    "committed_tree_release_binding": [
+      "test:tests/test_release_package.py"
+    ],
+    "detached_validation": [
+      "test:tests/test_operating_modes.py"
+    ],
+    "explicit_user_and_architecture_reporting": [
+      "test:tests/test_operating_modes.py"
+    ],
+    "governed_publication": [
+      "test:tests/test_release_package.py"
+    ],
+    "independent_deep_review": [
+      "test:tests/test_independent_deep_review.py"
+    ],
+    "network_policy_validation": [
+      "test:tests/test_framework.py"
+    ],
+    "post_run_residue_inspection": [
+      "test:tests/test_operating_modes.py"
+    ],
+    "quality_rule_discovery": [
+      "test:tests/test_quality_review.py"
+    ],
+    "repository_state_preservation": [
+      "test:tests/test_operating_modes.py"
+    ],
+    "resumable_handoff": [
+      "test:tests/test_operating_modes.py"
+    ],
+    "rights_readiness_validation": [
+      "test:tests/test_framework.py"
+    ],
+    "sealed_work_order": [
+      "test:tests/test_operating_modes.py"
+    ],
+    "transactional_writes": [
+      "test:tests/test_release_package.py"
+    ]
+  },
+  "capability_evidence_rationale": {
+    "binary_secret_gate": "Release proof owns binary and secret gates.",
+    "canonical_path_containment": "Framework proof owns containment contracts.",
+    "committed_tree_release_binding": "Release proof owns committed-tree binding.",
+    "detached_validation": "Operating-mode proof owns detached validation declarations.",
+    "explicit_user_and_architecture_reporting": "Operating-mode proof owns explicit stop reporting.",
+    "governed_publication": "Release proof owns publication boundaries.",
+    "independent_deep_review": "Focused independent-review proof owns the Architecture boundary.",
+    "network_policy_validation": "Framework proof owns network-policy contracts.",
+    "post_run_residue_inspection": "Operating-mode proof owns residue inspection.",
+    "quality_rule_discovery": "Quality-review proof owns rule discovery.",
+    "repository_state_preservation": "Operating-mode proof owns state-preserving transitions.",
+    "resumable_handoff": "Operating-mode proof owns resumable handoffs.",
+    "rights_readiness_validation": "Framework proof owns rights-readiness contracts.",
+    "sealed_work_order": "Operating-mode proof owns work-order sealing.",
+    "transactional_writes": "Release proof owns staged transactional output."
+  },
+  "degraded_features": [],
+  "detached_validation": {
+    "mechanism": "profile-defined metadata-capable checkout"
+  },
+  "dual_hat_core_version": "1.11.0",
+  "guarantees": {
+    "evidence_not_weakened": true,
+    "monitoring_not_weakened": true,
+    "recovery_not_weakened": true,
+    "security_not_weakened": true,
+    "validation_not_weakened": true
+  },
+  "known_environment_limitations": [],
+  "limitations": [
+    "illustrative nonnormative configuration"
+  ],
+  "mandatory_capabilities": {
+    "binary_secret_gate": true,
+    "canonical_path_containment": true,
+    "committed_tree_release_binding": true,
+    "detached_validation": true,
+    "explicit_user_and_architecture_reporting": true,
+    "governed_publication": true,
+    "independent_deep_review": true,
+    "network_policy_validation": true,
+    "post_run_residue_inspection": true,
+    "quality_rule_discovery": true,
+    "repository_state_preservation": true,
+    "resumable_handoff": true,
+    "rights_readiness_validation": true,
+    "sealed_work_order": true,
+    "transactional_writes": true
+  },
+  "monitoring": {
+    "cadence": "governed environment-appropriate interval",
+    "owned_process_identification": "profile-defined"
+  },
+  "precedence": "dual_hat_core_governs_profile_specializes",
+  "preflight_artifact": "platform-preflight.json",
+  "profile_id": "example-toolchain",
+  "profile_version": "1.11.0",
+  "recovery": {
+    "context_loss": "reload sealed state and repository evidence"
+  },
+  "required_permissions_and_tools": [
+    "read governed state",
+    "write only authorized paths"
+  ],
+  "supported_configuration": {
+    "agent_runtime": "example",
+    "editor": "example",
+    "execution_host": "example"
+  },
+  "temporary_workspace": {
+    "resolver": "profile-defined outside governed active paths"
+  },
+  "unavailable_external_services": [],
+  "uncertainties_requiring_architecture_review": [],
+  "validation": [
+    "profile-to-core conformance"
+  ]
+}

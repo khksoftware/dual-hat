@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use Dual Hat"
+  short_description: "Run governed software work with Dual Hat"
+  default_prompt: "Use $use-dual-hat to onboard this repository with the Dual Hat framework."

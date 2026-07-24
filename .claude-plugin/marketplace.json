@@ -1,0 +1,18 @@
+{
+  "description": "Official Dual Hat framework adapters for Claude Code",
+  "metadata": {
+    "description": "Official Dual Hat framework adapters for Claude Code"
+  },
+  "name": "dual-hat",
+  "owner": {
+    "email": "khksoftware@gmail.com",
+    "name": "Dual Hat contributors"
+  },
+  "plugins": [
+    {
+      "description": "Use the Dual Hat framework for governed, AI-assisted software development.",
+      "name": "dual-hat",
+      "source": "./plugins/dual-hat"
+    }
+  ]
+}

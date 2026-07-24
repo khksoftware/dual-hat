@@ -1,0 +1,150 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/future-work.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "dependencies": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "entry_criteria": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "exit_criteria": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "id": {
+            "pattern": "^[A-Z][A-Z0-9-]+$",
+            "type": "string"
+          },
+          "objective": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "owner": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "requirements": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "risks": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "monitored",
+              "triggered",
+              "promoted",
+              "retired",
+              "superseded"
+            ]
+          },
+          "superseded_by": {
+            "pattern": "^[A-Z][A-Z0-9-]+$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "trigger": {
+            "additionalProperties": false,
+            "properties": {
+              "event": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "invoker": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "last_evaluated_at": {
+                "format": "date-time",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "review_interval": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "selector": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "selector",
+              "invoker",
+              "review_interval",
+              "last_evaluated_at"
+            ],
+            "type": "object"
+          },
+          "validation": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "objective",
+          "owner",
+          "dependencies",
+          "status",
+          "entry_criteria",
+          "exit_criteria",
+          "requirements",
+          "validation",
+          "risks",
+          "trigger",
+          "superseded_by"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "dual-hat-future-work/1.0"
+    }
+  },
+  "required": [
+    "schema",
+    "items"
+  ],
+  "type": "object"
+}

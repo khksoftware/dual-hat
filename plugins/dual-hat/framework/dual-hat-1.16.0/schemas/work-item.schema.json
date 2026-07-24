@@ -1,0 +1,277 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/work-item.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema": {
+            "const": "dual-hat-sealed-work-order/1.1"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "authorized_paths",
+          "destructive_permissions",
+          "dependency_permissions",
+          "external_service_permissions",
+          "source_revisions",
+          "revision_hash_set_sha256",
+          "revision_hash_set_encoding",
+          "current_revision",
+          "sealed_state",
+          "material_revision_rule"
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "active_role": {
+      "enum": [
+        "architecture",
+        "engineering",
+        "architecture_review"
+      ]
+    },
+    "approval_date": {
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "type": "string"
+    },
+    "approval_state": {
+      "enum": [
+        "draft",
+        "work_order_ready",
+        "author_approved_for_execution"
+      ]
+    },
+    "approval_timestamp": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "approved_scope": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "authorized_mutation": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "authorized_paths": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "authorized_repositories": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "current_revision": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "dependency_permissions": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "minProperties": 1,
+      "type": "object"
+    },
+    "destructive_permissions": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "explicit_exclusions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "extension_classification": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "type": "object"
+    },
+    "external_service_permissions": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "minProperties": 1,
+      "type": "object"
+    },
+    "follow_up_blocking": {
+      "type": "boolean"
+    },
+    "governance_contract_change": {
+      "type": "boolean"
+    },
+    "lifecycle_state": {
+      "enum": [
+        "architecture",
+        "work_order_ready",
+        "author_approved_for_execution",
+        "engineering",
+        "engineering_complete",
+        "engineering_paused",
+        "engineering_blocked",
+        "engineering_aborted",
+        "architecture_review",
+        "accepted",
+        "accepted_with_follow_up",
+        "remediation_required",
+        "rejected",
+        "archived"
+      ]
+    },
+    "material_revision_rule": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "operating_mode": {
+      "enum": [
+        "integrated",
+        "split"
+      ]
+    },
+    "product_increment": {
+      "type": "boolean"
+    },
+    "publication_authority": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "type": "object"
+    },
+    "required_validation": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "revision_hash_set_encoding": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "revision_hash_set_sha256": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "schema": {
+      "enum": [
+        "dual-hat-sealed-work-order/1.0",
+        "dual-hat-sealed-work-order/1.1"
+      ]
+    },
+    "sealed_state": {
+      "const": "immutable_approved_contract"
+    },
+    "source_revisions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_state": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "bytes": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "forward_record": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "hash_basis": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "sha256": {
+            "pattern": "^[A-F0-9]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "stop_gates": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "title": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "work_item_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "work_item_type": {
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "type": "string"
+    },
+    "work_order_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "work_item_id",
+    "work_item_type",
+    "title",
+    "operating_mode",
+    "active_role",
+    "lifecycle_state",
+    "approved_scope",
+    "explicit_exclusions",
+    "stop_gates",
+    "authorized_repositories",
+    "authorized_mutation",
+    "required_validation",
+    "publication_authority",
+    "approval_state",
+    "approval_timestamp",
+    "work_order_hash"
+  ],
+  "type": "object"
+}

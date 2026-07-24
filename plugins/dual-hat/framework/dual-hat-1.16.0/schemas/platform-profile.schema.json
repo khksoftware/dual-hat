@@ -1,0 +1,168 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/platform-profile.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "applicability": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "architecture_boundary_review": {
+      "type": "object"
+    },
+    "authentication": {
+      "type": "object"
+    },
+    "capability_evidence": {
+      "additionalProperties": {
+        "items": {
+          "pattern": "^(test|evidence):\\S",
+          "type": "string"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "required": [
+        "sealed_work_order",
+        "repository_state_preservation",
+        "explicit_user_and_architecture_reporting",
+        "resumable_handoff",
+        "detached_validation",
+        "governed_publication",
+        "quality_rule_discovery",
+        "independent_deep_review",
+        "canonical_path_containment",
+        "network_policy_validation",
+        "rights_readiness_validation",
+        "binary_secret_gate",
+        "committed_tree_release_binding",
+        "transactional_writes",
+        "post_run_residue_inspection"
+      ],
+      "type": "object"
+    },
+    "capability_evidence_rationale": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "degraded_features": {
+      "type": "array"
+    },
+    "detached_validation": {
+      "type": "object"
+    },
+    "dual_hat_core_version": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "type": "string"
+    },
+    "guarantees": {
+      "required": [
+        "monitoring_not_weakened",
+        "recovery_not_weakened",
+        "security_not_weakened",
+        "validation_not_weakened",
+        "evidence_not_weakened"
+      ],
+      "type": "object"
+    },
+    "known_environment_limitations": {
+      "type": "array"
+    },
+    "limitations": {
+      "type": "array"
+    },
+    "mandatory_capabilities": {
+      "additionalProperties": {
+        "const": true
+      },
+      "required": [
+        "sealed_work_order",
+        "repository_state_preservation",
+        "explicit_user_and_architecture_reporting",
+        "resumable_handoff",
+        "detached_validation",
+        "governed_publication",
+        "quality_rule_discovery",
+        "independent_deep_review",
+        "canonical_path_containment",
+        "network_policy_validation",
+        "rights_readiness_validation",
+        "binary_secret_gate",
+        "committed_tree_release_binding",
+        "transactional_writes",
+        "post_run_residue_inspection"
+      ],
+      "type": "object"
+    },
+    "monitoring": {
+      "type": "object"
+    },
+    "precedence": {
+      "const": "dual_hat_core_governs_profile_specializes"
+    },
+    "preflight_artifact": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "profile_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "profile_version": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "recovery": {
+      "type": "object"
+    },
+    "required_permissions_and_tools": {
+      "type": "array"
+    },
+    "supported_configuration": {
+      "type": "object"
+    },
+    "temporary_workspace": {
+      "type": "object"
+    },
+    "unavailable_external_services": {
+      "type": "array"
+    },
+    "uncertainties_requiring_architecture_review": {
+      "type": "array"
+    },
+    "validation": {
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "profile_id",
+    "profile_version",
+    "dual_hat_core_version",
+    "supported_configuration",
+    "applicability",
+    "precedence",
+    "guarantees",
+    "mandatory_capabilities",
+    "capability_evidence",
+    "capability_evidence_rationale",
+    "preflight_artifact",
+    "required_permissions_and_tools",
+    "degraded_features",
+    "unavailable_external_services",
+    "known_environment_limitations",
+    "uncertainties_requiring_architecture_review",
+    "monitoring",
+    "temporary_workspace",
+    "detached_validation",
+    "authentication",
+    "recovery",
+    "architecture_boundary_review",
+    "limitations",
+    "validation"
+  ],
+  "type": "object"
+}

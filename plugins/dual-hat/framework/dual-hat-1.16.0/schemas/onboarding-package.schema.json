@@ -1,0 +1,131 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/onboarding-package.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approval": {
+      "type": "object"
+    },
+    "architecture_summary": {
+      "type": "string"
+    },
+    "assumptions": {
+      "type": "array"
+    },
+    "dependencies": {},
+    "depth": {
+      "enum": [
+        "quick",
+        "standard",
+        "deep"
+      ]
+    },
+    "future_triggers": {
+      "type": "array"
+    },
+    "installation_and_binding_recommendation": {
+      "enum": [
+        "external",
+        "pinned_project_local"
+      ]
+    },
+    "minimum_viable_questions": {
+      "type": "array"
+    },
+    "mutation_plan": {
+      "type": "object"
+    },
+    "operating_mode_recommendation": {
+      "enum": [
+        "integrated",
+        "split"
+      ]
+    },
+    "package_hash": {
+      "pattern": "^[A-F0-9]{64}$",
+      "type": "string"
+    },
+    "phase_level_roadmap": {
+      "type": "array"
+    },
+    "product_model": {
+      "type": "object"
+    },
+    "proposed_work_items": {
+      "type": "array"
+    },
+    "protected_characteristics_and_non_negotiables": {
+      "type": "object"
+    },
+    "quality_rule_discovery": {
+      "type": "object"
+    },
+    "repository_evidence": {
+      "type": "object"
+    },
+    "repository_scenario": {
+      "enum": [
+        "no_repository",
+        "nearly_empty",
+        "existing_project"
+      ]
+    },
+    "risks_and_constraints": {
+      "type": "object"
+    },
+    "rollback_strategy": {
+      "type": "string"
+    },
+    "scaffold_disposition_options": {
+      "type": "array"
+    },
+    "schema": {
+      "const": "dual-hat-onboarding-package/1.0"
+    },
+    "state": {
+      "enum": [
+        "awaiting_user_approval",
+        "approved_for_binding"
+      ]
+    },
+    "technical_debt_proposal": {
+      "type": "array"
+    },
+    "unresolved_decisions": {
+      "type": "array"
+    },
+    "user_and_stakeholder_model": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "state",
+    "repository_scenario",
+    "depth",
+    "product_model",
+    "user_and_stakeholder_model",
+    "protected_characteristics_and_non_negotiables",
+    "operating_mode_recommendation",
+    "installation_and_binding_recommendation",
+    "architecture_summary",
+    "risks_and_constraints",
+    "quality_rule_discovery",
+    "technical_debt_proposal",
+    "phase_level_roadmap",
+    "proposed_work_items",
+    "future_triggers",
+    "dependencies",
+    "assumptions",
+    "unresolved_decisions",
+    "minimum_viable_questions",
+    "repository_evidence",
+    "mutation_plan",
+    "scaffold_disposition_options",
+    "rollback_strategy",
+    "approval",
+    "package_hash"
+  ],
+  "type": "object"
+}

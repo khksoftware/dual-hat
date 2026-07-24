@@ -1,0 +1,24 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "paid_services": false,
+  "private_data": false,
+  "product_concept": "Local-first task tracker with a CLI, tiny web UI, local JSON persistence, basic tests, deliberately imperfect architecture, incomplete documentation, and bounded security/maintainability defects.",
+  "scenarios": [
+    {
+      "id": "no_repository",
+      "materialization": "intended target path must remain absent",
+      "source": "no-repository/scenario.json"
+    },
+    {
+      "id": "nearly_empty",
+      "materialization": "copy the bounded initial files",
+      "source": "nearly-empty"
+    },
+    {
+      "id": "existing_project",
+      "materialization": "copy metadata fixture only; do not execute during onboarding",
+      "source": "existing-imperfect-task-tracker"
+    }
+  ],
+  "schema": "dual-hat-onboarding-fixtures/1.0"
+}

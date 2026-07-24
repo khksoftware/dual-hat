@@ -1,0 +1,30 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "binary_attestations": [
+    {
+      "content_type": "image/png",
+      "distribution_rule": "include",
+      "path": "assets/dual-hat-agent.png",
+      "provenance": "User-approved AI-generated transparent master supplied for Dual Hat on 2026-07-24.",
+      "purpose": "Shared transparent square master for Dual Hat mascot derivatives.",
+      "retention_rule": "Retain as the source asset while square mascot derivatives remain active.",
+      "review_evidence": "Human visual approval plus local RGBA, 1254x1254 dimensions, and transparent-corner validation.",
+      "rights_basis": "Project-owner-authorized AI-generated original approved for repository distribution under the Dual Hat Apache-2.0 project license.",
+      "sha256": "B84B5B59E0EA7C3472DFF3AE37118C1FA10704C9208A941F7FEE17DD07CBE8B7",
+      "size_bytes": 527123
+    },
+    {
+      "content_type": "image/png",
+      "distribution_rule": "include",
+      "path": "assets/dual-hat-agent-640x320.png",
+      "provenance": "User-approved AI-generated 640x320 transparent member of the accepted Dual Hat mascot family, supplied on 2026-07-24.",
+      "purpose": "Shared horizontal Dual Hat mascot for wide presentation and plugin documentation surfaces.",
+      "retention_rule": "Retain while a supported wide-format presentation surface consumes the horizontal mascot.",
+      "review_evidence": "Human visual approval plus local RGBA, exact-dimension, and transparent-corner validation.",
+      "rights_basis": "Project-owner-authorized AI-generated original approved for repository distribution under the Dual Hat Apache-2.0 project license.",
+      "sha256": "0DB421BFBD35E5B89F2B0CD297DEADE20D1E7CAA4500259E216C7E82B22E4324",
+      "size_bytes": 67316
+    }
+  ],
+  "schema": "dual-hat-binary-provenance/1.0"
+}

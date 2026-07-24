@@ -1,0 +1,20 @@
+{
+  "interface": {
+    "displayName": "Personal"
+  },
+  "name": "personal",
+  "plugins": [
+    {
+      "category": "Productivity",
+      "name": "dual-hat",
+      "policy": {
+        "authentication": "ON_INSTALL",
+        "installation": "AVAILABLE"
+      },
+      "source": {
+        "path": "./plugins/dual-hat",
+        "source": "local"
+      }
+    }
+  ]
+}
