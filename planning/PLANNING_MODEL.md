@@ -6,6 +6,12 @@ New planning items declare `work_item_type` as `capability` or `gov`. Capability
 
 Planning separates authorization from intent. A roadmap states direction and current sequencing; a backlog stores bounded candidate work; a future-work registry stores trigger-governed planning; phases group related outcomes; milestones state observable graduation; capabilities are atomic authorized changes. None authorizes execution without an active work order or equivalent decision.
 
+Authorization may name one exact action or a bounded reusable class. A
+categorical authorization declares objective eligibility conditions,
+per-candidate evidence, excluded cost/privacy/risk classes, invalidation and
+reapproval triggers, and cleanup of rejected installed candidates. It avoids
+repeated approval prompts without weakening evaluation or expanding authority.
+
 Execution authorization also does not settle consequential design details that the existing decision record leaves open. Before an implementation-ready specification fixes a material product, user-experience, workflow, commercial, privacy, or architectural choice, Architecture uses the lightest useful discussion artifact to expose and resolve the meaningful options. This is a decision-quality control, not a mandatory separate capability or ceremony.
 
 ## Required lifecycle
@@ -15,6 +21,12 @@ Planning items have stable IDs, title, objective, owner, dependencies, status, e
 Authorization and preflight verify that every mandatory assigned tier has a current, evidence-backed concrete selection. A changed environment fingerprint or changed model capability/availability invalidates the mapping and triggers remapping at a safe boundary. Session and handover state record the mapping identity and fingerprint used by active work. Missing or stale mandatory mapping is a resumable hard stop; optional fallback requires the governed confirmation defined by the model-tier policy.
 
 Phase entry verifies dependencies and protected boundaries. Capability closure reconciles roadmap, backlog, debt, triggers, session, and handover. Phase or governed subphase closure additionally reviews unresolved work, test-suite health, debt budget, graduation evidence, release/tag decision, rollback/reopen conditions, and final handover. Its transition cannot be represented only by status fields: Architecture also gives the user a concise narrative of completed activities, outcomes, limitations or carry-forward work, and the rationale for the next phase or subphase.
+
+When phase closure and successor opening occur together, update current
+planning, completed history, the successor capability ledger, session, and
+handover as one atomic transition. The closed phase leaves current planning,
+the successor receives its current execution lane, and validation rejects
+simultaneous current/unopened or active/history contradictions.
 
 Each project profile inventories its forward-looking authorities—such as roadmap, backlog, debt, future-work triggers, deferred decisions, risk/mitigation registers, and migration, upgrade, release, or productization plans—and assigns progression-point and change-driven review events. Default progression points are phase or governed subphase opening/closure, material roadmap replanning, and release/productization gates; an owning scope, assumption, dependency, or environment change may trigger a narrower review. Groom the affected delta for activation, completion, obsolescence, duplication, stale assumptions/conditions/owners/mappings/review dates/status, and next placement. Use a full portfolio review only when the progression point or breadth of change warrants it. Avoid duplicate roadmaps, milestone ledgers, or status dashboards that independently claim current truth.
 

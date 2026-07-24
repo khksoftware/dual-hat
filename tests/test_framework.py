@@ -92,7 +92,7 @@ class FrameworkTests(unittest.TestCase):
             "governance/ARCHITECTURE_OFFICE_GUIDE.md",
             "governance/ENGINEERING_AGENT_GUIDE.md",
             "sessions/TASK_CONTEXT_RETRIEVAL.md",
-            "help/COMMAND_REFERENCE.md",
+            "guides/COMMAND_REFERENCE.md",
         }
         self.assertTrue(all((ROOT / path).is_file() for path in expected))
         self.assertFalse((ROOT / "docs").exists())

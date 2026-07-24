@@ -2,6 +2,21 @@
 
 # Changelog
 
+## 1.14.0 - 2026-07-24
+
+- Allowed precisely bounded categorical authorization for dependency, tool,
+  and model candidates while preserving per-candidate license, cost,
+  reliability, safety, hardware, support, privacy, and integrity evaluation.
+- Required rejected installed candidates to be removed promptly after their
+  evidence is preserved.
+- Made combined phase closure and successor opening one atomic planning,
+  history, session, ledger, and handover transition.
+- Consolidated command reference and troubleshooting under `guides/`, removing
+  the redundant top-level `help/` directory and updating all active references.
+
+This is a backward-compatible additive governance release. Existing 1.x
+authority, lifecycle, schema, and compatibility contracts remain unchanged.
+
 ## 1.13.0 - 2026-07-24
 
 - Added proportional specialist-review separation for material work whose acceptance depends on genuinely distinct architecture, UX, security, accessibility, data, or domain judgments.

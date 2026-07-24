@@ -25,3 +25,10 @@ Groom the affected forward-looking portfolio against the outcomes and environmen
 For the concrete future-work registry, evaluate every trigger individually. A satisfied trigger advances to its decision- or implementation-ready state or receives an explicit terminal disposition; obsolete and duplicate triggers retire with successor/reason; stale conditions, owners, mappings, review events, and status are updated; and every live trigger maps to a planned phase/work item or an explicit trigger-only next review point. This concrete contract takes precedence over the general portfolio fallback above.
 
 Closure requires every exit criterion, zero unaccepted blockers, current planning/session/handover state, conformance, detached committed-tree validation, clean worktree, authorized release/tag decision, and rollback/reopening instructions. Publish a final handover. A closed phase is immutable; correction proceeds forward through a new bounded capability.
+
+When closure and successor opening are authorized together, perform them as
+one planning transaction: remove the closed phase from every current surface,
+append its historical outcome once, establish the successor's current
+capability ledger and session state, and regenerate the handover. Reject a
+state that describes one phase as both current and historical or the successor
+as both current and unopened.

@@ -14,6 +14,12 @@ Before mutation, verify current branch/remotes/worktrees, authorization, phase o
 
 Before suggesting or adding any third-party tool, library, SDK, package, runtime, model, service client, or other dependency, evaluate and share its license and product implications, cost, intended-workload reliability, safety/privacy/supply-chain risks, hardware/platform requirements, and active/stale/deprecated/out-of-support status using current primary evidence. If multiple viable options exist, provide a concise pros/cons comparison table and explain the recommendation. Bind approval to the evaluated choice and re-evaluate material changes.
 
+A stakeholder's standing authorization for a bounded dependency or model class
+removes repeated approval prompts only while every stated eligibility condition
+remains satisfied. Record the exact candidate and evidence before use. Preserve
+the evidence for a rejected installed candidate, then remove it promptly rather
+than waiting for a replacement.
+
 Make surgical changes, reuse fitting abstractions, avoid speculative flexibility, and remove newly obsolete state. Apply broader-design and analogous-gap review proportionally. Deferred processing is incomplete without a trigger, bounded selector, invoker, idempotence/history, retry/terminal behavior, and tests. Reserve stakeholder interaction for material judgment, consent, risk, irreversibility, protected decisions, or unresolved architecture.
 
 Avoid over-bureaucratization. Use the smallest sufficient handoff, check, validation set, evidence record, package, repository inspection, and closure procedure. Reuse still-valid results and do not regenerate or rerun work merely to satisfy ceremony; escalate only for a defined invalidation, material risk, unexplained failure, or explicit requirement. For every ad hoc fix, assess whether its failure class can recur; when it can, prefer the smallest proportionate owning-layer systemic repair while still correcting the current instance.

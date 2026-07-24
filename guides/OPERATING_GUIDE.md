@@ -14,7 +14,7 @@ All third-party dependency recommendations follow the [dependency evaluation con
 
 Work begins from the active session, roadmap, bounded work order, and owning domain—not archives or previous chat memory. Use [context retrieval](../process/CONTEXT_AND_RETRIEVAL.md) and product-bound [entrypoints](../repository/CANONICAL_ENTRYPOINTS.md). Capabilities follow the [capability lifecycle](../process/CAPABILITY_LIFECYCLE.md); multi-capability phases follow the [phase-run protocol](../process/PHASE_RUN_PROTOCOL.md).
 
-For bounded loading and freshness rules, follow the [task-context retrieval guide](../sessions/TASK_CONTEXT_RETRIEVAL.md). Runnable standalone examples are in the [command reference](../help/COMMAND_REFERENCE.md).
+For bounded loading and freshness rules, follow the [task-context retrieval guide](../sessions/TASK_CONTEXT_RETRIEVAL.md). Runnable standalone examples are in the [command reference](COMMAND_REFERENCE.md).
 
 ## Planning and debt
 
@@ -28,4 +28,4 @@ The [validation protocol](../validation/VALIDATION_PROTOCOL.md) covers automated
 
 Use the [Engineering Blueprint](../repository/ENGINEERING_BLUEPRINT.md) and [repository governance](../governance/REPOSITORY_GOVERNANCE.md) for product/framework/engineering/workspace/archive separation, scan-first migrations, namespace rules, artifact lifecycle, packaging, and generated state. Use the [session/handover protocol](../sessions/SESSION_AND_HANDOVER_PROTOCOL.md) for one current machine/human pair and interruption recovery.
 
-[Conformance](../governance/CONFORMANCE_POLICY.md) is semantic, not a test-count claim. [Publication and closure](../process/PUBLICATION_AND_CLOSURE.md) are forward-only, drift-aware, fully disposed, and accurately reported. Product extensions use [profile composition](../governance/PROFILE_COMPOSITION.md). Bootstrap and examples are described in [Bootstrap](../process/BOOTSTRAP.md); failures are routed in [Troubleshooting](../help/TROUBLESHOOTING.md).
+[Conformance](../governance/CONFORMANCE_POLICY.md) is semantic, not a test-count claim. [Publication and closure](../process/PUBLICATION_AND_CLOSURE.md) are forward-only, drift-aware, fully disposed, and accurately reported. Product extensions use [profile composition](../governance/PROFILE_COMPOSITION.md). Bootstrap and examples are described in [Bootstrap](../process/BOOTSTRAP.md); failures are routed in [Troubleshooting](TROUBLESHOOTING.md).

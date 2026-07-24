@@ -12,7 +12,7 @@ Dual Hat is not an application runtime, programming library, hosted service, or 
 
 Dual Hat supports both **Integrated Mode** and **Split Mode**, with Integrated as the default. The plain-language [Integrated and Split Dual Hat Modes guide](guides/OPERATING_MODES.md) explains roles, pros and cons, approval, safe switching, recovery, review, acceptance, archival, platform profiles, and ordinary commands. The [platform-profile contract](governance/PLATFORM_PROFILE_CONTRACT.md) makes capability preflight and hard-stop behavior prominent.
 
-Start with the [operating model](architecture/OPERATING_MODEL.md), [onboarding workflow](process/ONBOARDING.md), [bootstrap guide](process/BOOTSTRAP.md), and [operating guide](guides/OPERATING_GUIDE.md). The [Architecture Office guide](governance/ARCHITECTURE_OFFICE_GUIDE.md) and [Engineering Agent guide](governance/ENGINEERING_AGENT_GUIDE.md) explain role practice. [Canonical Entrypoints](repository/CANONICAL_ENTRYPOINTS.md) says where to begin; the [Canonical Domain Index](repository/CANONICAL_DOMAIN_INDEX.md) says which role owns each kind of truth. Use the [command reference](help/COMMAND_REFERENCE.md) for standalone validation and bootstrap commands.
+Start with the [operating model](architecture/OPERATING_MODEL.md), [onboarding workflow](process/ONBOARDING.md), [bootstrap guide](process/BOOTSTRAP.md), and [operating guide](guides/OPERATING_GUIDE.md). The [Architecture Office guide](governance/ARCHITECTURE_OFFICE_GUIDE.md) and [Engineering Agent guide](governance/ENGINEERING_AGENT_GUIDE.md) explain role practice. [Canonical Entrypoints](repository/CANONICAL_ENTRYPOINTS.md) says where to begin; the [Canonical Domain Index](repository/CANONICAL_DOMAIN_INDEX.md) says which role owns each kind of truth. Use the [command reference](guides/COMMAND_REFERENCE.md) for standalone validation and bootstrap commands.
 
 ## First use
 
@@ -24,9 +24,9 @@ Start with the [operating model](architecture/OPERATING_MODEL.md), [onboarding w
 
 Do not copy or dump the whole extracted release package into the product repository. During onboarding, choose either an external/user-level installation or a bounded pinned project-local binding such as `.dual-hat/`; the approval package explains reproducibility, path-dependency, update, migration, and repository-footprint tradeoffs before any product mutation.
 
-Read [Repository and Product Onboarding](process/ONBOARDING.md) for the three repository scenarios and approval boundary, [Installation and Project Binding](guides/INSTALLATION_AND_BINDING.md) for setup/update/rollback/removal, and [Troubleshooting](help/TROUBLESHOOTING.md) when detection or binding stops safely.
+Read [Repository and Product Onboarding](process/ONBOARDING.md) for the three repository scenarios and approval boundary, [Installation and Project Binding](guides/INSTALLATION_AND_BINDING.md) for setup/update/rollback/removal, and [Troubleshooting](guides/TROUBLESHOOTING.md) when detection or binding stops safely.
 
-First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](help/TROUBLESHOOTING.md); and [1.13.0 release notes](release/RELEASE_NOTES_v1.13.0.md).
+First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](guides/TROUBLESHOOTING.md); and [1.14.0 release notes](release/RELEASE_NOTES_v1.14.0.md).
 
 ## Framework areas
 
@@ -38,7 +38,7 @@ First-use map: [no-repository, nearly-empty, and existing-project onboarding](pr
 - `sessions/`: active-session and current-handover maintenance.
 - `validation/`: test strategy, detached/standalone validation, parallelism, and process watchdog.
 - `prompts/`, `templates/`, `schemas/`, `tooling/`, and `examples/`: executable adoption assets.
-- `guides/` and `help/`: cross-cutting guidance, troubleshooting, and lookup material whose responsibility does not belong to one operating domain.
+- `guides/`: cross-cutting operating guidance, troubleshooting, and command lookup material whose responsibility does not belong to one operating domain.
 - `release/`: version, release policy, release notes, packaging, and publication rules.
 
 The framework is Apache-2.0 licensed. Product profiles may add or narrow rules without duplicating or weakening generic authority. A source repository may remain canonical while an external Dual Hat repository is a forward-only derived publication; see [publication](release/PUBLICATION.md).
