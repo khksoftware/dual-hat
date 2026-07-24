@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "author": {
+    "email": "khksoftware@gmail.com",
+    "name": "Dual Hat contributors",
+    "url": "https://github.com/khksoftware/dual-hat"
+  },
+  "description": "Use the Dual Hat framework for governed, AI-assisted software development.",
+  "displayName": "Dual Hat",
+  "homepage": "https://github.com/khksoftware/dual-hat",
+  "keywords": [
+    "governance",
+    "software-development",
+    "architecture",
+    "code-review"
+  ],
+  "license": "Apache-2.0",
+  "name": "dual-hat",
+  "repository": "https://github.com/khksoftware/dual-hat",
+  "skills": "./skills/",
+  "version": "0.1.0"
+}

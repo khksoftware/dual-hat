@@ -1,0 +1,39 @@
+{
+  "author": {
+    "email": "khksoftware@gmail.com",
+    "name": "Dual Hat contributors",
+    "url": "https://github.com/khksoftware/dual-hat"
+  },
+  "description": "Use the Dual Hat framework for governed, AI-assisted software development.",
+  "homepage": "https://github.com/khksoftware/dual-hat",
+  "interface": {
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "category": "Productivity",
+    "composerIcon": "./assets/dual-hat-agent-256.png",
+    "defaultPrompt": [
+      "Use Dual Hat to onboard this repository.",
+      "Use Dual Hat to plan and execute this change.",
+      "Review this work under Dual Hat governance."
+    ],
+    "developerName": "Dual Hat contributors",
+    "displayName": "Dual Hat",
+    "logo": "./assets/dual-hat-agent-512.png",
+    "longDescription": "Route onboarding, architecture, implementation, validation, and closure through an installed Dual Hat framework without copying its authority into the plugin.",
+    "shortDescription": "Run governed software work with Dual Hat.",
+    "websiteURL": "https://github.com/khksoftware/dual-hat"
+  },
+  "keywords": [
+    "governance",
+    "software-development",
+    "architecture",
+    "code-review"
+  ],
+  "license": "Apache-2.0",
+  "name": "dual-hat",
+  "repository": "https://github.com/khksoftware/dual-hat",
+  "skills": "./skills/",
+  "version": "0.1.0"
+}

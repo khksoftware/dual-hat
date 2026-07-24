@@ -1,0 +1,63 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/work-estimate.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assumes_no_architectural_hard_stop": {
+      "const": true
+    },
+    "estimated_active_hours": {
+      "required": [
+        "low",
+        "high"
+      ],
+      "type": "object"
+    },
+    "expansion_conditions": {
+      "type": "array"
+    },
+    "included": {
+      "type": "array"
+    },
+    "prior_revision": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "revision": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "revision_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema": {
+      "const": "dual-hat-work-estimate/1.0"
+    },
+    "segments": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "uncertainties": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "revision",
+    "estimated_active_hours",
+    "segments",
+    "included",
+    "uncertainties",
+    "expansion_conditions",
+    "assumes_no_architectural_hard_stop",
+    "prior_revision",
+    "revision_reason"
+  ],
+  "type": "object"
+}

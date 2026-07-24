@@ -1,0 +1,11 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "initial_files_are_authoritative": false,
+  "material_mutation_requires_approval": true,
+  "required_scaffold_dispositions": [
+    "retain",
+    "replace",
+    "migrate"
+  ],
+  "scenario": "nearly_empty"
+}

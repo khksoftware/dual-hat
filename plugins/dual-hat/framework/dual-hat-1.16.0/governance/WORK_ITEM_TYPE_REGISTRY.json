@@ -1,0 +1,57 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "extension_contract": {
+    "governance": "Adding a type such as defect requires a governed registry entry, identity rule, lifecycle compatibility decision, machine-readable classification validation, documentation, and tests. Unregistered or definition-free identifiers fail closed.",
+    "identifier_pattern": "^[a-z][a-z0-9_]*$",
+    "required_definition_fields": [
+      "identity_pattern",
+      "semantic_owner",
+      "classification_rule",
+      "classification",
+      "compatible_execution_lifecycles"
+    ]
+  },
+  "schema": "dual-hat-work-item-type-registry/1.0",
+  "types": {
+    "capability": {
+      "classification": {
+        "required_false": [
+          "governance_contract_change"
+        ],
+        "required_true": [
+          "product_increment"
+        ]
+      },
+      "classification_rule": "product_increment must be true; independently bounded governance_contract_change must be false; tightly coupled governance may use extension_classification.coupled_governance_change",
+      "compatible_execution_lifecycles": [
+        "author_approved_for_execution",
+        "engineering",
+        "remediation_required",
+        "engineering_complete",
+        "architecture_review"
+      ],
+      "identity_pattern": "^Capability [0-9]+$",
+      "semantic_owner": "bounded product, runtime, data, workflow, or operational increment"
+    },
+    "gov": {
+      "classification": {
+        "required_false": [
+          "product_increment"
+        ],
+        "required_true": [
+          "governance_contract_change"
+        ]
+      },
+      "classification_rule": "governance_contract_change must be true and product_increment must not be true",
+      "compatible_execution_lifecycles": [
+        "author_approved_for_execution",
+        "engineering",
+        "remediation_required",
+        "engineering_complete",
+        "architecture_review"
+      ],
+      "identity_pattern": "^GOV-[0-9]{4}$",
+      "semantic_owner": "independently bounded governance or framework change"
+    }
+  }
+}

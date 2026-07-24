@@ -1,0 +1,69 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/delegated-validation-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_fingerprint": {
+      "type": "string"
+    },
+    "cleanup": {
+      "type": "object"
+    },
+    "command": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "duration_seconds": {
+      "minimum": 0,
+      "type": "number"
+    },
+    "environment": {
+      "type": "object"
+    },
+    "failures": {
+      "type": "array"
+    },
+    "group_id": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "retries": {
+      "type": "array"
+    },
+    "return_code": {
+      "type": "integer"
+    },
+    "schema": {
+      "const": "dual-hat-delegated-validation-result/1.0"
+    },
+    "skips": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "tests": {
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "group_id",
+    "owner",
+    "command",
+    "environment",
+    "candidate_fingerprint",
+    "return_code",
+    "tests",
+    "skips",
+    "failures",
+    "retries",
+    "duration_seconds",
+    "cleanup"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,20 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "analogous_gap_review": "recorded; no evidence-confirmed adjacent gap",
+  "architecture_disposition": "accepted",
+  "deviation_found": false,
+  "engineering_self_report_only": false,
+  "material_violation_unresolved": false,
+  "primary_evidence_inspected": [
+    "repository diff",
+    "commits and remote state",
+    "generated artifacts",
+    "validation and publication evidence"
+  ],
+  "reviewer_role": "architecture",
+  "sealed_work_order_hash_verified": true,
+  "specific_remediation_obligation": null,
+  "systemic_control_obligation": null,
+  "tests_only": false,
+  "work_item_id": "GOV-EXAMPLE"
+}

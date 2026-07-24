@@ -1,0 +1,46 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/active-session.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "active_capability": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "authorization": {
+      "type": "array"
+    },
+    "handover_fingerprint": {
+      "type": "string"
+    },
+    "next_allowed_work": {
+      "type": "array"
+    },
+    "protected_assets": {
+      "type": "array"
+    },
+    "repository": {
+      "type": "object"
+    },
+    "schema": {
+      "const": "dual-hat-active-session/1.0"
+    },
+    "session_id": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "session_id",
+    "repository",
+    "active_capability",
+    "authorization",
+    "protected_assets",
+    "handover_fingerprint",
+    "next_allowed_work"
+  ],
+  "type": "object"
+}

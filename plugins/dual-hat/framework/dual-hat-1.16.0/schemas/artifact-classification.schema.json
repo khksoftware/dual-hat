@@ -1,0 +1,63 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://dual-hat.example/schemas/artifact-classification/1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "consumer": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "lifecycle": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "owner": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "packaging_class": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "path": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "primary_role": {
+      "enum": [
+        "product",
+        "dual_hat",
+        "product_engineering",
+        "workspace",
+        "archive_audit",
+        "test_fixture"
+      ]
+    },
+    "retention_rationale": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "stable_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "update_trigger": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "stable_id",
+    "path",
+    "primary_role",
+    "owner",
+    "consumer",
+    "lifecycle",
+    "update_trigger",
+    "packaging_class",
+    "retention_rationale"
+  ],
+  "title": "Dual Hat artifact classification",
+  "type": "object"
+}
