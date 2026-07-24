@@ -261,7 +261,7 @@
         "schemas/closeout-decision.schema.json",
         "schemas/work-estimate.schema.json",
         "tooling/continuity_closeout.py",
-        "help/TROUBLESHOOTING.md",
+        "guides/TROUBLESHOOTING.md",
         "governance/PROFILE_COMPOSITION.md",
         "tooling/staged_publication.py",
         "tooling/release_package.py"
@@ -344,9 +344,9 @@
         "governance/ARCHITECTURE_OFFICE_GUIDE.md",
         "governance/ENGINEERING_AGENT_GUIDE.md",
         "sessions/TASK_CONTEXT_RETRIEVAL.md",
-        "help/COMMAND_REFERENCE.md",
+        "guides/COMMAND_REFERENCE.md",
         "process/BOOTSTRAP.md",
-        "help/TROUBLESHOOTING.md"
+        "guides/TROUBLESHOOTING.md"
       ],
       "validation": "tooling/validate_framework.py"
     }
