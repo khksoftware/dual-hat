@@ -103,6 +103,14 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("prefer explicit iterations within the same capability", proportionality)
         self.assertIn("does not require a separate capability identity", lifecycle)
 
+    def test_specialist_review_and_long_run_reporting_contracts(self):
+        review = (ROOT / "governance/CODE_REVIEW_CONTRACT.md").read_text(encoding="utf-8")
+        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        self.assertIn("Architecture/Design, UX, and QA", review)
+        self.assertIn("bounded falsification-oriented posture", review)
+        self.assertIn("one-to-five-minute user-update cadence", engineering)
+        self.assertIn("Never invent percentage completion for an opaque worker", engineering)
+
     def test_inventory_separates_required_domains(self):
         payload = json.loads((ROOT / "repository/FRAMEWORK_CAPABILITY_INVENTORY.json").read_text(encoding="utf-8"))
         ids = {domain["id"] for domain in payload["domains"]}

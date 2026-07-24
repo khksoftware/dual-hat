@@ -2,6 +2,31 @@
 
 # Changelog
 
+## 1.15.0 - 2026-07-24
+
+- Added Architecture/Design, UX, and QA as the proportional independent
+  specialist-review roster, with falsification-oriented review for material
+  risks rather than routine three-gate ceremony.
+- Required one-to-five-minute verified progress updates for long-running work,
+  especially opaque delegated execution.
+- Required universal completion claims to name and reconcile their exact
+  inventory, counts, dispositions, and remainder.
+- Added a correction-to-control loop: generalize called-out errors, identify
+  their owning cause, apply and codify the smallest effective systemic
+  countermeasure, and inspect direct analogues.
+- Added preregistered hypothesis-blind execution, separate blinded result
+  review, and three independent arbiters for genuinely doubtful material
+  decisions.
+- Prohibited population-wide conclusions from representative samples unless a
+  valid preregistered sampling design supports them; enumerable broad-intake
+  corpora require item inventory and separate catalog, triage, and processing
+  completeness.
+- Required sealed independent approval before Architecture or Engineering
+  narrows external-source discovery or ingestion.
+
+This is a backward-compatible additive governance release. Existing 1.x
+authority, lifecycle, schema, and compatibility contracts remain unchanged.
+
 ## 1.14.0 - 2026-07-24
 
 - Allowed precisely bounded categorical authorization for dependency, tool,

@@ -15,6 +15,16 @@ The fingerprint includes base commit, complete candidate tree, changed-path dige
 
 Before sharding, inventory every required group exactly once. Workers receive isolated writable state and deterministic commands. The integration owner records counts, skips, omissions, duplicates, failures, retries, and logs, then centrally reconciles one authoritative result.
 
+Hypothesis experiments and three-arbiter decisions follow
+[Reasoning and Decision Review](../architecture/REASONING_AND_DECISION_REVIEW.md).
+Keep blinded executors, blinded result reviewers, and arbiters isolated until
+their judgments are locked. Give every party the protocol, primary evidence,
+authority, safety constraints, and neutral question needed to work, but
+withhold sponsor preference, expected answer, hypothesis or implementation
+identity when it can bias the role, and every other party's conclusions.
+Shared writable state, message leakage, or premature unblinding invalidates the
+affected result.
+
 Prefer delegating long-running execution and monitoring to a dedicated sub-agent so the primary agent can continue independent tasks within the current work item. The primary agent retains integration ownership and must not manufacture parallel work: when every remaining task is blocked on the long-running result, monitor or await that result instead. Delegation must preserve the original authority, safety, privacy, writable-boundary, evidence, and cleanup requirements.
 
 ## Delegated progress visibility
