@@ -7,9 +7,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+sys.dont_write_bytecode = True
 
 
 BACKLOG_STATUSES = {

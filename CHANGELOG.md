@@ -44,6 +44,9 @@
   plugin artifacts, standalone release notes, and deployment provenance survive
   forward core publication without becoming portable-core content; the
   portable changelog remains byte-exact canonical content.
+- Prevented ordinary Python validation, test, staging, and release commands
+  from generating bytecode residue, and made governed staging clean and report
+  only recognized Python cache artifacts before fail-closed mismatch checks.
 
 The three carried-forward control groups plus the routing/role/learning and
 plan/run-optimization groups account for all 13 items in the unpublished

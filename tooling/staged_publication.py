@@ -8,11 +8,15 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Callable
 
+sys.dont_write_bytecode = True
+
 from release_artifacts import is_release_product
 from content_security import ContentSecurityError, inspect_content_set
+from path_containment import ContainmentError, contained, is_reparse
 
 
 MANIFEST = ".dual-hat/export-manifest.json"
@@ -109,6 +113,79 @@ def _filesystem_files(root: Path) -> set[str]:
     return files
 
 
+def clean_generated_python_caches(root: Path) -> list[str]:
+    """Remove only generated Python cache artifacts contained by ``root``."""
+
+    unresolved_root = root.absolute()
+    if is_reparse(unresolved_root):
+        raise PublicationValidationError(
+            "publication root is a symlink or reparse point"
+        )
+    root = unresolved_root.resolve(strict=True)
+    cleaned: list[str] = []
+    cache_artifacts: list[Path] = []
+    cache_directories: list[Path] = []
+    linked_or_reparse: list[str] = []
+    for current, directories, names in os.walk(root, topdown=True, followlinks=False):
+        current_path = Path(current)
+        if is_reparse(current_path):
+            linked_or_reparse.append(current_path.relative_to(root).as_posix())
+            directories[:] = []
+            continue
+        current_path.resolve(strict=True).relative_to(root)
+        traversable: list[str] = []
+        for name in directories:
+            if name == ".git":
+                continue
+            directory = current_path / name
+            if is_reparse(directory):
+                linked_or_reparse.append(directory.relative_to(root).as_posix())
+                continue
+            traversable.append(name)
+            if name == "__pycache__":
+                cache_directories.append(directory)
+        directories[:] = traversable
+        for name in names:
+            artifact = current_path / name
+            if is_reparse(artifact):
+                linked_or_reparse.append(artifact.relative_to(root).as_posix())
+                continue
+            if artifact.suffix.casefold() not in {".pyc", ".pyo"}:
+                continue
+            cache_artifacts.append(artifact)
+    if linked_or_reparse:
+        raise PublicationValidationError(
+            "publication worktree contains symlink or reparse entries: "
+            f"{sorted(linked_or_reparse)}"
+        )
+    for artifact in cache_artifacts:
+        relative = artifact.relative_to(root).as_posix()
+        try:
+            contained(root, relative, must_exist=True, kind="file").unlink()
+        except ContainmentError as exc:
+            raise PublicationValidationError(
+                f"Python cache cleanup crossed a symlink or reparse point: {relative}"
+            ) from exc
+        else:
+            cleaned.append(relative)
+    for directory in sorted(
+        cache_directories,
+        key=lambda path: len(path.parts),
+        reverse=True,
+    ):
+        relative = directory.relative_to(root).as_posix()
+        try:
+            contained(root, relative, must_exist=True, kind="directory").rmdir()
+        except ContainmentError as exc:
+            raise PublicationValidationError(
+                f"Python cache cleanup crossed a symlink or reparse point: {relative}"
+            ) from exc
+        except OSError:
+            continue
+        cleaned.append(relative + "/")
+    return sorted(cleaned)
+
+
 def _worktree_controls(root: Path) -> tuple[dict, set[str]]:
     manifest_path, marker_path = root / MANIFEST, root / MARKER
     if not manifest_path.is_file() or not marker_path.is_file():
@@ -183,6 +260,7 @@ def stage_manifest_owned(
     """Stage only manifest-owned paths and then validate the complete index."""
     root = root.resolve()
     preserved_path = preserved_path or (lambda path: False)
+    cleaned_python_cache_paths = clean_generated_python_caches(root)
     manifest, owned = _worktree_controls(root)
     current = _filesystem_files(root)
     forbidden = sorted(path for path in current if _forbidden(path))
@@ -207,6 +285,8 @@ def stage_manifest_owned(
     result = validate_staged(root, preserved_path=preserved_path)
     result["pre_stage_status"] = pre_stage_status
     result["staging_strategy"] = "manifest-owned paths only"
+    result["cleaned_python_cache_count"] = len(cleaned_python_cache_paths)
+    result["cleaned_python_cache_paths"] = cleaned_python_cache_paths
     return result
 
 

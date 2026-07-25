@@ -20,10 +20,10 @@ From the framework root:
 
 ```text
 python tooling/validate_framework.py --root . --json
-python -m unittest discover -s tests
+python tooling/run_tests.py
 ```
 
-The first command validates semantic ownership, required documentation, product-neutrality, and declared artifacts. The second validates examples and bootstrap surfaces. Both must pass in a standalone tree before publication.
+The first command validates semantic ownership, required documentation, product-neutrality, and declared artifacts. The bytecode-safe test entrypoint validates examples and bootstrap surfaces without leaving Python cache residue. Both must pass in a standalone tree before publication.
 
 ## Reconcile planning state
 

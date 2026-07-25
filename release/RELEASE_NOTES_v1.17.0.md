@@ -69,6 +69,12 @@ publication preserves those namespaces without treating them as core drift.
 The portable changelog remains byte-exact canonical content and does not merge
 standalone-only deployment history.
 
+Shipped validation, test, staging, packaging, planning, and bootstrap
+entrypoints now suppress bytecode generation before loading local tooling.
+Governed staging also removes and reports only contained, recognized
+`__pycache__`, `.pyc`, and `.pyo` artifacts before its manifest mismatch gate;
+unrecognized files remain untouched and fail closed.
+
 Those three carried-forward groups plus the outcome-routing/role/learning
 changes and the plan/run optimization changes account for all 13 items carried
 into the unpublished portable 1.17.0 candidate.

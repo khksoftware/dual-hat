@@ -15,6 +15,8 @@ import sys
 from urllib.parse import urlsplit
 import zipfile
 
+sys.dont_write_bytecode = True
+
 from temporary_workspace import TemporaryWorkspacePolicy
 from release_artifacts import is_release_product
 from content_security import inspect_content_set
