@@ -21,6 +21,7 @@ from temporary_workspace import TemporaryWorkspacePolicy
 from release_artifacts import is_release_product
 from content_security import inspect_content_set
 from path_containment import ContainmentError, contained
+from publication_ownership import standalone_owned
 from staged_publication import verify_commit_tree
 
 
@@ -81,11 +82,16 @@ def source_files() -> dict[str, bytes]:
     else:
         raise RuntimeError("release packaging requires a canonical allowlist or published export manifest")
     actual = tuple(sorted(
-        path.relative_to(ROOT).as_posix()
+        relative
         for path in ROOT.rglob("*")
         if path.is_file() and ".git" not in path.parts and "__pycache__" not in path.parts
-        and path.relative_to(ROOT).as_posix() not in CONTROL_PATHS
-        and not is_release_product(path.relative_to(ROOT).as_posix())
+        for relative in (path.relative_to(ROOT).as_posix(),)
+        if relative not in CONTROL_PATHS
+        and not is_release_product(relative)
+        and not (
+            expected_publication is not None
+            and standalone_owned(relative)
+        )
     ))
     expected = tuple(sorted(expected_publication)) if expected_publication is not None else tuple(sorted(included))
     if expected != actual:
@@ -129,6 +135,16 @@ def _is_ancestor(ancestor: str, descendant: str) -> bool:
     if result.returncode not in {0, 1}:
         raise RuntimeError(result.stderr.strip() or "Git ancestry query failed")
     return result.returncode == 0
+
+
+def verify_portable_publication_commit(root: Path, revision: str) -> dict:
+    """Verify the exact portable manifest subset of a composite publication."""
+
+    return verify_commit_tree(
+        root,
+        revision,
+        preserved_path=standalone_owned,
+    )
 
 
 def _remote_identity(value: str) -> str:
@@ -197,7 +213,7 @@ def release_provenance_record(
     if not __import__("re").fullmatch(r"[0-9a-f]{40}",source): raise RuntimeError("export manifest source commit is invalid")
     if marker.get("source_commit")!=source or marker.get("tree_sha256")!=manifest.get("tree_sha256") or marker.get("manifest_sha256")!=sha256(manifest_bytes):
         raise RuntimeError("standalone publication marker does not bind the exact export manifest bytes")
-    committed=verify_commit_tree(ROOT,publication_commit)
+    committed=verify_portable_publication_commit(ROOT,publication_commit)
     if committed.get("commit")!=publication_commit or committed.get("manifest_sha256")!=marker.get("manifest_sha256"):
         raise RuntimeError("committed publication tree does not match marker and manifest provenance")
     return {"schema":"dual-hat-remote-publication-provenance/1.0","canonical_source_commit":source,

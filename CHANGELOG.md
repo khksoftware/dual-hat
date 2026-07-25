@@ -47,6 +47,9 @@
 - Prevented ordinary Python validation, test, staging, and release commands
   from generating bytecode residue, and made governed staging clean and report
   only recognized Python cache artifacts before fail-closed mismatch checks.
+- Bound release-package inputs and committed provenance to the exact
+  manifest-owned portable subset of composite publications while preserving
+  declared standalone deployment lanes and rejecting portable drift or loss.
 
 The three carried-forward control groups plus the routing/role/learning and
 plan/run-optimization groups account for all 13 items in the unpublished

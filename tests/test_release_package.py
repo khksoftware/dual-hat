@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
@@ -24,6 +25,54 @@ from release_artifacts import is_release_product  # noqa: E402
 
 
 class ReleasePackageTests(unittest.TestCase):
+    @staticmethod
+    def _git(root: Path, *arguments: str) -> str:
+        return subprocess.run(
+            ("git", *arguments),
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+    @staticmethod
+    def _write_composite_publication(root: Path) -> tuple[bytes, bytes]:
+        portable = b"# Portable framework\n"
+        plugin = b'{"name":"standalone-deployment"}\n'
+        record = {
+            "path": "README.md",
+            "sha256": sha256(portable),
+            "bytes": len(portable),
+            "mode": "100644",
+            "license": "Apache-2.0",
+            "origin": "canonical_source",
+        }
+        records = [record]
+        manifest = {
+            "source_commit": "a" * 40,
+            "tree_sha256": sha256(release_package.canonical_json(records)),
+            "content_files": records,
+        }
+        manifest_bytes = release_package.canonical_json(manifest)
+        marker = {
+            "schema": "dual-hat-published-state/1.0",
+            "license_expression": "Apache-2.0",
+            "source_commit": "a" * 40,
+            "tree_sha256": manifest["tree_sha256"],
+            "manifest_sha256": sha256(manifest_bytes),
+            "previous_export_identity": None,
+            "canonical_branch": "main",
+        }
+        (root / ".dual-hat").mkdir(parents=True)
+        (root / "plugins/dual-hat").mkdir(parents=True)
+        (root / "README.md").write_bytes(portable)
+        (root / ".dual-hat/export-manifest.json").write_bytes(manifest_bytes)
+        (root / ".dual-hat/published-state.json").write_bytes(
+            release_package.canonical_json(marker)
+        )
+        (root / "plugins/dual-hat/plugin.json").write_bytes(plugin)
+        return portable, plugin
+
     def test_unknown_binary_fails_closed_and_attestation_is_distinct_from_scan(self) -> None:
         payload = b"\x89PNG\r\n\x1a\n\x00fixture"
         with self.assertRaisesRegex(ContentSecurityError, "explicit allowlist"):
@@ -97,6 +146,48 @@ class ReleasePackageTests(unittest.TestCase):
                 "release/v0.1.0/dual-hat-0.1.0.release.json",
                 release_package.source_files(),
             )
+
+    def test_composite_source_files_package_only_manifest_owned_portable_subset(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            portable, plugin = self._write_composite_publication(root)
+            plugin_path = root / "plugins/dual-hat/plugin.json"
+            with patch.object(release_package, "ROOT", root):
+                self.assertEqual({"README.md": portable}, release_package.source_files())
+                self.assertEqual(plugin, plugin_path.read_bytes())
+                (root / "manual.txt").write_text("unknown", encoding="utf-8")
+                with self.assertRaisesRegex(RuntimeError, "unclassified=.*manual.txt"):
+                    release_package.source_files()
+
+    def test_composite_commit_verifies_portable_subset_and_fails_on_drift(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            portable, plugin = self._write_composite_publication(root)
+            plugin_path = root / "plugins/dual-hat/plugin.json"
+            self._git(root, "init", "-b", "main")
+            self._git(root, "config", "user.name", "Dual Hat Release Test")
+            self._git(root, "config", "user.email", "dual-hat-release@example.invalid")
+            self._git(root, "add", ".")
+            self._git(root, "commit", "-m", "Composite publication")
+            verified = release_package.verify_portable_publication_commit(root, "HEAD")
+            self.assertEqual("passed", verified["status"])
+            self.assertEqual(plugin, plugin_path.read_bytes())
+
+            (root / "README.md").write_text("altered portable bytes\n", encoding="utf-8")
+            self._git(root, "add", "README.md")
+            self._git(root, "commit", "-m", "Alter portable bytes")
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "content hash mismatch: README.md",
+            ):
+                release_package.verify_portable_publication_commit(root, "HEAD")
+
+            (root / "README.md").unlink()
+            self._git(root, "add", "-u", "README.md")
+            self._git(root, "commit", "-m", "Remove portable file")
+            with self.assertRaisesRegex(RuntimeError, "missing=.*README.md"):
+                release_package.verify_portable_publication_commit(root, "HEAD")
+            self.assertEqual(plugin, plugin_path.read_bytes())
 
     def test_canonical_source_tree_cannot_issue_a_production_release(self) -> None:
         if not (ROOT / "export/EXPORT_SOURCES.json").is_file(): self.skipTest("test applies to canonical source tree")

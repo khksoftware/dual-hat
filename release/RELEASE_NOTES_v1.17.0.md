@@ -75,6 +75,12 @@ Governed staging also removes and reports only contained, recognized
 `__pycache__`, `.pyc`, and `.pyo` artifacts before its manifest mismatch gate;
 unrecognized files remain untouched and fail closed.
 
+Release packaging and production provenance now verify the exact
+manifest-owned portable subset at the committed publication identity.
+Separately governed standalone plugin and deployment paths may coexist without
+entering the portable archive, while altered, missing, or unowned portable
+content remains fail-closed.
+
 Those three carried-forward groups plus the outcome-routing/role/learning
 changes and the plan/run optimization changes account for all 13 items carried
 into the unpublished portable 1.17.0 candidate.
