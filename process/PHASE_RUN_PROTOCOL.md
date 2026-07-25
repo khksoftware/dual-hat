@@ -22,6 +22,13 @@ Before announcing or opening the next phase or governed subphase, Architecture d
 
 Groom the affected forward-looking portfolio against the outcomes and environment that now exist. This includes roadmap and backlog entries, debt, future-work triggers, deferred decisions, risk/mitigation registers, migration or upgrade plans, and comparable project-profile authorities. Advance satisfied items; record completed outcomes; retire obsolete and duplicate items with an explicit replacement or reason; and refresh stale assumptions, conditions, owners, mappings, review events, and status. Map every still-live item to planned work or label it trigger-only/deferred with its next evaluation event. Planning advancement informs authorization and never grants it by itself.
 
+At an accumulated framework release or governed phase progression, review
+durable learning held by the affected authorities. Consolidate duplicate
+lessons, resolve contradictions, recheck staleness and scope, retire or narrow
+obsolete guidance, and promote a lesson across contexts only when evidence
+supports the generalization. This progression review does not require a
+per-run lesson ledger.
+
 For the concrete future-work registry, evaluate every trigger individually. A satisfied trigger advances to its decision- or implementation-ready state or receives an explicit terminal disposition; obsolete and duplicate triggers retire with successor/reason; stale conditions, owners, mappings, review events, and status are updated; and every live trigger maps to a planned phase/work item or an explicit trigger-only next review point. This concrete contract takes precedence over the general portfolio fallback above.
 
 Closure requires every exit criterion, zero unaccepted blockers, current planning/session/handover state, conformance, detached committed-tree validation, clean worktree, authorized release/tag decision, and rollback/reopening instructions. Publish a final handover. A closed phase is immutable; correction proceeds forward through a new bounded capability.

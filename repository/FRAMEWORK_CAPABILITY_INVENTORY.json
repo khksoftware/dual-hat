@@ -23,12 +23,17 @@
         "broader-goal analysis",
         "intent-versus-proposed-solution analysis",
         "anti-sycophancy",
-        "trade-off and alternative evaluation"
+        "trade-off and alternative evaluation",
+        "optional intended-end routing",
+        "failure-axis role composition",
+        "durable-learning governance"
       ],
       "support": [
         "architecture/REASONING_AND_DECISION_REVIEW.md",
         "architecture/OPERATING_MODES.md",
         "governance/ROLE_TRANSITIONS.md",
+        "governance/PROCESS_PROPORTIONALITY.md",
+        "process/PHASE_RUN_PROTOCOL.md",
         "governance/WORK_ITEM_TYPE_REGISTRY.json",
         "schemas/work-item.schema.json",
         "schemas/architecture-boundary-review.schema.json",
@@ -58,7 +63,10 @@
         "stakeholder decision gates",
         "sub-agent ownership",
         "shared-state serialization",
-        "central integration"
+        "central integration",
+        "mandatory turn-exit audit",
+        "blocked-boundary deliver-or-declare",
+        "blocked-state lifecycle and re-entry"
       ],
       "support": [
         "process/CAPABILITY_LIFECYCLE.md",
@@ -89,7 +97,8 @@
         "entry and exit criteria",
         "requirement-to-roadmap traceability",
         "status transitions",
-        "history preservation"
+        "history preservation",
+        "proportionate pre-execution plan optimization"
       ],
       "support": [
         "planning/TECHNICAL_DEBT.md",
@@ -132,7 +141,10 @@
         "subprocess cleanup",
         "test-runtime and I/O monitoring",
         "temporary workspace containment",
-        "owner-scoped temporary cleanup"
+        "owner-scoped temporary cleanup",
+        "single-active-writer shared artifact lanes",
+        "checkpointed writer reassignment",
+        "read-only independent reviewers"
       ],
       "support": [
         "validation/PROCESS_WATCHDOG.md",
@@ -247,7 +259,8 @@
         "source publication versus release separation",
         "lightweight continuity closeout",
         "full-closure trigger selection",
-        "deferred-publication inventory"
+        "deferred-publication inventory",
+        "portable-core versus plugin-deployment ownership"
       ],
       "support": [
         "governance/CONFORMANCE_POLICY.md",
@@ -310,7 +323,8 @@
         "manual switching fallback",
         "mandatory-tier hard stop",
         "explicit production provider and model configuration",
-        "atomic safe switching"
+        "atomic safe switching",
+        "re-tier versus re-role diagnosis"
       ],
       "support": [
         "schemas/model-routing.schema.json",

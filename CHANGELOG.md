@@ -2,24 +2,55 @@
 
 # Changelog
 
-## 1.16.0 - 2026-07-24
+## 1.17.0 - 2026-07-25
 
-- Added self-contained Codex and Claude plugin deployment forms backed by the
-  same checksum-governed Dual Hat framework payload.
-- Expanded First Use guidance so adopters can choose a standalone release,
-  Codex plugin, or Claude plugin without changing the framework's authority or
-  onboarding contracts.
-- Added attested Dual Hat branding assets for repository and plugin surfaces.
-- Kept plugin catalogs, packages, payloads, and plugin-only acceptance tests
-  out of the standalone framework ZIP to prevent recursive packaging.
-- Corrected post-artifact release validation so a recorded source-publication
-  commit remains valid when it is an ancestor of the current published head.
-- Added binary-aware canonical export and package-specific provenance
-  projection for attested assets.
+- Added optional discover/decide/deliver/single-role-pass routing without a
+  mandatory pipeline.
+- Required the smallest distinct-value role roster derived from actual failure
+  axes, with explicit re-tier-versus-re-role diagnosis.
+- Distinguished re-tiering, primary-hat transition, and specialist
+  reassignment, and prohibited single-role passes from bypassing Architecture
+  acceptance.
+- During parallel/shared mutation, assigned one active writer at a time plus
+  one integration owner to each shared artifact lane, with implicit trivial
+  ownership and checkpointed reassignment; reviewers remain read-only.
+- Added compact deliver-or-declare reporting only at governed blocked
+  boundaries plus explicit blocked-state entry, evidence, and re-entry
+  semantics.
+- Added selective durable-learning retention plus accumulated-release and
+  phase-progression consolidation, contradiction, and staleness review without
+  a per-run ledger.
+- Added proportionate pre-execution plan optimization with independent
+  Architecture review only for material scale, complexity, risk, or
+  irreversibility.
+- Added non-disruptive checkpoint reevaluation of materially long-running or
+  resource-consuming execution when observed bottlenecks, throughput, yield,
+  allocation, batching, failures, cost, or wall time justify it.
+- Required periodic optimization review to confirm, revise, or retire material
+  embedded assumptions against current evidence rather than confusing
+  unchallenged with supported, with experimentation proportional to consequence
+  and uncertainty.
+- Added the mandatory response-boundary turn-exit audit to both role guides.
+- Consolidated carried-forward active-execution controls: termination
+  preflight, active-goal response/continuation interlock, execution lease, and
+  response-end watchdog.
+- Consolidated carried-forward validation and transition controls: separate
+  validation gate versus mutation, nonzero-test evidence, lifecycle-aware gate
+  inputs, and pre-state-versus-replay transition validation.
+- Consolidated carried-forward completeness and evidence controls: itemized
+  adjudication readiness, identity-bound progress accounting, and
+  current-capability claim verification.
+- Separated portable-core ownership from standalone deployment namespaces so
+  plugin artifacts, standalone release notes, and deployment provenance survive
+  forward core publication without becoming portable-core content; the
+  portable changelog remains byte-exact canonical content.
 
-This is a backward-compatible additive deployment and packaging release.
-Existing 1.x authority, lifecycle, schema, and compatibility contracts remain
-unchanged.
+The three carried-forward control groups plus the routing/role/learning and
+plan/run-optimization groups account for all 13 items in the unpublished
+portable 1.17.0 candidate.
+
+This is a backward-compatible additive governance release. Existing 1.x
+authority, lifecycle, schema, and compatibility contracts remain unchanged.
 
 ## 1.15.0 - 2026-07-24
 

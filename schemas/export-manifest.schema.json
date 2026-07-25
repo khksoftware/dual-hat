@@ -8,66 +8,6 @@
       "minLength": 1,
       "type": "string"
     },
-    "binary_attestations": {
-      "items": {
-        "additionalProperties": false,
-        "properties": {
-          "content_type": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "distribution_rule": {
-            "const": "include"
-          },
-          "path": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "provenance": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "purpose": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "retention_rule": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "review_evidence": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "rights_basis": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "sha256": {
-            "pattern": "^[A-F0-9]{64}$",
-            "type": "string"
-          },
-          "size_bytes": {
-            "minimum": 1,
-            "type": "integer"
-          }
-        },
-        "required": [
-          "path",
-          "content_type",
-          "purpose",
-          "provenance",
-          "sha256",
-          "size_bytes",
-          "rights_basis",
-          "review_evidence",
-          "retention_rule",
-          "distribution_rule"
-        ],
-        "type": "object"
-      },
-      "type": "array"
-    },
     "content_files": {
       "items": {
         "additionalProperties": false,
@@ -150,21 +90,8 @@
       "const": "dual-hat-export-manifest/3.0"
     },
     "source_commit": {
-      "oneOf": [
-        {
-          "pattern": "^[0-9a-f]{40}$",
-          "type": "string"
-        },
-        {
-          "const": "WORKING-TREE-UNCOMMITTED"
-        }
-      ]
-    },
-    "source_provenance_state": {
-      "enum": [
-        "verified_committed_tree",
-        "uncommitted_working_tree_preview_not_publishable"
-      ]
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
     },
     "third_party_notice_sha256": {
       "pattern": "^[A-F0-9]{64}$",
@@ -184,9 +111,7 @@
     "framework",
     "license_expression",
     "source_commit",
-    "source_provenance_state",
     "content_files",
-    "binary_attestations",
     "copied_file_count",
     "generated_content_file_count",
     "control_file_count",

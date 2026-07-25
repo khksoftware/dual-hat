@@ -63,30 +63,6 @@ RELEASE_CONTROL_PATHS = {
     ".dual-hat-release/content-manifest.json",
     ".dual-hat-release/SHA256SUMS",
 }
-PLATFORM_INTEGRATION_PATHS = {
-    ".dual-hat/export-manifest.json",
-    "BINARY_PROVENANCE.json",
-    "README.md",
-    "export/EXPORT_SOURCES.json",
-    "guides/DEPLOYMENT_FORMS.md",
-    "CHANGELOG.md",
-}
-PLATFORM_INTEGRATION_PREFIXES = (
-    ".agents/",
-    ".claude-plugin/",
-    "plugins/",
-    "tests/",
-)
-
-
-def is_platform_integration_surface(relative: str) -> bool:
-    """Return whether a file intentionally describes or packages an agent platform."""
-
-    return (
-        relative in PLATFORM_INTEGRATION_PATHS
-        or relative.startswith(PLATFORM_INTEGRATION_PREFIXES)
-        or re.fullmatch(r"release/RELEASE_NOTES_v\d+\.\d+\.\d+\.md", relative) is not None
-    )
 
 
 def validate_framework(root: Path) -> tuple[str, ...]:
@@ -196,10 +172,7 @@ def validate_framework(root: Path) -> tuple[str, ...]:
         for pattern in FORBIDDEN_PRODUCT_PATTERNS:
             if pattern.search(text):
                 failures.append(f"product-specific leakage in {relative}: {pattern.pattern}")
-        if (
-            relative != "tooling/framework_completeness.py"
-            and not is_platform_integration_surface(relative)
-        ):
+        if relative != "tooling/framework_completeness.py":
             for pattern in FORBIDDEN_PLATFORM_PATTERNS:
                 if pattern.search(text):
                     failures.append(f"platform-specific leakage in normative core {relative}: {pattern.pattern}")

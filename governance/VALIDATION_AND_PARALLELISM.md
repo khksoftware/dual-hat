@@ -13,7 +13,15 @@ Validation profiles are risk-based:
 
 The fingerprint includes base commit, complete candidate tree, changed-path digest, runtime/tool versions, material optional dependencies, schemas, and profile identity. Changed paths optimize selection but cannot define the final candidate.
 
-Before sharding, inventory every required group exactly once. Workers receive isolated writable state and deterministic commands. The integration owner records counts, skips, omissions, duplicates, failures, retries, and logs, then centrally reconciles one authoritative result.
+Before sharding, inventory every required group exactly once. Workers receive
+isolated writable state and deterministic commands. During parallel or shared
+mutation, every shared artifact lane has one active writer at a time and one
+integration owner; trivial serial work may use its primary owner implicitly.
+Reassign a lane only at a checkpoint after the prior writer is quiescent and
+partial state is handed off. Reviewers and other workers are read-only on that
+lane and return nonoverlapping findings or candidate outputs. The integration
+owner records counts, skips, omissions, duplicates, failures, retries, and
+logs, then centrally reconciles one authoritative result.
 
 Hypothesis experiments and three-arbiter decisions follow
 [Reasoning and Decision Review](../architecture/REASONING_AND_DECISION_REVIEW.md).
@@ -40,5 +48,18 @@ Delegation never transfers user-communication accountability. Before launch, the
 - if monitoring or notification fails, immediately reconstructs state, reports the visibility gap, and resumes from verified evidence.
 
 The primary agent remains responsible for reconciliation, evidence, cleanup, and truthful status even when a sub-agent executes and monitors the task.
+
+Every numeric progress report defines and preserves the identity of its counted
+unit, denominator population, and completion predicate. The integration owner
+reconciles completed identities against the frozen population; secondary evidence,
+provenance rows, retries, routed/split extras, and multiple records for one assigned
+identity do not advance completion unless the work order explicitly defines them as
+the unit. If the artifact tracks both assigned outcomes and supporting entries,
+report both counters separately and validate uniqueness, coverage, and cursor
+arithmetic before publishing the percentage or fraction. A proxy row count must
+never be presented as outcome completion. Tests for a living progress ledger derive
+mutable counts, latest-wave identities, and current revisions from the same
+authoritative evidence graph as the ledger; hard-coded expectations are reserved
+for stable contract invariants, not yesterday's checkpoint.
 
 All orchestrated writable state uses the canonical temporary-workspace resolver. Every shard receives a unique owner-scoped run directory below an approved operating-system temporary root; repository, author, project, instance, and repository-sibling workspaces are prohibited. A shard cleans only its own directory in guaranteed finalization, and the integration owner verifies no run directory, worktree registration, child process, cache, or raw log remains.

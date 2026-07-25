@@ -17,3 +17,14 @@ Engineering completion moves to Architecture review, not acceptance. `accepted` 
 ## Failure and recovery
 
 Context loss reloads canonical state rather than relying on memory. Engineering interruption reaches a safe pause or records partial mutation and recovery steps. Blocked and aborted runs produce reports; Architecture never fabricates missing evidence. Missing snapshot or ignored state is an explicit limitation. Conflicting mode state, dirty transition, stale order, stale remote, incomplete report, failed archival, or failed publication blocks the affected transition. Inability to obtain independent review is disclosed and may use structured adversarial review when proportionate.
+
+`blocked` is a governed lifecycle state, not a synonym for slow, waiting,
+recoverable, or incomplete work. Enter it only at a permitted blocked boundary
+when no safe in-scope action remains and the applicable blocked-state threshold
+or work-order gate is satisfied. The transition records attempted work, the
+exact obstacle, required capability/decision/external change, preserved state,
+cleanup, recommended escalation, owner, and precise re-entry condition.
+Blocked work is neither accepted nor archived. When the condition changes,
+Architecture or the authorized controller returns it to the compatible active
+state from the recorded checkpoint; it does not fabricate completion. `aborted`
+requires explicit authority and a terminal preservation/disposition decision.

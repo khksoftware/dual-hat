@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
 
-from framework_completeness import is_platform_integration_surface, validate_framework  # noqa: E402
+from framework_completeness import validate_framework  # noqa: E402
 from staged_publication import (  # noqa: E402
     PublicationValidationError,
     stage_manifest_owned,
@@ -61,26 +61,6 @@ class FrameworkTests(unittest.TestCase):
 
     def test_semantic_completeness(self):
         self.assertEqual((), validate_framework(ROOT))
-
-    def test_platform_integrations_are_not_mistaken_for_normative_core(self):
-        for relative in (
-            "README.md",
-            "CHANGELOG.md",
-            "guides/DEPLOYMENT_FORMS.md",
-            "release/RELEASE_NOTES_v1.16.0.md",
-            ".agents/plugins/marketplace.json",
-            ".claude-plugin/marketplace.json",
-            "plugins/dual-hat/.codex-plugin/plugin.json",
-            "plugins/dual-hat/framework/dual-hat-1.15.0/README.md",
-            "tests/test_agent_plugin_package.py",
-        ):
-            self.assertTrue(is_platform_integration_surface(relative), relative)
-        for relative in (
-            "governance/PROCESS_PROPORTIONALITY.md",
-            "prompts/ENGINEERING_AGENT_PROMPT.md",
-            "tooling/model_routing.py",
-        ):
-            self.assertFalse(is_platform_integration_surface(relative), relative)
 
     def test_json_and_schema_files_parse(self):
         for path in [*ROOT.rglob("*.json"), *ROOT.rglob("*.schema.json")]:
@@ -130,6 +110,187 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("bounded falsification-oriented posture", review)
         self.assertIn("one-to-five-minute user-update cadence", engineering)
         self.assertIn("Never invent percentage completion for an opaque worker", engineering)
+
+    def test_117_routes_by_intended_end_without_mandatory_pipeline(self):
+        operating = (ROOT / "architecture/OPERATING_MODEL.md").read_text(encoding="utf-8")
+        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (operating, framework, architecture, engineering):
+            normalized = " ".join(guidance.lower().split())
+            for route in ("discover", "decide", "deliver", "single-role"):
+                self.assertIn(route, normalized)
+            self.assertIn("not", normalized)
+            self.assertTrue("mandatory pipeline" in normalized or "mandatory stages" in normalized)
+
+    def test_117_composes_distinct_value_roster_and_diagnoses_assignment(self):
+        review = (ROOT / "governance/CODE_REVIEW_CONTRACT.md").read_text(encoding="utf-8")
+        routing = (ROOT / "governance/MODEL_TIER_AND_RUNTIME_BINDING.md").read_text(encoding="utf-8")
+        architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (review, architecture):
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("smallest", normalized)
+            self.assertIn("distinct", normalized)
+            self.assertIn("failure axes", normalized)
+        for guidance in (routing, architecture, engineering):
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("re-tier", normalized)
+            self.assertIn("re-role", normalized)
+            self.assertIn("capability", normalized)
+            self.assertTrue("ownership" in normalized or "authority" in normalized)
+
+    def test_117_shared_artifact_lanes_are_single_writer(self):
+        validation = (ROOT / "governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
+        review = (ROOT / "governance/CODE_REVIEW_CONTRACT.md").read_text(encoding="utf-8")
+        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (validation, review, framework, engineering):
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("shared", normalized)
+            self.assertIn("artifact lane", normalized)
+            self.assertIn("writer", normalized)
+            self.assertIn("read-only", normalized)
+            self.assertIn("active writer at a time", normalized)
+            self.assertIn("trivial serial", normalized)
+            self.assertIn("checkpoint", normalized)
+            self.assertIn("quiescent", normalized)
+
+    def test_117_deliver_or_declare_is_only_for_governed_blockage(self):
+        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (framework, architecture, engineering):
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("deliver", normalized)
+            self.assertIn("declare", normalized)
+            self.assertIn("blocked boundary", normalized)
+            self.assertIn("exact obstacle", normalized)
+            self.assertIn("preserved state", normalized)
+            self.assertIn("recoverable", normalized)
+
+    def test_117_durable_learning_avoids_per_run_ledger(self):
+        proportionality = (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
+        phase = (ROOT / "process/PHASE_RUN_PROTOCOL.md").read_text(encoding="utf-8")
+        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        for guidance in (proportionality, phase, framework):
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("accumulated framework release", normalized)
+            self.assertIn("governed phase progression", normalized)
+            self.assertIn("contradiction", normalized)
+            self.assertIn("staleness", normalized)
+            self.assertIn("per-run", normalized)
+
+    def test_117_role_guides_apply_turn_exit_audit(self):
+        for relative in (
+            "governance/ARCHITECTURE_OFFICE_GUIDE.md",
+            "governance/ENGINEERING_AGENT_GUIDE.md",
+        ):
+            guidance = (ROOT / relative).read_text(encoding="utf-8")
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("mandatory turn-exit audit", normalized)
+            self.assertIn("before every response boundary", normalized)
+            self.assertIn("do not emit a terminal response", normalized)
+            self.assertIn("execute it in the same turn", normalized)
+            self.assertIn("resumable next-action receipt", normalized)
+            self.assertIn("accidental turn termination", normalized)
+
+    def test_117_version_and_plugin_ownership_boundary(self):
+        version = json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))
+        publication = (ROOT / "release/PUBLICATION.md").read_text(encoding="utf-8")
+        self.assertEqual("1.17.0", version["version"])
+        self.assertTrue((ROOT / "release/RELEASE_NOTES_v1.17.0.md").is_file())
+        source_map_path = ROOT / "export/EXPORT_SOURCES.json"
+        if source_map_path.is_file():
+            source_map = json.loads(source_map_path.read_text(encoding="utf-8"))
+            self.assertIn("release/RELEASE_NOTES_v1.17.0.md", source_map["included"])
+        self.assertIn("canonical source owns only the portable Dual Hat core", publication)
+        self.assertIn("standalone", publication)
+        self.assertIn("must not carry a", publication)
+        self.assertNotIn("E" + "OS", publication)
+        self.assertFalse((ROOT / "plugins").exists())
+
+    def test_117_distinguishes_reassignment_from_authority_transition(self):
+        transitions = (ROOT / "governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
+        normalized = " ".join(transitions.lower().split())
+        for required in (
+            "re-tiering",
+            "primary-hat transition",
+            "specialist reassignment",
+            "atomic safe boundary",
+            "checkpointed",
+            "architecture's acceptance authority",
+        ):
+            self.assertIn(required, normalized)
+        self.assertIn("single-role pass", normalized)
+        self.assertIn("sole authority to accept and archive", normalized)
+
+    def test_117_single_role_pass_cannot_self_accept(self):
+        operating = (ROOT / "architecture/OPERATING_MODEL.md").read_text(encoding="utf-8")
+        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (operating, framework, engineering):
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("single-role pass", normalized)
+            self.assertIn("accept", normalized)
+            self.assertTrue("architecture" in normalized or "self-acceptance" in normalized)
+
+    def test_117_blocked_state_has_entry_and_reentry_semantics(self):
+        lifecycle = (ROOT / "process/WORK_ITEM_LIFECYCLE.md").read_text(encoding="utf-8")
+        normalized = " ".join(lifecycle.lower().split())
+        for required in (
+            "governed lifecycle state",
+            "no safe in-scope action remains",
+            "exact obstacle",
+            "re-entry condition",
+            "neither accepted nor archived",
+            "recorded checkpoint",
+        ):
+            self.assertIn(required, normalized)
+
+    def test_117_durable_learning_has_nonplanning_owner(self):
+        inventory = json.loads(
+            (ROOT / "repository/FRAMEWORK_CAPABILITY_INVENTORY.json").read_text(encoding="utf-8")
+        )
+        domains = {row["id"]: row for row in inventory["domains"]}
+        self.assertIn("durable-learning governance", domains["architecture"]["responsibilities"])
+        self.assertNotIn(
+            "accumulated durable-learning review",
+            domains["planning"]["responsibilities"],
+        )
+
+    def test_117_plan_optimization_is_proportionate_and_retests_assumptions(self):
+        proportionality = (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
+        planning = (ROOT / "planning/PLANNING_MODEL.md").read_text(encoding="utf-8")
+        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (proportionality, planning, engineering):
+            normalized = " ".join(guidance.lower().split())
+            for required in (
+                "brute force",
+                "value",
+                "sequence",
+                "parallelism",
+                "checkpoint",
+                "evidence reuse",
+                "cheaper equivalent control",
+                "sealed independent architecture optimization review",
+                "straightforward",
+                "bottleneck",
+                "throughput",
+                "value yield",
+                "batching",
+                "wall time",
+                "confirm",
+                "revise",
+                "retire",
+                "unchallenged",
+                "supported",
+                "consequence",
+                "uncertainty",
+            ):
+                self.assertIn(required, normalized)
+            self.assertIn("healthy work", normalized)
+            self.assertIn("ceremony", normalized)
 
     def test_inventory_separates_required_domains(self):
         payload = json.loads((ROOT / "repository/FRAMEWORK_CAPABILITY_INVENTORY.json").read_text(encoding="utf-8"))

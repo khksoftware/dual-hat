@@ -14,6 +14,23 @@ repeated approval prompts without weakening evaluation or expanding authority.
 
 Execution authorization also does not settle consequential design details that the existing decision record leaves open. Before an implementation-ready specification fixes a material product, user-experience, workflow, commercial, privacy, or architectural choice, Architecture uses the lightest useful discussion artifact to expose and resolve the meaningful options. This is a decision-quality control, not a mandatory separate capability or ceremony.
 
+Once the design or plan is ready and before execution, run a proportionate
+optimization pass. Consider avoiding brute force, ordering for earlier value,
+improving dependency sequence, allocating parallelism and resources,
+checkpointing incremental execution, improving evidence reuse, and substituting a
+cheaper equivalent control. Preserve scope, authority, acceptance, safety, and
+recovery. A sealed independent Architecture optimization review is required
+only when scale, complexity, risk, or irreversibility justifies its distinct
+judgment; straightforward plans proceed without a separate ritual.
+Long-running or materially resource-consuming execution also receives
+proportionate reevaluation at meaningful checkpoints for changed bottlenecks,
+throughput, failures, value yield, allocation, batching, cost, and wall time.
+Retest material embedded assumptions or hypotheses against current evidence,
+explicitly confirm, revise, or retire them, and distinguish supported
+assumptions from merely unchallenged ones. Experiment only in proportion to
+consequence and uncertainty. The reevaluation must not pause healthy work or
+become a routine ceremony.
+
 ## Required lifecycle
 
 Planning items have stable IDs, title, objective, owner, dependencies, status, entry and exit criteria, requirements, validation, risks, triggers, history, and supersession. Work-item planning assigns the abstract model tier required for each materially distinct activity, including implementation, architecture, independent review, security/privacy/rights review, and release review where applicable. It references the current project-local concrete mapping rather than embedding provider choices in portable policy. Status transitions are append-only events or otherwise auditable. Current and historical projections cannot contradict one another.

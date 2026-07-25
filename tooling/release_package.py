@@ -25,8 +25,6 @@ from staged_publication import verify_commit_tree
 ROOT = Path(__file__).resolve().parents[1]
 CONTROL_PATHS = {"export/EXPORT_READINESS.json", "export/EXPORT_SOURCES.json"}
 ARCHIVE_DATE = (1980, 1, 1, 0, 0, 0)
-PLUGIN_DISTRIBUTION_PREFIXES = (".agents/", ".claude-plugin/", "plugins/")
-PLUGIN_DISTRIBUTION_PATHS = {"tests/test_agent_plugin_package.py"}
 
 
 def canonical_json(value: object) -> bytes:
@@ -59,23 +57,12 @@ def release_maturity(release_version: str) -> str:
     return "stable_1_x" if int(release_version.split(".", 1)[0]) >= 1 else "functional_pre_1_0"
 
 
-def is_plugin_distribution(path: str) -> bool:
-    normalized_path = path.replace("\\", "/")
-    return (
-        normalized_path in PLUGIN_DISTRIBUTION_PATHS
-        or normalized_path.startswith(PLUGIN_DISTRIBUTION_PREFIXES)
-    )
-
-
 def source_files() -> dict[str, bytes]:
     canonical_specification = ROOT / "export/EXPORT_SOURCES.json"
     publication_manifest = ROOT / ".dual-hat/export-manifest.json"
     if canonical_specification.is_file():
         specification = json.loads(canonical_specification.read_text(encoding="utf-8"))
-        included = tuple(
-            str(path) for path in specification["included"]
-            if not is_plugin_distribution(str(path))
-        )
+        included = tuple(str(path) for path in specification["included"])
         expected_publication: set[str] | None = None
     elif publication_manifest.is_file():
         manifest = json.loads(publication_manifest.read_text(encoding="utf-8"))
@@ -84,14 +71,9 @@ def source_files() -> dict[str, bytes]:
             raise RuntimeError("published source manifest lacks content records")
         included = tuple(
             str(row["path"]) for row in records
-            if isinstance(row, dict)
-            and row.get("origin") == "canonical_source"
-            and not is_plugin_distribution(str(row["path"]))
+            if isinstance(row, dict) and row.get("origin") == "canonical_source"
         )
-        expected_publication = {
-            str(row["path"]) for row in records
-            if isinstance(row, dict) and not is_plugin_distribution(str(row["path"]))
-        } | {
+        expected_publication = {str(row["path"]) for row in records if isinstance(row, dict)} | {
             ".dual-hat/export-manifest.json", ".dual-hat/published-state.json",
         }
     else:
@@ -101,7 +83,6 @@ def source_files() -> dict[str, bytes]:
         for path in ROOT.rglob("*")
         if path.is_file() and ".git" not in path.parts and "__pycache__" not in path.parts
         and path.relative_to(ROOT).as_posix() not in CONTROL_PATHS
-        and not is_plugin_distribution(path.relative_to(ROOT).as_posix())
         and not is_release_product(path.relative_to(ROOT).as_posix())
     ))
     expected = tuple(sorted(expected_publication)) if expected_publication is not None else tuple(sorted(included))
@@ -120,22 +101,12 @@ def source_files() -> dict[str, bytes]:
     if publication_manifest.is_file():
         declared = {
             str(row["path"]): (row.get("sha256"), row.get("bytes"))
-            for row in records
-            if isinstance(row, dict)
-            and row.get("origin") == "canonical_source"
-            and not is_plugin_distribution(str(row["path"]))
+            for row in records if isinstance(row, dict) and row.get("origin") == "canonical_source"
         }
         mismatches = sorted(path for path, data in result.items()
                             if declared.get(path) != (sha256(data), len(data)))
         if mismatches:
             raise RuntimeError(f"published source bytes contradict export provenance: {mismatches}")
-    if "BINARY_PROVENANCE.json" in result:
-        provenance = json.loads(result["BINARY_PROVENANCE.json"].decode("utf-8"))
-        provenance["binary_attestations"] = [
-            row for row in provenance["binary_attestations"]
-            if str(row["path"]) in result
-        ]
-        result["BINARY_PROVENANCE.json"] = canonical_json(provenance)
     return result
 
 
@@ -240,20 +211,11 @@ def release_provenance(expected_remote_identity: str) -> tuple[str, str]:
     return str(record["canonical_source_commit"]),str(record["external_publication_commit"])
 
 
-def binary_attestations(files: dict[str, bytes]) -> tuple[dict[str, object], ...]:
-    provenance = json.loads(files["BINARY_PROVENANCE.json"].decode("utf-8"))
-    return tuple(
-        row for row in provenance["binary_attestations"]
-        if str(row["path"]) in files
-    )
-
-
 def package_entries() -> dict[str, bytes]:
     release_version = version()
     prefix = f"dual-hat-{release_version}/"
     source = source_files()
-    attestations = binary_attestations(source)
-    inspect_content_set(source, binary_attestations=attestations)
+    inspect_content_set(source)
     records = [
         {"bytes": len(data), "path": path, "sha256": sha256(data)}
         for path, data in sorted(source.items())
@@ -275,7 +237,7 @@ def package_entries() -> dict[str, bytes]:
         ".dual-hat-release/SHA256SUMS": ("\n".join(checksum_rows) + "\n").encode("utf-8"),
     }
     complete = {**source, **controls}
-    inspect_content_set(complete, binary_attestations=attestations)
+    inspect_content_set(complete)
     return {prefix + path: data for path, data in sorted(complete.items())}
 
 

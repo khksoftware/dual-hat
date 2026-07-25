@@ -13,6 +13,15 @@ Portable Dual Hat policy names capabilities, never providers or product model na
 
 Architecture assigns tiers to activities. A mandatory tier cannot be silently downgraded. Optional downgrade requires a recorded reason and user/Architecture confirmation; unavailable mandatory capability produces a resumable hard stop. Fallback must satisfy the same tier or remain explicitly inadequate. Evidence records the abstract requirement, concrete local selection, environment fingerprint, availability, and confirmation.
 
+When an agent or reviewer struggles, diagnose whether the mismatch is
+capability or ownership before retrying. **Re-tier** when the assigned model or
+runtime lacks the reasoning depth, context, tools, or reliability required by
+the same role. **Re-role** when the task's authority, method, failure axis, or
+expected judgment belongs to a different role even if the current model is
+capable. Do not spend model tier to compensate for a confused role, and do not
+rename a role to conceal inadequate capability. Preserve the work boundary and
+independence requirements across either change.
+
 Development adapters bind tiers using hash-verified exposed evidence only: adapter identity, tool inventory, complete runtime/platform fingerprint, supported probes, configuration, and user confirmation. Any fingerprint change invalidates capability, availability, and confirmation evidence and forces remapping. If the host cannot switch automatically, it gives adapter-specific manual switching instructions and records the user-confirmed selection. It never pretends to detect a capability the host withholds.
 
 The host adapter and governed capability registry are the trusted provenance boundaries. Evidence must identify its source type, authority ID, observation ID, complete environment identity where applicable, and canonical evidence hash. Core routing rejects malformed, altered, or stale receipts; it does not elevate self-hashed records from an untrusted caller into provider or user authority.

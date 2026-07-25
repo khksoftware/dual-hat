@@ -2,12 +2,7 @@
 
 # Dual Hat
 
-<p>
-  <img src="assets/dual-hat-agent.png" alt="Dual Hat agent mascot wearing two top hats" width="180" align="left">
-  Dual Hat is a product-neutral operating framework for governed, AI-assisted software development. It separates two complementary responsibilities: the <strong>Architecture Office</strong> defines intent, requirements, boundaries, trade-offs, sequencing, and acceptance; the <strong>Engineering Agent</strong> implements, validates, publishes, and reports the work. One agent can wear both hats in Integrated Mode, or separate agents can perform the roles in Split Mode.
-</p>
-
-<br clear="left">
+Dual Hat is a product-neutral operating framework for governed, AI-assisted software development. It separates two complementary responsibilities: the **Architecture Office** defines intent, requirements, boundaries, trade-offs, sequencing, and acceptance; the **Engineering Agent** implements, validates, publishes, and reports the work. One agent can wear both hats in Integrated Mode, or separate agents can perform the roles in Split Mode.
 
 Use Dual Hat when a software project needs more than code generation: explicit authority, bounded work orders, traceable decisions, safe repository mutation, proportional validation, independent review, resumable execution, and reliable closure. It can onboard an existing repository, a nearly empty repository, or a project that does not yet have a repository, then adapt through a product-specific profile without weakening the framework's core controls.
 
@@ -21,24 +16,17 @@ Start with the [operating model](architecture/OPERATING_MODEL.md), [onboarding w
 
 ## First use
 
-First choose a deployment form:
-
-- **Standalone release:** platform-neutral, checksum-verifiable framework installation.
-- **Codex plugin:** a self-contained `use-dual-hat` skill for Codex with a checksum-governed framework payload.
-- **Claude plugin:** the same self-contained skill, namespaced for Claude Code, with the same governed payload.
-
-See [Deployment Forms](guides/DEPLOYMENT_FORMS.md) for form-specific installation and upgrade steps. Every form converges on the same onboarding workflow, operating modes, product profile, approval boundaries, and validation contracts.
-
-1. For standalone use, obtain a versioned release, verify its published checksum, and extract it outside the product repository. For plugin use, install the selected plugin form and let its skill verify the bundled payload.
-2. Open the target product repository—or the intended project folder when no repository exists—in a supported agent environment.
-3. For standalone use, tell the agent: `Use the Dual Hat framework in <path> to onboard the repository currently open.` For Codex, invoke `$use-dual-hat`; for Claude Code, invoke `/dual-hat:use-dual-hat`.
-4. Review and approve the generated onboarding package before material product mutation.
+1. Obtain a versioned Dual Hat release package and its published checksum.
+2. Verify the package checksum before extraction.
+3. Extract the package outside the product repository you want to work on.
+4. Open the target product repository—or the intended project folder when no repository exists—in a supported agent environment.
+5. Tell the agent, in natural language: `Use the Dual Hat framework in <path> to onboard the repository currently open.`
 
 Do not copy or dump the whole extracted release package into the product repository. During onboarding, choose either an external/user-level installation or a bounded pinned project-local binding such as `.dual-hat/`; the approval package explains reproducibility, path-dependency, update, migration, and repository-footprint tradeoffs before any product mutation.
 
 Read [Repository and Product Onboarding](process/ONBOARDING.md) for the three repository scenarios and approval boundary, [Installation and Project Binding](guides/INSTALLATION_AND_BINDING.md) for setup/update/rollback/removal, and [Troubleshooting](guides/TROUBLESHOOTING.md) when detection or binding stops safely.
 
-First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](guides/TROUBLESHOOTING.md); and [1.16.0 release notes](release/RELEASE_NOTES_v1.16.0.md).
+First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](guides/TROUBLESHOOTING.md); and [1.17.0 release notes](release/RELEASE_NOTES_v1.17.0.md).
 
 ## Framework areas
 

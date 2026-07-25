@@ -6,6 +6,8 @@ Validation must prove profile preflight blocks known mandatory gaps, runtime gap
 
 Testable products require automated unit, integration, regression, schema/contract, and appropriate end-to-end tests. Validation also includes semantic review, repository and dependency checks, documentation, migration, packaging, security, rights, and operator-visible behavior. Tests are owned by the subsystem whose defects they detect.
 
+A test command is evidence only when the intended runner discovers and executes a nonzero expected test count. Importing or directly executing a file that merely defines tests, a successful command reporting zero collected tests, or invoking the wrong framework is not a passing result. Record the runner, collected/executed/pass/fail/skip counts, and treat unexpected zero collection or missing runner support as a validation failure until corrected.
+
 Default to the minimal necessary, risk-proportionate focused subset that credibly validates the changed surfaces, affected contracts and direct consumers, known failure modes, and critical integrations. Do not run a full suite merely because work is reaching handoff or closure. Escalate to broader or full-suite validation only when the blast radius is broad or cannot be bounded confidently, a focused check produces an unexplained failure, an explicit work-order or release policy requires it, or the focused subset cannot provide credible coverage. An explicit mandatory suite remains mandatory until its governing work order or release policy is changed; this default does not waive a declared gate.
 
 ## Profiles
@@ -18,6 +20,26 @@ Default to the minimal necessary, risk-proportionate focused subset that credibl
 - Post-commit/post-push: identity, cleanliness, evidence, and alignment only.
 
 Publication validation is additionally state-specific. Before commit, validate the complete staged index against the current export manifest, inspect the staged path list, scan staged content for likely secrets, and reject unowned or generated/cache artifacts. After commit and before push, validate the exact committed tree against the bound manifest and marker. Product-specific wrappers may add checks but may not replace or weaken these generic gates.
+
+Validation and execution gates must model each input according to its real
+lifecycle and packaging class. Version-controlled executable inputs, accepted
+reviews, manifests, and immutable plans may require exact committed-tree identity.
+Governed runtime data, user state, external databases, secrets, and intentionally
+ignored persistence must instead use exact content/version/schema guards through
+their owning repository abstraction; a gate must not require such state to be Git
+tracked. Every material gate requires at least one production-layout integration
+test using the same tracked-versus-runtime arrangement as deployment, plus negative
+tests for drift in both classes. An all-fixture layout that accidentally commits
+runtime state is insufficient evidence.
+
+State-transition commands classify authoritative state before selecting gates.
+Before first mutation, validate current executable inputs against the accepted
+pre-execution review. After a committed transition, read-only replay validates the
+immutable execution evidence and exact resulting runtime state before consulting
+current implementation identity; later maintenance commits must not invalidate
+historical evidence or make verified replay impossible. Tests cover both the true
+pre-state mutation path and the true post-state replay path through the public
+command surface, including drift rejection and proof that replay changes no state.
 
 The fingerprint binds base commit, complete candidate tracked-tree identity, changed-path digest, runtime/dependencies, schemas/inventories, protected assets, and profile. Caller path lists are optimization hints, never authority.
 

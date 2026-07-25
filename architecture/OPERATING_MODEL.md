@@ -8,6 +8,26 @@ Process proportionality is cardinal: use the lightest protocol that adequately p
 
 Integrated and Split operation are coequal first-class modes governed by [Operating Modes](OPERATING_MODES.md). Integrated is the usability default. Mode, role, lifecycle state, and work-item type remain independent; shared context never permits Engineering self-acceptance or informal role blending.
 
+## Outcome routing and role composition
+
+When it materially clarifies ownership, route a bounded activity by its intended
+end: **discover** produces evidence or options, **decide** produces an authorized
+choice, **deliver** produces a validated change or result, and a **single-role
+pass** completes work that needs no handoff. These are optional routing lenses,
+not lifecycle states or a mandatory pipeline. A work item may use one, repeat
+one, combine several, or omit the labels entirely.
+
+A single-role pass changes orchestration, not authority. It cannot bypass a
+sealed work order, independent evidence where required, or Architecture's sole
+acceptance and archival authority.
+
+Compose the smallest roster that adds distinct value. Start from the actual
+failure axes—for example system boundaries, user experience and accessibility,
+acceptance and state transitions, security and privacy, data, or domain
+correctness—then assign only roles capable of independently detecting those
+failures. Do not add a role merely because it appears in a standard roster, and
+do not collapse genuinely different judgments into one role for convenience.
+
 ## Authority stack
 
 1. The live repository and its declared canonical artifacts are authoritative.

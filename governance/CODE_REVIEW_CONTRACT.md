@@ -15,13 +15,25 @@ Closely coupled or routine low-risk work does not require multiple reviewers;
 do not turn specialist separation into ceremony when one bounded independent
 review is sufficient.
 
-The standard specialist roster is Architecture/Design, UX, and QA.
-Architecture/Design challenges system boundaries, integration, extensibility,
-and maintainability. UX challenges author workflows, information architecture,
-accessibility, presentation, and recovery behavior. QA challenges acceptance
-behavior, state transitions, failure paths, migrations, releases, and material
-privacy or security boundaries. Select only the specialties whose risks are
-material; the roster does not create three mandatory gates for ordinary work.
+Architecture/Design, UX, and QA form a reusable base roster, not a default
+attendance list. Compose the smallest roster that adds distinct detection value
+from the candidate's actual failure axes. Architecture/Design challenges system
+boundaries, integration, extensibility, and maintainability. UX challenges
+author workflows, information architecture, accessibility, presentation, and
+recovery behavior. QA challenges acceptance behavior, state transitions,
+failure paths, migrations, and releases. Add security, privacy, data,
+accessibility, or domain specialists when those judgments are material and not
+already covered independently. Omit a specialty that adds no distinct judgment;
+the roster does not create mandatory gates for ordinary work.
+
+During parallel or shared mutation, every shared artifact lane used for review
+has one active writer at a time and one integration owner. Trivial serial work
+uses its primary owner implicitly; checkpointed reassignment requires the prior
+writer to be quiescent and partial state to be handed off.
+Specialists inspect primary evidence and return isolated read-only findings;
+they do not concurrently edit the candidate, another specialist's report, or
+the shared disposition. Architecture alone integrates, deduplicates, and
+dispositions the findings.
 
 Every independent specialist takes a bounded falsification-oriented posture:
 actively seek disconfirming primary evidence, challenge unsupported claims and

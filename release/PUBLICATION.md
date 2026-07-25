@@ -2,6 +2,16 @@
 
 # Export, Publication, and Drift
 
+The canonical source owns only the portable Dual Hat core. A standalone
+distribution repository may own disjoint deployment-specific plugin manifests,
+wrappers, installation projections, and package artifacts. Portable-core source
+must not carry a `plugins/` tree or another standalone deployment artifact;
+forward publication preserves those standalone-owned namespaces without
+claiming or mutating them.
+The portable `CHANGELOG.md` remains a byte-exact canonical-source file.
+Standalone-only deployment history is retained in standalone-owned release
+notes or provenance rather than merged into the portable changelog.
+
 The canonical framework source may live inside an adopting source repository while a standalone repository is a derived publication. Exact source mapping, structural validation, semantic completeness, licensing, deterministic assembly, idempotence, standalone tests, target drift, and prior marker identity must pass before writing.
 
 A prior manifest defines the owned external file set. Forward publication may add, update, rename, or remove only governed files and must report the change plan before writing. Unknown files or changed governed files fail closed. Publication creates a transparent commit, pushes without force when authorized, fetches, verifies alignment/cleanliness/manifest/marker, and records the receipt outside the generic source when it contains product or remote identity.

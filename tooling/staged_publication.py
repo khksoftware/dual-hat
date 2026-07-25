@@ -142,9 +142,14 @@ def _validate_payload(manifest: dict, read: Callable[[str], bytes]) -> list[str]
     return []
 
 
-def validate_staged(root: Path) -> dict:
+def validate_staged(
+    root: Path,
+    *,
+    preserved_path: Callable[[str], bool] | None = None,
+) -> dict:
     """Validate the exact staged index against the staged publication manifest."""
     root = root.resolve()
+    preserved_path = preserved_path or (lambda path: False)
     manifest_bytes = _index_bytes(root, MANIFEST)
     marker_bytes = _index_bytes(root, MARKER)
     manifest, owned = _validate_controls(manifest_bytes, marker_bytes)
@@ -154,7 +159,7 @@ def validate_staged(root: Path) -> dict:
     }
     staged = set(str(_git(root, "diff", "--cached", "--name-only", "--diff-filter=ACDMRTUXB")).splitlines())
     forbidden = sorted(path for path in index_paths | staged if _forbidden(path))
-    unknown = sorted(index_paths - owned)
+    unknown = sorted(path for path in index_paths - owned if not preserved_path(path))
     missing = sorted(owned - index_paths)
     unknown_staged = sorted(staged - owned)
     if forbidden or unknown or missing or unknown_staged:
@@ -170,13 +175,18 @@ def validate_staged(root: Path) -> dict:
     }
 
 
-def stage_manifest_owned(root: Path) -> dict:
+def stage_manifest_owned(
+    root: Path,
+    *,
+    preserved_path: Callable[[str], bool] | None = None,
+) -> dict:
     """Stage only manifest-owned paths and then validate the complete index."""
     root = root.resolve()
+    preserved_path = preserved_path or (lambda path: False)
     manifest, owned = _worktree_controls(root)
     current = _filesystem_files(root)
     forbidden = sorted(path for path in current if _forbidden(path))
-    unknown = sorted(current - owned)
+    unknown = sorted(path for path in current - owned if not preserved_path(path))
     missing = sorted(owned - current)
     if forbidden or unknown or missing:
         raise PublicationValidationError(
@@ -192,17 +202,23 @@ def stage_manifest_owned(root: Path) -> dict:
     except subprocess.CalledProcessError:
         pass
     subprocess.run(("git", "add", "--", *sorted(owned)), cwd=root, check=True)
-    for removed in sorted(prior_owned - owned):
+    for removed in sorted(path for path in prior_owned - owned if not preserved_path(path)):
         subprocess.run(("git", "add", "-u", "--", removed), cwd=root, check=True)
-    result = validate_staged(root)
+    result = validate_staged(root, preserved_path=preserved_path)
     result["pre_stage_status"] = pre_stage_status
     result["staging_strategy"] = "manifest-owned paths only"
     return result
 
 
-def verify_commit_tree(root: Path, revision: str = "HEAD") -> dict:
+def verify_commit_tree(
+    root: Path,
+    revision: str = "HEAD",
+    *,
+    preserved_path: Callable[[str], bool] | None = None,
+) -> dict:
     """Verify a committed publication tree before it is pushed."""
     root = root.resolve()
+    preserved_path = preserved_path or (lambda path: False)
     manifest_bytes = _revision_bytes(root, revision, MANIFEST)
     marker_bytes = _revision_bytes(root, revision, MARKER)
     manifest, owned = _validate_controls(manifest_bytes, marker_bytes)
@@ -211,7 +227,7 @@ def verify_commit_tree(root: Path, revision: str = "HEAD") -> dict:
         if not is_release_product(path)
     }
     forbidden = sorted(path for path in tree_paths if _forbidden(path))
-    unknown = sorted(tree_paths - owned)
+    unknown = sorted(path for path in tree_paths - owned if not preserved_path(path))
     missing = sorted(owned - tree_paths)
     if forbidden or unknown or missing:
         raise PublicationValidationError(

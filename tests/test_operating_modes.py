@@ -203,6 +203,25 @@ class OperatingModeTests(unittest.TestCase):
         self.assertIn("does not send a final response",contract)
         self.assertIn("persistent watcher",contract)
 
+    def test_numeric_progress_binds_exact_population_identity(self):
+        contract=(ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
+        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (contract,prompt):
+            normalized=" ".join(guidance.split())
+            self.assertIn("counted unit",normalized)
+            self.assertIn("denominator population",normalized)
+            self.assertIn("completion predicate",normalized)
+            self.assertIn("secondary evidence",normalized)
+            self.assertIn("routed/split extras",normalized)
+            self.assertIn("uniqueness, coverage, and cursor arithmetic",normalized)
+        self.assertIn("proxy row count",contract)
+        for guidance in (contract,prompt):
+            normalized=" ".join(guidance.split())
+            self.assertIn("living",normalized)
+            self.assertIn("authoritative evidence",normalized)
+            self.assertIn("hard-code",normalized)
+            self.assertIn("earlier checkpoint",normalized.replace("yesterday's checkpoint","earlier checkpoint"))
+
     def test_active_task_continuity_has_only_governed_early_stops(self):
         framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
         engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
@@ -216,13 +235,124 @@ class OperatingModeTests(unittest.TestCase):
             self.assertIn("explicitly specified stop gate",guidance)
             self.assertIn("end of a message",guidance)
             self.assertIn("side question",guidance)
+            self.assertIn("termination preflight", guidance)
+            self.assertIn("no safe in-scope action remains", guidance)
+            self.assertIn("persistent", guidance)
         self.assertIn("transition directly to `[Architect Office]`",framework)
         self.assertIn("task is complete and reported",architecture)
+
+    def test_active_goal_interlocks_response_with_continuation_action(self):
+        framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        transitions=(ROOT/"governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (framework,transitions,engineering,architecture):
+            normalized=" ".join(guidance.split())
+            self.assertIn("same turn",normalized)
+            self.assertIn("observable continuation action",normalized)
+            self.assertIn("reactivate",normalized)
+            self.assertIn("persisted cursor",normalized)
+            self.assertIn("execution lease",normalized)
+            self.assertIn("classify",normalized)
+            self.assertIn("progress response",normalized)
+            self.assertIn("terminal",normalized)
+            self.assertIn("response",normalized)
+            self.assertIn("boundary",normalized)
+            self.assertIn("cannot release it",normalized)
+        self.assertIn("promise",framework)
+        self.assertIn("automatic continuation",framework)
+        self.assertIn("Repeated premature termination",framework)
+
+    def test_active_goal_has_response_end_watchdog(self):
+        framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (framework,engineering,architecture):
+            normalized=" ".join(guidance.split()).lower()
+            self.assertIn("response-end watchdog",normalized)
+            self.assertIn("poll",normalized)
+            self.assertIn("reactivate",normalized)
+            self.assertIn("worker",normalized)
+            self.assertIn("continuation receipt",normalized)
+            self.assertIn("durable cursor or process identity",normalized)
+            self.assertIn("same turn",normalized)
+            self.assertIn("prose-only status",normalized)
+
+    def test_persistent_goal_is_checked_and_restored_at_response_boundaries(self):
+        framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        transitions=(ROOT/"governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (framework,transitions,engineering,architecture):
+            normalized=" ".join(guidance.split()).lower()
+            self.assertIn("goal",normalized)
+            self.assertIn("continuation instruction",normalized)
+            self.assertIn("context",normalized)
+            self.assertIn("restore",normalized)
+            self.assertIn("before answering",normalized)
+            self.assertIn("reactivate",normalized)
+        self.assertIn("checked execution invariant",framework)
+
+    def test_itemized_review_cannot_skip_from_partial_triage_to_persistence(self):
+        framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (framework,engineering):
+            normalized=" ".join(guidance.split()).lower()
+            for required in (
+                "evidence acquired",
+                "partially triaged",
+                "fully adjudicated",
+                "persist-ready",
+                "completion predicate",
+                "no omissions or duplicates",
+                "context-exhausted worker",
+                "durable evidence and cursor",
+            ):
+                self.assertIn(required,normalized)
 
     def test_closure_requires_proactive_delivery_of_promised_results(self):
         closure=(ROOT/"process/PUBLICATION_AND_CLOSURE.md").read_text(encoding="utf-8")
         for required in ("explicitly promised stakeholder-facing", "proactively presented", "archiving an artifact is not delivery", "do not wait for the stakeholder"):
             self.assertIn(required,closure)
+
+    def test_validation_gate_cannot_share_compound_command_with_mutation(self):
+        guide=(ROOT/"governance/ENGINEERING_AGENT_GUIDE.md").read_text(encoding="utf-8")
+        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (guide,prompt):
+            self.assertIn("validation gate",guidance)
+            self.assertIn("compound shell",guidance)
+
+    def test_gates_distinguish_committed_inputs_from_runtime_state(self):
+        protocol=(ROOT/"validation/VALIDATION_PROTOCOL.md").read_text(encoding="utf-8")
+        guide=(ROOT/"governance/ENGINEERING_AGENT_GUIDE.md").read_text(encoding="utf-8")
+        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (protocol,guide,prompt):
+            normalized=" ".join(guidance.split())
+            self.assertIn("lifecycle and packaging class",normalized)
+            self.assertIn("committed-tree identity",normalized)
+            self.assertIn("runtime data",normalized)
+            self.assertIn("production",normalized)
+        self.assertIn("must not require such state to be Git tracked"," ".join(protocol.split()))
+
+    def test_transition_gates_distinguish_prestate_from_replay(self):
+        protocol=(ROOT/"validation/VALIDATION_PROTOCOL.md").read_text(encoding="utf-8")
+        guide=(ROOT/"governance/ENGINEERING_AGENT_GUIDE.md").read_text(encoding="utf-8")
+        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (protocol,guide,prompt):
+            normalized=" ".join(guidance.split())
+            self.assertIn("pre-state",normalized)
+            self.assertIn("post-state",normalized)
+            self.assertIn("immutable execution evidence",normalized)
+            self.assertIn("public command surface",normalized)
+        self.assertIn("later maintenance commits must not invalidate historical evidence"," ".join(protocol.split()))
+
+    def test_zero_test_execution_is_not_passing_evidence(self):
+        protocol=(ROOT/"validation/VALIDATION_PROTOCOL.md").read_text(encoding="utf-8")
+        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (protocol,prompt):
+            self.assertIn("nonzero",guidance)
+            self.assertIn("zero",guidance)
+            self.assertIn("validation failure",guidance)
 
     def test_closure_dispositions_scoped_outputs_off_current_surfaces(self):
         closure=(ROOT/"process/PUBLICATION_AND_CLOSURE.md").read_text(encoding="utf-8")
@@ -232,5 +362,19 @@ class OperatingModeTests(unittest.TestCase):
             self.assertIn(required,closure)
         self.assertIn("Capability chronology must not remain mixed into current product output",phase)
         self.assertIn("active/output locations limited to current operational artifacts",prompt)
+
+    def test_current_capability_limits_require_documentation_and_runtime_probe(self):
+        proportionality=(ROOT/"governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
+        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+        for guidance in (proportionality,architecture,engineering):
+            normalized=" ".join(guidance.split()).lower()
+            self.assertIn("current authoritative documentation",normalized)
+            self.assertIn("installed surface",normalized)
+            self.assertIn("authentication",normalized)
+            self.assertIn("unconfigured",normalized)
+            self.assertTrue("logged out" in normalized or "logged-out" in normalized)
+            self.assertIn("entitlement",normalized)
+            self.assertIn("environment",normalized)
 
 if __name__ == "__main__": unittest.main()

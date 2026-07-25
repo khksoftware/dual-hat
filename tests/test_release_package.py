@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import json
 import os
-import posixpath
-import re
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
@@ -99,25 +97,6 @@ class ReleasePackageTests(unittest.TestCase):
                 "release/v0.1.0/dual-hat-0.1.0.release.json",
                 release_package.source_files(),
             )
-
-    def test_plugin_distribution_is_not_nested_in_standalone_release(self) -> None:
-        for path in (
-            ".agents/plugins/marketplace.json",
-            ".claude-plugin/marketplace.json",
-            "plugins/dual-hat/framework/dual-hat-1.15.0/README.md",
-            "tests/test_agent_plugin_package.py",
-        ):
-            self.assertTrue(release_package.is_plugin_distribution(path))
-        self.assertFalse(release_package.is_plugin_distribution("assets/dual-hat-agent-640x320.png"))
-        self.assertFalse(release_package.is_plugin_distribution("guides/DEPLOYMENT_FORMS.md"))
-
-    def test_packaged_deployment_guide_has_no_missing_relative_markdown_links(self) -> None:
-        guide_path = "guides/DEPLOYMENT_FORMS.md"
-        guide = (ROOT / guide_path).read_text(encoding="utf-8")
-        relative_links = re.findall(r"\[[^\]]+\]\((?!https?://)([^)#]+\.md)(?:#[^)]*)?\)", guide)
-        for link in relative_links:
-            target = posixpath.normpath(posixpath.join(posixpath.dirname(guide_path), link))
-            self.assertTrue((ROOT / target).is_file(), link)
 
     def test_canonical_source_tree_cannot_issue_a_production_release(self) -> None:
         if not (ROOT / "export/EXPORT_SOURCES.json").is_file(): self.skipTest("test applies to canonical source tree")

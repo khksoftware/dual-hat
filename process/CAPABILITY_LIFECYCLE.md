@@ -9,11 +9,15 @@ A capability is the smallest coherent authorized product change that can be impl
 1. Verify branch, remotes, worktrees, current authority, protected assets, dependencies, and authorization.
 2. Interpret the objective, durable goal, scope, exclusions, assumptions, ambiguity, risks, and stop gates.
 3. Inventory affected artifacts, consumers, writers, analogues, transients, and validation groups.
-4. Implement the simplest coherent owning-layer repair.
-5. Run focused checks during development; repair defects and invalidate affected evidence.
-6. Reconcile documentation, planning, debt, session, handover, and artifact disposition.
-7. Run the declared final validation profile and any required committed-tree validation.
-8. Commit transparently, publish only when authorized, verify alignment, and report automatically.
+4. Optimize the execution-ready plan proportionately for value order, sequence,
+   parallelism/resources, incremental checkpoints, evidence reuse, and cheaper
+   equivalent controls; obtain sealed independent Architecture optimization
+   review only when scale, complexity, risk, or irreversibility justifies it.
+5. Implement the simplest coherent owning-layer repair.
+6. Run focused checks during development; repair defects and invalidate affected evidence.
+7. Reconcile documentation, planning, debt, session, handover, and artifact disposition.
+8. Run the declared final validation profile and any required committed-tree validation.
+9. Commit transparently, publish only when authorized, verify alignment, and report automatically.
 
 Stop before mutation on unexplained drift, conflicting authority, missing authorization, protected-state mismatch, or a material stakeholder decision. During implementation, stop only when safe autonomous repair cannot resolve the issue inside scope. Never treat a checkpoint, partial commit, or generated report as closure.
 
