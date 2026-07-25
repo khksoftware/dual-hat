@@ -10,12 +10,12 @@ Treat the installed Dual Hat framework as canonical. This skill routes work to i
 ## Resolve and verify the framework
 
 1. Resolve the plugin root two directories above this skill, then read `framework-payload.json`.
-2. Use the declared package-local `framework/dual-hat-1.16.0/` root by default. Verify its `release/VERSION.json`, `.dual-hat-release/content-manifest.json`, and every content hash before governed mutation.
+2. Use the declared package-local `framework/dual-hat-1.17.0/` root by default. Verify its `release/VERSION.json`, `.dual-hat-release/content-manifest.json`, and every content hash before governed mutation.
 3. If the user explicitly supplies an external framework override, validate the same required files and report both versions. Accept a 1.x override only when it is not older than the bundled version. A different major version requires its governed migration and compatibility review before use.
 4. Accept a selected root only when it contains `repository/CANONICAL_ENTRYPOINTS.md`, `process/ONBOARDING.md`, and `governance/CONFORMANCE_POLICY.md`.
 5. Report whether the selected root is bundled or external and its version. Fall back to the verified bundled root when an override is absent or invalid.
 
-The bundled payload is an exact extraction of the published, checksum-bound Dual Hat 1.16.0 release. Treat it as read-only source. Do not copy the framework tree into a product repository outside the canonical binding workflow.
+The bundled payload is an exact extraction of the published, checksum-bound Dual Hat 1.17.0 release. Treat it as read-only source. Do not copy the framework tree into a product repository outside the canonical binding workflow.
 
 ## Route the request
 

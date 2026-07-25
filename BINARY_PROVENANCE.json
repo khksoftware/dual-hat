@@ -60,30 +60,6 @@
       "rights_basis": "Project-owner-authorized AI-generated original approved for repository distribution under the Dual Hat Apache-2.0 project license.",
       "sha256": "0DB421BFBD35E5B89F2B0CD297DEADE20D1E7CAA4500259E216C7E82B22E4324",
       "size_bytes": 67316
-    },
-    {
-      "content_type": "image/png",
-      "distribution_rule": "include",
-      "path": "plugins/dual-hat/framework/dual-hat-1.16.0/assets/dual-hat-agent.png",
-      "provenance": "Exact package-local copy inherited from the checksum-bound Dual Hat 1.16.0 standalone package.",
-      "purpose": "Read-only mascot master retained by the exact bundled 1.16.0 framework payload.",
-      "retention_rule": "Retain only as part of the exact checksum-governed bundled framework payload.",
-      "review_evidence": "Hash parity with the approved shared master and the bundled framework content manifest.",
-      "rights_basis": "Project-owner-authorized AI-generated original approved for repository distribution under the Dual Hat Apache-2.0 project license.",
-      "sha256": "B84B5B59E0EA7C3472DFF3AE37118C1FA10704C9208A941F7FEE17DD07CBE8B7",
-      "size_bytes": 527123
-    },
-    {
-      "content_type": "image/png",
-      "distribution_rule": "include",
-      "path": "plugins/dual-hat/framework/dual-hat-1.16.0/assets/dual-hat-agent-640x320.png",
-      "provenance": "Exact package-local copy inherited from the checksum-bound Dual Hat 1.16.0 standalone package.",
-      "purpose": "Read-only horizontal mascot retained by the exact bundled 1.16.0 framework payload.",
-      "retention_rule": "Retain only as part of the exact checksum-governed bundled framework payload.",
-      "review_evidence": "Hash parity with the approved shared horizontal asset and the bundled framework content manifest.",
-      "rights_basis": "Project-owner-authorized AI-generated original approved for repository distribution under the Dual Hat Apache-2.0 project license.",
-      "sha256": "0DB421BFBD35E5B89F2B0CD297DEADE20D1E7CAA4500259E216C7E82B22E4324",
-      "size_bytes": 67316
     }
   ],
   "schema": "dual-hat-binary-provenance/1.0"
