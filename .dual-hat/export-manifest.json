@@ -10,12 +10,12 @@
       "sha256": "8CF8107F9304362DFAABC270D634F5B83E082D9B0A7E36AE2786C37518AF7304"
     },
     {
-      "bytes": 20339,
+      "bytes": 20348,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": "CHANGELOG.md",
-      "sha256": "AAC5959340EF382B3D422234774E3D687EC65DD40BD583B4D94F0FE23D74A68D"
+      "sha256": "7BB7425F88229B635E849526A3C6153CC690C14900DC17653CC3407BBEE8A596"
     },
     {
       "bytes": 11357,
@@ -39,7 +39,7 @@
       "mode": "100644",
       "origin": "canonical_source",
       "path": "README.md",
-      "sha256": "9CBF2F7FB49EE9070565E996CC416507FFA386A7B89E9D6879F53C5202DFFA54"
+      "sha256": "D577173AA5DB03C1551215BC6F1BC56A277B6E4139927631525FF0F44B820791"
     },
     {
       "bytes": 352,
@@ -626,6 +626,14 @@
       "sha256": "FA7142F8F0F45FB58BACDDE1B4AEF293ADE17C984DD497BE759A1C90010EA523"
     },
     {
+      "bytes": 2282,
+      "license": "Apache-2.0",
+      "mode": "100644",
+      "origin": "canonical_source",
+      "path": "release/RELEASE_NOTES_v1.17.1.md",
+      "sha256": "E57B737A69ABA508B5C3D504A1F0959E41CA7746E7585F910BD47071899050E2"
+    },
+    {
       "bytes": 3563,
       "license": "Apache-2.0",
       "mode": "100644",
@@ -639,7 +647,7 @@
       "mode": "100644",
       "origin": "canonical_source",
       "path": "release/VERSION.json",
-      "sha256": "DCFFA7F5B1DF8D131462A0F8732F304E285248E1E4B8FCCC7D2E47436148B4EA"
+      "sha256": "445101F8BD7824A532F8055568E00C404EED83339EF44284F01829CA1FDEED33"
     },
     {
       "bytes": 862,
@@ -1170,12 +1178,12 @@
       "sha256": "A910498F2DBBC174AFDF13D70F86663DB1BAAAEA66F4BDC9CBDA264EDB0EBEF7"
     },
     {
-      "bytes": 31226,
+      "bytes": 31538,
       "license": "Apache-2.0",
       "mode": "100644",
       "origin": "canonical_source",
       "path": "tests/test_framework.py",
-      "sha256": "8FB5559125B080D7EFC300662472FE8FE41D2C4BDDE56779639F8201B7972CCC"
+      "sha256": "5AD87D0B5F90A986FA3982F5A2FB5601EBC2048561BFB1477B8961E07F88E53A"
     },
     {
       "bytes": 2296,
@@ -1403,18 +1411,18 @@
     }
   ],
   "control_file_count": 2,
-  "copied_file_count": 175,
+  "copied_file_count": 176,
   "drift_policy": "fail closed on unknown, changed, missing, or unowned portable-core target content; preserve declared standalone-owned deployment namespaces",
   "excluded_canonical_control_count": 2,
   "framework": "Dual Hat",
   "license_expression": "Apache-2.0",
   "license_sha256": "C71D239DF91726FC519C6EB72D318EC65820627232B2F796219E87DCF35D0AB4",
   "notice_sha256": "C316657F9FA7370B840DCBFCC5C1D1C15C422A91EEA96526A8F3EC5A40994280",
-  "previous_export_identity": "5EB478BD7C4B93300CB98ECD0EE80FCA7D221C7C303D238377194BED62E9CE06",
+  "previous_export_identity": "7048AA5B1EDFE0786F11DE46851B8E06B7D7932D52A4FDCF0A2835E7002B7CE2",
   "schema": "dual-hat-export-manifest/4.0",
-  "source_commit": "c4297de983ffc4f6ad7c16f4391c44c7fb4e7ab0",
+  "source_commit": "922e72bfcccb570cd6596d5910ac3b2de2dab891",
   "source_provenance_state": "verified_committed_tree",
   "third_party_notice_sha256": "05A902FE88C8667F19BA55A4D8F3BBB807D0FC1433DD9C508CBAAE5C3274B2DD",
-  "total_file_count": 177,
-  "tree_sha256": "7048AA5B1EDFE0786F11DE46851B8E06B7D7932D52A4FDCF0A2835E7002B7CE2"
+  "total_file_count": 178,
+  "tree_sha256": "AAC88E6C023906A1436DF2321E338698776B8E85CFAFF37E61AC21AFEE2ECE23"
 }

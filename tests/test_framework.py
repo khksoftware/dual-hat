@@ -201,12 +201,17 @@ class FrameworkTests(unittest.TestCase):
     def test_117_version_and_plugin_ownership_boundary(self):
         version = json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))
         publication = (ROOT / "release/PUBLICATION.md").read_text(encoding="utf-8")
-        self.assertEqual("1.17.0", version["version"])
-        self.assertTrue((ROOT / "release/RELEASE_NOTES_v1.17.0.md").is_file())
+        # This milestone test protects invariants introduced at 1.17.0 and
+        # still binding for the remainder of the 1.17.x line; the exact
+        # published patch version is expected to advance without requiring
+        # a change here.
+        self.assertTrue(version["version"].startswith("1.17."))
+        current_release_notes = f"release/RELEASE_NOTES_v{version['version']}.md"
+        self.assertTrue((ROOT / current_release_notes).is_file())
         source_map_path = ROOT / "export/EXPORT_SOURCES.json"
         if source_map_path.is_file():
             source_map = json.loads(source_map_path.read_text(encoding="utf-8"))
-            self.assertIn("release/RELEASE_NOTES_v1.17.0.md", source_map["included"])
+            self.assertIn(current_release_notes, source_map["included"])
         self.assertIn("canonical source owns only the portable Dual Hat core", publication)
         self.assertIn("standalone", publication)
         self.assertIn("must not carry a", publication)

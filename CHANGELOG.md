@@ -2,7 +2,7 @@
 
 # Changelog
 
-## Unreleased
+## 1.17.1 - 2026-07-26
 
 - Closed a defect only after repairing both the behavior and its failed or
   missing prevention/detection defense, adding defect-sensitive executable
