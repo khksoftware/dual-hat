@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 from release_artifacts import is_release_product
+from publication_ownership import standalone_owned
 
 
 REQUIRED_DOMAIN_FIELDS = {
@@ -165,14 +166,12 @@ def validate_framework(root: Path) -> tuple[str, ...]:
         if path.suffix.lower() not in {".md", ".py", ".json", ".jsonl"}:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        if relative in RELEASE_CONTROL_PATHS or relative == "release/PUBLICATION_AND_DRIFT.md":
-            # A derived publication may identify its current canonical source;
-            # this generated receipt is not framework authority.
+        if relative in RELEASE_CONTROL_PATHS:
             continue
         for pattern in FORBIDDEN_PRODUCT_PATTERNS:
             if pattern.search(text):
                 failures.append(f"product-specific leakage in {relative}: {pattern.pattern}")
-        if relative != "tooling/framework_completeness.py":
+        if relative != "tooling/framework_completeness.py" and not standalone_owned(relative):
             for pattern in FORBIDDEN_PLATFORM_PATTERNS:
                 if pattern.search(text):
                     failures.append(f"platform-specific leakage in normative core {relative}: {pattern.pattern}")

@@ -1,6 +1,6 @@
 {
   "$comment": "SPDX-License-Identifier: Apache-2.0",
-  "$id": "https://dual-hat.example/schemas/export-manifest/3.0",
+  "$id": "https://dual-hat.example/schemas/export-manifest/4.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
@@ -23,10 +23,7 @@
             "const": "100644"
           },
           "origin": {
-            "enum": [
-              "canonical_source",
-              "generated"
-            ]
+            "const": "canonical_source"
           },
           "path": {
             "minLength": 1,
@@ -66,9 +63,6 @@
     "framework": {
       "const": "Dual Hat"
     },
-    "generated_content_file_count": {
-      "const": 1
-    },
     "license_expression": {
       "const": "Apache-2.0"
     },
@@ -87,7 +81,7 @@
       ]
     },
     "schema": {
-      "const": "dual-hat-export-manifest/3.0"
+      "const": "dual-hat-export-manifest/4.0"
     },
     "source_commit": {
       "pattern": "^[0-9a-f]{40}$",
@@ -98,7 +92,7 @@
       "type": "string"
     },
     "total_file_count": {
-      "minimum": 4,
+      "minimum": 3,
       "type": "integer"
     },
     "tree_sha256": {
@@ -113,7 +107,6 @@
     "source_commit",
     "content_files",
     "copied_file_count",
-    "generated_content_file_count",
     "control_file_count",
     "total_file_count",
     "excluded_canonical_control_count",
