@@ -43,6 +43,16 @@ command surface, including drift rejection and proof that replay changes no stat
 
 The fingerprint binds base commit, complete candidate tracked-tree identity, changed-path digest, runtime/dependencies, schemas/inventories, protected assets, and profile. Caller path lists are optimization hints, never authority.
 
+Every hash binding declares its byte policy. Use repository-byte identity for
+tracked artifacts whose exact stored bytes are authoritative. A governed text
+binding may instead declare UTF-8 without BOM and canonical LF newlines; its
+validator reads the worktree file, rejects invalid encoding, BOM, and bare CR,
+normalizes CRLF to LF, and hashes the resulting bytes so platform checkout
+newlines do not create false drift while substantive worktree changes still
+fail. Binary outputs, archives, databases, and release products always use
+exact raw bytes. Never validate a mutable worktree input by hashing `git show`
+or another committed copy that would hide current drift.
+
 ## Temporary workspace containment
 
 Validation orchestration, detached worktrees, export checks, bootstrap proof, package assembly, temporary reports, logs, and subprocess state use `tooling/temporary_workspace.py`. Its default is a unique owner-marked run below the operating-system temporary directory. A profile may supply an absolute alternate root only when it does not overlap the source repository, an author/project/instance workspace, or a repository-sibling workspace. Relative, parent-traversing, and ambiguous caller roots are rejected.

@@ -294,6 +294,127 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("healthy work", normalized)
             self.assertIn("ceremony", normalized)
 
+    def test_concurrency_controls_require_executable_adverse_timing_evidence(self):
+        guidance = " ".join(
+            (
+                ROOT / "governance/VALIDATION_AND_PARALLELISM.md"
+            ).read_text(encoding="utf-8").lower().split()
+        )
+        for required in (
+            "competing actors",
+            "adverse timing",
+            "simultaneous acquisition",
+            "token replacement",
+            "stale-owner finalization",
+            "process-identity reuse",
+            "delayed child appearance",
+            "cannot substantiate race-safety",
+            "ordinary serial logic",
+        ):
+            self.assertIn(required, guidance)
+
+    def test_defect_closure_repairs_and_independently_reviews_the_failed_defense(self):
+        proportionality = " ".join(
+            (
+                ROOT / "governance/PROCESS_PROPORTIONALITY.md"
+            ).read_text(encoding="utf-8").lower().split()
+        )
+        review = " ".join(
+            (
+                ROOT / "governance/CODE_REVIEW_CONTRACT.md"
+            ).read_text(encoding="utf-8").lower().split()
+        )
+        for required in (
+            "concrete behavior",
+            "owning root cause",
+            "failed or missing prevention/detection defense",
+            "reason it let the defect escape",
+            "proportional executable regression evidence",
+            "fail against the defective state",
+            "directly analogous instances",
+            "narrowest appropriate authority",
+            "independent adversarial review",
+            "attempts falsification",
+            "new failure modes",
+            "disproportionate runtime or maintenance cost",
+            "independence is mandatory",
+        ):
+            self.assertIn(required, proportionality)
+        self.assertIn("cannot approve its own prevention or detection repair", review)
+
+    def test_chat_switchover_uses_fresh_state_without_stopping_healthy_work(self):
+        protocol = " ".join(
+            (
+                ROOT / "sessions/SESSION_AND_HANDOVER_PROTOCOL.md"
+            ).read_text(encoding="utf-8").lower().split()
+        )
+        for required in (
+            "ready to switch chats.",
+            "nearest safe, low-ambiguity boundary",
+            "without pausing healthy background work",
+            "classify and reconcile every in-flight task",
+            "delegated agent",
+            "owned process",
+            "fresh authoritative snapshot",
+            "never construct the handoff from stale or assumed state",
+            "compact current-project handoff artifact",
+            "copyable bootstrap instruction",
+            "full active goal",
+            "exact current counters or state",
+            "authoritative repository paths",
+            "worktree ownership",
+            "pending gates",
+            "standing interaction",
+            "safe to switch",
+            "clean boundary cannot be reached promptly",
+            "safest available handoff",
+        ):
+            self.assertIn(required, protocol)
+
+    def test_consequential_parallel_work_has_one_nonopaque_orchestrator(self):
+        guidance = " ".join(
+            (
+                ROOT / "governance/VALIDATION_AND_PARALLELISM.md"
+            ).read_text(encoding="utf-8").lower().split()
+        )
+        for required in (
+            "consequential delegated execution must not be opaque",
+            "authoritative repository/workspace identity",
+            "prohibited stale locations",
+            "exactly one orchestrator",
+            "parallel workers are pure bounded executors",
+            "immutable leases",
+            "structured terminal result",
+            "never allocate follow-on work",
+            "relaunch/reset a failed operation",
+            "maximal contiguous checkpoint prefix",
+            "retains later valid ranges behind gaps",
+            "deduplicates exact identities",
+            "residual immutable lease after quiescence",
+            "complete recoverable unit payload",
+            "hash-only receipt cannot",
+            "cursor advancement occur atomically",
+        ):
+            self.assertIn(required, guidance)
+
+    def test_hash_gates_declare_byte_policy_and_guard_worktree_drift(self):
+        validation = " ".join(
+            (
+                ROOT / "validation/VALIDATION_PROTOCOL.md"
+            ).read_text(encoding="utf-8").lower().split()
+        )
+        for required in (
+            "every hash binding declares its byte policy",
+            "repository-byte identity",
+            "utf-8 without bom",
+            "canonical lf newlines",
+            "rejects invalid encoding, bom, and bare cr",
+            "normalizes crlf to lf",
+            "binary outputs, archives, databases, and release products always use",
+            "never validate a mutable worktree input by hashing",
+        ):
+            self.assertIn(required, validation)
+
     def test_inventory_separates_required_domains(self):
         payload = json.loads((ROOT / "repository/FRAMEWORK_CAPABILITY_INVENTORY.json").read_text(encoding="utf-8"))
         ids = {domain["id"] for domain in payload["domains"]}
