@@ -2,38 +2,6 @@
 
 # Changelog
 
-## Unreleased
-
-- Closed a defect only after repairing both the behavior and its failed or
-  missing prevention/detection defense, adding defect-sensitive executable
-  regression evidence, checking analogous instances, and obtaining independent
-  adversarial review of the countermeasure before closure.
-- Required executable competing-actor and adverse-timing evidence for any
-  claimed lock, lease, ownership-token, or coordination race safety;
-  structural inspection and happy-path tests alone no longer substantiate
-  race-safety claims.
-- Required consequential parallel workflows to use exactly one authoritative
-  orchestrator with pure bounded parallel workers, immutable leases,
-  maximal-prefix checkpoint salvage, deduplicated residual retry, and atomic
-  publication/cursor advancement; opaque status and heartbeats never advance
-  authority.
-- Kept the active-session record current throughout execution rather than
-  only at closure or switchover, and added a governed chat-switchover
-  protocol that takes a fresh authoritative snapshot, reconciles every
-  in-flight task and owned process, regenerates one compact handoff artifact,
-  and gives an explicit safe-to-switch signal without pausing healthy work.
-- Required every hash gate to declare repository-byte, canonical-UTF-8-text,
-  or binary-output byte semantics; canonical text validation now reads
-  current worktree bytes, normalizes only CRLF to LF, rejects BOM/invalid
-  UTF-8/bare CR, and never hashes a committed copy that could hide worktree
-  drift.
-
-These five items were part of the reconciled 1.17.0 carried-forward set but
-were not actually present in the published 1.17.0 release content; this
-section completes that set. This is a backward-compatible additive
-governance release; no existing authority, lifecycle, schema, or
-compatibility contract changes.
-
 ## 1.17.0 - 2026-07-25
 
 - Added optional discover/decide/deliver/single-role-pass routing without a

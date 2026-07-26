@@ -47,9 +47,6 @@ correction-to-control loop in
 omission, or inaccurate claim is identified, they must correct the instance,
 generalize the failure mode, identify the owning cause, apply a proportionate
 reusable countermeasure, and report directly analogous current-session impact.
-Architecture owns the loop's mandatory independent adversarial review of the
-countermeasure before defect closure; the implementing role cannot approve its
-own prevention or detection repair.
 
 External-source scope restrictions are a mandatory prospective independent
 review class. Before a proposed discovery stop, sampling substitution,

@@ -22,21 +22,14 @@ Avoid over-bureaucratization. Dual Hat uses the lightest process that provides e
 14. A stakeholder may grant standing authorization for a precisely bounded class of dependencies, models, tools, or equivalent candidates. Reuse that authority while every candidate satisfies its declared license, cost, reliability, safety, hardware, support, privacy, integrity, and scope conditions; re-escalate only when a condition is absent or exceeded. Preserve rejected-candidate evidence and remove rejected installed candidates promptly instead of retaining them until a replacement exists.
 15. When a stakeholder or another agent identifies a real mistake, omission,
 inaccuracy, or process failure, the responsible role must not stop at
-acknowledgment or instance repair. A defect closes only after the concrete
-behavior is fixed; the error mode and owning root cause are generalized; the
-failed or missing prevention/detection defense and the reason it let the defect
-escape are identified; that defense is repaired with proportional executable
-regression evidence; directly analogous instances receive a bounded check; and
-reusable guidance is codified at the narrowest appropriate authority. Where
-practical, the new regression must be shown to fail against the defective
-state. The countermeasure itself then receives independent adversarial review:
-the reviewer attempts falsification, verifies the regression's defect
-sensitivity, and checks new failure modes and disproportionate runtime or
-maintenance cost. Review depth is proportional, but independence is mandatory.
-Trivial slips may use a lightweight behavioral defense and review unless they
-reveal a recurring or materially harmful class; do not create speculative
-controls or unrelated scope. Behavior and its detection/prevention gap must
-both be addressed before closure.
+acknowledgment or instance repair. Generalize the error mode, identify the
+owning root cause, select the smallest reasonable countermeasure, apply it to
+the current work, and codify it at the lowest reusable authority that can
+prevent or reliably detect similar recurrence. Check directly analogous
+current-session state and report the disposition. Keep the response
+proportionate: trivial slips need only a lightweight behavioral correction
+unless they reveal a recurring or materially harmful failure class; do not use
+the rule to create speculative controls or unrelated scope.
 16. Before asserting that a current product, platform, tool, subscription, or
 runtime can or cannot support a proposed operation, verify the claim against
 current authoritative documentation and, when locally testable, the installed
