@@ -2,6 +2,18 @@
 
 # Changelog
 
+## 1.17.2 - 2026-07-26
+
+- Made explicit that the persistent-execution and no-idle continuation rules
+  govern behavior only within an active sealed order and never substitute for
+  one: a work item's closure terminates Engineering authority immediately
+  regardless of continued conversational instructions, side requests, or an
+  apparently obvious next task. A direct, specific, or urgent instruction is
+  a request for Architecture to classify and seal, not itself a sealed order.
+  Before any Engineering action, verify a currently bound, hash-valid sealed
+  order covers the exact action; if none exists, return to Architecture and
+  seal one before resuming.
+
 ## 1.17.1 - 2026-07-26
 
 - Closed a defect only after repairing both the behavior and its failed or

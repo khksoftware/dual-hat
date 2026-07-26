@@ -45,6 +45,8 @@ an available final-response channel, or a platform turn boundary cannot release 
 
 A design question during Engineering does not change role. Entering Engineering requires an approved, hash-valid sealed order and unambiguous execution intent. Dirty worktrees, interrupted mutations, stale remotes, missing local state, or stale order hashes block mode transfer until reconciled or explicitly packaged as unresolved state.
 
+The persistent-execution and no-idle continuation rules govern behavior *within* an active sealed order; they never substitute for one. The moment a work item closes, Engineering authority terminates immediately regardless of continued conversational instructions, side requests, or an apparently obvious next task. A user chat instruction, however direct, specific, or urgent, is a request for Architecture to classify and seal, not itself a sealed order; it does not license further repository mutation. Before any subsequent Engineering action, verify a currently bound, hash-valid sealed order exists; if none does, remain in or return to Architecture, seal one (a lightweight order is sufficient for small or continuation work), and only then resume Engineering. Do not treat "the user kept asking for things" or "work remained conversationally open" as evidence that a sealed order was still in force.
+
 Distinguish three different assignment changes:
 
 - **Re-tiering** changes the model or runtime capability while retaining the

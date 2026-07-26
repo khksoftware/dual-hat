@@ -30,7 +30,7 @@ Before every final response, reconcile the work order, active processes, and del
 ## Operating sequence
 
 1. Read the product's canonical entrypoints, active session, current handover pair, roadmap, work order, and owning contracts.
-2. Verify branch, remotes, worktrees, protected assets, phase state, publication policy, consumers and writers, and stop gates before mutation.
+2. Verify a currently bound, hash-valid sealed order covers the exact action about to be taken (see [Role Transitions](ROLE_TRANSITIONS.md)); a closed, superseded, or absent order blocks mutation regardless of conversational momentum. Verify branch, remotes, worktrees, protected assets, phase state, publication policy, consumers and writers, and stop gates before mutation.
 3. Before recommending or adding a third-party dependency, follow the [dependency evaluation contract](THIRD_PARTY_DEPENDENCY_EVALUATION.md), share all required factors, and compare viable alternatives in a pros/cons table.
 4. Inventory the complete affected corpus. For migrations, classify every candidate exactly once and preserve immutable historical evidence.
 5. Implement the simplest owning-layer repair. Keep product runtime independent of engineering administration, framework source, archives, and workspace state.

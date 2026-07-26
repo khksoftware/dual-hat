@@ -12,7 +12,7 @@ Before Engineering, persist the identifier/type, title, scope, exclusions, assum
 
 ## Completion, review, and archival
 
-Engineering completion moves to Architecture review, not acceptance. `accepted` archives. `accepted_with_follow_up` archives only when follow-up is explicitly non-blocking and independently recorded. `remediation_required` stays active. Deterministic archival preserves approved intent, evidence, disposition, hashes, publication references, and non-blocking follow-up pointers; removes obsolete active packages; retains only a minimal active locator; and cannot become a runtime dependency.
+Engineering completion moves to Architecture review, not acceptance. `accepted` archives. `accepted_with_follow_up` archives only when follow-up is explicitly non-blocking and independently recorded. `remediation_required` stays active. Deterministic archival preserves approved intent, evidence, disposition, hashes, publication references, and non-blocking follow-up pointers; relocates the work item's entire active working or tracking location, as a whole rather than only through per-artifact disposition of its contents, to the designated archive location; removes other obsolete active packages; retains only a minimal active locator; and cannot become a runtime dependency.
 
 ## Failure and recovery
 

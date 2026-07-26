@@ -16,6 +16,6 @@ Path-heavy work is scan-first: inventory sources, writers, readers, imports, man
 
 ## Artifact lifecycle
 
-At closure, retain active only with an ongoing consumer and trigger; archive only with audit, rollback, legal, provenance, or occasional-consultation value; otherwise delete reproducible transients. A name such as `legacy`, `migration`, `current`, or `durable` does not establish lifecycle. Completed capability artifacts do not remain in active paths by omission.
+At closure, retain active only with an ongoing consumer and trigger; archive only with audit, rollback, legal, provenance, or occasional-consultation value; otherwise delete reproducible transients. A name such as `legacy`, `migration`, `current`, or `durable` does not establish lifecycle. Completed capability artifacts do not remain in active paths by omission: a work item's own active tracking or working location relocates to the archive location in full as one closure step, not merely through per-artifact disposition of its contents.
 
 Generated state records its authoritative inputs, deterministic method, invalidation triggers, and replacement behavior. Superseded output is removed once required lineage and rollback evidence are preserved.
