@@ -2,12 +2,7 @@
 
 # Dual Hat
 
-<p>
-  <img src="assets/dual-hat-agent.png" alt="Dual Hat agent mascot wearing two top hats" width="180" align="left">
-  Dual Hat is a product-neutral operating framework for governed, AI-assisted software development. It separates two complementary responsibilities: the <strong>Architecture Office</strong> defines intent, requirements, boundaries, trade-offs, sequencing, and acceptance; the <strong>Engineering Agent</strong> implements, validates, publishes, and reports the work. One agent can wear both hats in Integrated Mode, or separate agents can perform the roles in Split Mode.
-</p>
-
-<br clear="left">
+Dual Hat is a product-neutral operating framework for governed, AI-assisted software development. It separates two complementary responsibilities: the **Architecture Office** defines intent, requirements, boundaries, trade-offs, sequencing, and acceptance; the **Engineering Agent** implements, validates, publishes, and reports the work. One agent can wear both hats in Integrated Mode, or separate agents can perform the roles in Split Mode.
 
 Use Dual Hat when a software project needs more than code generation: explicit authority, bounded work orders, traceable decisions, safe repository mutation, proportional validation, independent review, resumable execution, and reliable closure. It can onboard an existing repository, a nearly empty repository, or a project that does not yet have a repository, then adapt through a product-specific profile without weakening the framework's core controls.
 
