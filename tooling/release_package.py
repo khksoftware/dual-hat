@@ -27,6 +27,14 @@ from staged_publication import verify_commit_tree
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTROL_PATHS = {"export/EXPORT_READINESS.json", "export/EXPORT_SOURCES.json"}
+# Local tool-generated state that is never source content, tracked, or
+# publication-relevant -- the same categories .gitignore already excludes
+# from version control, plus per-user editor/agent tool directories. A
+# classification failure here must reflect real unclassified content, not
+# whatever cache a tool happened to leave in the working tree.
+IGNORED_LOCAL_TOOL_DIRS = {
+    ".pytest_cache", ".mypy_cache", ".ruff_cache", ".claude",
+}
 ARCHIVE_DATE = (1980, 1, 1, 0, 0, 0)
 
 
@@ -85,6 +93,7 @@ def source_files() -> dict[str, bytes]:
         relative
         for path in ROOT.rglob("*")
         if path.is_file() and ".git" not in path.parts and "__pycache__" not in path.parts
+        and IGNORED_LOCAL_TOOL_DIRS.isdisjoint(path.parts)
         for relative in (path.relative_to(ROOT).as_posix(),)
         if relative not in CONTROL_PATHS
         and not is_release_product(relative)

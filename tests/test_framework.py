@@ -22,6 +22,7 @@ from staged_publication import (  # noqa: E402
     stage_manifest_owned,
     verify_commit_tree,
 )
+from publication_ownership import standalone_owned  # noqa: E402
 
 
 class FrameworkTests(unittest.TestCase):
@@ -210,7 +211,21 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("standalone", publication)
         self.assertIn("must not carry a", publication)
         self.assertNotIn("E" + "OS", publication)
-        self.assertFalse((ROOT / "plugins").exists())
+        # Standalone-only plugin distribution legitimately exists under
+        # plugins/ since 1.16.0; the portable-core boundary this test
+        # protects is that none of it is ever classified as canonical
+        # portable-core source, not that the directory itself is absent.
+        plugins_root = ROOT / "plugins"
+        if plugins_root.is_dir():
+            for path in plugins_root.rglob("*"):
+                if not path.is_file():
+                    continue
+                relative = path.relative_to(ROOT).as_posix()
+                self.assertTrue(
+                    standalone_owned(relative),
+                    f"{relative} exists under plugins/ but is not "
+                    "classified as standalone-owned",
+                )
 
     def test_117_distinguishes_reassignment_from_authority_transition(self):
         transitions = (ROOT / "governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
