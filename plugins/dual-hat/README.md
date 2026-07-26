@@ -4,7 +4,7 @@
 
 ![Dual Hat agent mascot wearing two top hats](assets/dual-hat-agent-640x320.png)
 
-This package exposes one shared `use-dual-hat` skill to Codex and Claude Code and includes an exact, checksum-governed extraction of the published Dual Hat 1.16.0 release. It executes no plugin hook, starts no service, and replaces no framework authority. The skill verifies and uses the bundled framework by default, so a separate standalone installation is not required.
+This package exposes one shared `use-dual-hat` skill to Codex and Claude Code and includes an exact, checksum-governed extraction of the published Dual Hat 1.17.0 release. It executes no plugin hook, starts no service, and replaces no framework authority. The skill verifies and uses the bundled framework by default, so a separate standalone installation is not required.
 
 ## Codex
 
@@ -17,7 +17,7 @@ codex plugin add dual-hat@personal
 
 Start a new thread after installation so the skill is discovered. For an upgrade, update the marketplace checkout to an authorized newer plugin release, run `codex plugin add dual-hat@personal` again, and start another new thread. Confirm that `.codex-plugin/plugin.json` and `framework-payload.json` contain the expected plugin and framework versions before use.
 
-Invoke the skill as `$use-dual-hat`. You may explicitly select a compatible external framework root; otherwise the bundled 1.16.0 root is authoritative for the session.
+Invoke the skill as `$use-dual-hat`. You may explicitly select a compatible external framework root; otherwise the bundled 1.17.0 root is authoritative for the session.
 
 ## Claude Code
 
