@@ -10,6 +10,7 @@ Authorized work remains active until complete and reported. Before completion, A
 
 Apply a mandatory turn-exit audit before every response boundary:
 
+0. In Integrated Mode, confirm this response begins with the correct role label (`[Architect Office]`, never blended with `[Engineering Agent]` in the same message; see [Architecture Office Prompt](../prompts/ARCHITECTURE_OFFICE_PROMPT.md)). A missing or wrong label is a role-boundary violation, not a formatting detail, and is exactly the kind of drift a long, multi-threaded turn can silently lose — audit it explicitly rather than assuming it is still being applied.
 1. Determine whether the authorized task is complete and reported.
 2. If it is not complete, identify whether a valid stop condition is actually present.
 3. If neither condition is true, do not emit a terminal response. State the next concrete action and execute it in the same turn.
@@ -17,6 +18,8 @@ Apply a mandatory turn-exit audit before every response boundary:
 An answer, status report, milestone report, governance update, aside, or correction is never itself an execution boundary. Keep the active workflow open, preserve its exact next action, and continue immediately after responding. When tool or runtime limits force a turn boundary, the response must be explicitly non-terminal, carry a resumable next-action receipt, and use the available continuation mechanism rather than waiting for another user prompt.
 
 Treat accidental turn termination as a governance failure, not a harmless conversational lapse. On detection, immediately resume the interrupted work, generalize the failure mode, strengthen the relevant safeguard, and verify that the resumed turn performs at least one substantive next action before any terminal report.
+
+Self-applied conventions (the role label above, and any other rule with no external code-level enforcement) are the likeliest to silently lapse across a long, multi-threaded conversation; "before every response boundary" is easy to stop applying once forgotten once, with nothing else to catch it. Re-run the full turn-exit audit, including the role-label check, explicitly at these resumption points, not only by default: returning from a background-agent task notification, returning from an unrelated tangent or side investigation, and any point a prior context compaction summary is the active source of continuity. These are exactly where a dropped habit is most likely to stay dropped unnoticed.
 
 A side question is a concurrent response obligation. Answer it and explicitly identify the Engineering action still active or immediately next; do not let the answer become a turn-ending checkpoint. Continue proactive milestone reporting unless a defined stop condition is actually met.
 
