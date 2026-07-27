@@ -185,9 +185,8 @@ class OperatingModeTests(unittest.TestCase):
         contract=(ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
         engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
         for guidance in (contract,engineering):
-            self.assertIn("long-running",guidance)
-            self.assertIn("dedicated sub-agent",guidance)
-            self.assertIn("current work item",guidance)
+            self.assertIn("on standby to orchestrate and remain immediately available for user interaction",guidance)
+            self.assertIn("capability or governance work item, regardless of how many streams it is divided into, delegate execution to sub-agents by default",guidance)
             self.assertIn("every remaining task",guidance)
 
     def test_delegation_retains_visible_heartbeat_and_terminal_reporting(self):

@@ -2,6 +2,20 @@
 
 # Changelog
 
+## 1.17.5 - 2026-07-27
+
+- Strengthened the delegation rule from "prefer delegating long-running
+  work" to a standing default: whenever the runtime supports it, keep the
+  primary agent on standby to orchestrate and stay directly available for
+  user interaction, delegating capability/Gov work-item execution to
+  sub-agents by default regardless of stream count or duration, including
+  new work an interaction surfaces mid-session, unless delegating would
+  risk interfering with another active stream.
+- Unified the wording of this rule across the two places it was
+  independently restated (`governance/VALIDATION_AND_PARALLELISM.md`,
+  `prompts/ENGINEERING_AGENT_PROMPT.md`) instead of letting them drift
+  further apart.
+
 ## 1.17.4 - 2026-07-27
 
 - Folded the Integrated Mode role-label convention into the mandatory
