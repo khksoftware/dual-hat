@@ -2,6 +2,8 @@
 
 # Operating Modes and Role-State Model
 
+This is the architecture-level reference for the mode/role/lifecycle/work-item state model itself. For a reader-facing walkthrough of what Integrated and Split Mode mean day to day, see [`guides/OPERATING_MODES.md`](../guides/OPERATING_MODES.md) — same basename, different directory, deliberately distinct scope.
+
 Dual Hat has four independent dimensions: operating mode, active role, lifecycle state, and work-item type. They never substitute for one another.
 
 ## Modes

@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
 from path_containment import ContainmentError, contained, is_reparse
+from profile_conformance import validate_profile
+from work_item_governance import validate_sealed
 
 
 TIERS = ("light", "standard", "deep")
@@ -140,10 +142,13 @@ def load_rules(path: str | Path) -> list[dict[str, object]]:
     if not isinstance(rows, list):
         raise QualityReviewError(f"{source}: top-level rules array is required")
     failures = [failure for row in rows if isinstance(row, Mapping) for failure in validate_rule(row, str(source))]
-    if any(not isinstance(row, Mapping) for row in rows): failures.append(f"{source}: every rule must be an object")
+    if any(not isinstance(row, Mapping) for row in rows):
+        failures.append(f"{source}: every rule must be an object")
     identities = [(str(row.get('rule_id')), row.get("revision")) for row in rows if isinstance(row, Mapping)]
-    if len(set(identities)) != len(rows): failures.append(f"{source}: duplicate rule_id and revision")
-    if failures: raise QualityReviewError("; ".join(failures))
+    if len(set(identities)) != len(rows):
+        failures.append(f"{source}: duplicate rule_id and revision")
+    if failures:
+        raise QualityReviewError("; ".join(failures))
     return [dict(row) for row in rows]
 
 
@@ -151,23 +156,28 @@ def discover_rule_files(repository: str | Path, source_config: str | Path,
                         prior_inventory: Mapping[str, object] | None = None) -> dict[str, object]:
     root = Path(repository).resolve()
     config_path = Path(source_config)
-    if not config_path.is_absolute(): config_path = root / config_path
+    if not config_path.is_absolute():
+        config_path = root / config_path
     config = _json(config_path)
     sources = config.get("sources") if isinstance(config, Mapping) else None
-    if not isinstance(sources, list): raise QualityReviewError(f"{config_path}: sources array is required")
+    if not isinstance(sources, list):
+        raise QualityReviewError(f"{config_path}: sources array is required")
     files: list[dict[str, object]] = []
     rules: list[dict[str, object]] = []
     errors: list[str] = []
     for source in sources:
         if not isinstance(source, Mapping) or not isinstance(source.get("path"), str):
-            errors.append(f"{config_path}: invalid source entry"); continue
+            errors.append(f"{config_path}: invalid source entry")
+            continue
         try:
             source_root = contained(root, str(source["path"]), must_exist=False)
         except ContainmentError:
-            errors.append(f"{config_path}: rule source escapes repository or crosses a link: {source['path']}"); continue
+            errors.append(f"{config_path}: rule source escapes repository or crosses a link: {source['path']}")
+            continue
         required = bool(source.get("required", False))
         if not source_root.exists():
-            if required: errors.append(f"{source_root}: required rule source is absent")
+            if required:
+                errors.append(f"{source_root}: required rule source is absent")
             continue
         linked = [path for path in source_root.rglob("*") if is_reparse(path)] if source_root.is_dir() else []
         if linked:
@@ -175,10 +185,13 @@ def discover_rule_files(repository: str | Path, source_config: str | Path,
             continue
         candidates = sorted(source_root.rglob("*.json")) if source_root.is_dir() else [source_root]
         for path in candidates:
-            if path.name.startswith("."): continue
-            try: path = contained(root, path.relative_to(root), must_exist=True, kind="file")
+            if path.name.startswith("."):
+                continue
+            try:
+                path = contained(root, path.relative_to(root), must_exist=True, kind="file")
             except (ContainmentError, ValueError):
-                errors.append(f"{path}: rule file escapes repository or crosses a link"); continue
+                errors.append(f"{path}: rule file escapes repository or crosses a link")
+                continue
             raw = path.read_bytes()
             record = {
                 "path": path.relative_to(root).as_posix(), "bytes": len(raw),
@@ -190,10 +203,12 @@ def discover_rule_files(repository: str | Path, source_config: str | Path,
                 for rule in load_rules(path):
                     rule["_source_path"] = record["path"]
                     rules.append(rule)
-            except QualityReviewError as exc: errors.append(str(exc))
+            except QualityReviewError as exc:
+                errors.append(str(exc))
     old = {row["path"]: row for row in (prior_inventory or {}).get("files", []) if isinstance(row, Mapping)}
     new = {row["path"]: row for row in files}
-    added = sorted(set(new) - set(old)); removed = sorted(set(old) - set(new))
+    added = sorted(set(new) - set(old))
+    removed = sorted(set(old) - set(new))
     modified = sorted(path for path in set(old) & set(new)
                       if old[path].get("sha256") != new[path]["sha256"] or old[path].get("mtime_ns") != new[path]["mtime_ns"])
     old_by_hash = {row.get("sha256"): path for path, row in old.items() if row.get("sha256")}
@@ -277,12 +292,16 @@ def effective_review_plan(architecture_rules: Sequence[Mapping[str, object]], us
         if len(rows) > 1 and len(signatures) > 1:
             conflicts.append({"type": "equally_specific_user_rules", "target_rule_id": target,
                               "specificity": specificity, "rule_ids": sorted(str(row["rule_id"]) for row in rows)})
-    suppressed: list[dict[str, object]] = []; replaced: list[dict[str, object]] = []
-    adjusted: list[dict[str, object]] = []; applied_user: list[dict[str, object]] = []
+    suppressed: list[dict[str, object]] = []
+    replaced: list[dict[str, object]] = []
+    adjusted: list[dict[str, object]] = []
+    applied_user: list[dict[str, object]] = []
     handled_targets: set[str] = set()
     for row in user:
-        action = row["action"]; target = str(action.get("target_rule_id", row["rule_id"]))
-        if target in handled_targets: continue
+        action = row["action"]
+        target = str(action.get("target_rule_id", row["rule_id"]))
+        if target in handled_targets:
+            continue
         handled_targets.add(target)
         target_rule = architecture.get(target)
         action_type = action["type"]
@@ -385,9 +404,9 @@ def derive_governed_baseline_state(repository: str | Path, resolver_config: str 
     plan = effective_review_plan(architecture, inventory["rules"], str(tier), context, str(inventory["rule_set_hash"]), inventory["errors"])
     if plan != plan_projection or not plan.get("review_authorized"):
         raise QualityReviewError("effective review plan is stale, mismatched, or unauthorized")
-    from work_item_governance import validate_sealed
     seal_failures = validate_sealed(seal)
-    if seal_failures: raise QualityReviewError("sealed work item is invalid: " + "; ".join(seal_failures))
+    if seal_failures:
+        raise QualityReviewError("sealed work item is invalid: " + "; ".join(seal_failures))
     active = handover.get("active_work_item")
     if not isinstance(active, Mapping): raise QualityReviewError("current handover lacks an active work item")
     expected_work_item = {"work_item_id":seal.get("work_item_id"), "work_order_revision":seal.get("current_revision"), "work_order_hash":seal.get("work_order_hash")}
@@ -398,9 +417,9 @@ def derive_governed_baseline_state(repository: str | Path, resolver_config: str 
     dual_hat_version = version.get("version")
     if not isinstance(dual_hat_version, str) or not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", dual_hat_version):
         raise QualityReviewError("canonical Dual Hat version is invalid")
-    from profile_conformance import validate_profile
     profile_failures = validate_profile(profile, dual_hat_version)
-    if profile_failures: raise QualityReviewError("active platform profile is invalid: " + "; ".join(profile_failures))
+    if profile_failures:
+        raise QualityReviewError("active platform profile is invalid: " + "; ".join(profile_failures))
     profile_id, profile_version = profile.get("profile_id"), profile.get("profile_version")
     if not isinstance(profile_id, str) or not profile_id or not isinstance(profile_version, str) or not profile_version:
         raise QualityReviewError("active platform profile identity is invalid")
@@ -450,7 +469,8 @@ def select_review_tier(risk_signals: Iterable[str], internal_release_only: bool 
 def review_acceptance_blockers(findings: Sequence[Mapping[str, object]]) -> tuple[str, ...]:
     blockers: list[str] = []
     for row in findings:
-        severity = str(row.get("severity", "")).casefold(); disposition = str(row.get("disposition", ""))
+        severity = str(row.get("severity", "")).casefold()
+        disposition = str(row.get("disposition", ""))
         if severity in BLOCKING_SEVERITIES and disposition not in {"remediated", "false_positive", "validly_suppressed"}:
             blockers.append(str(row.get("finding_id", "unknown finding")))
         if severity == "medium" and disposition not in {"remediated", "accepted_debt", "validly_suppressed", "false_positive"}:
@@ -527,7 +547,8 @@ def validate_baseline(payload: Mapping[str, object]) -> tuple[str, ...]:
     final_by_id = {str(row["finding_id"]): row for row in final}
     for row in unresolved:
         if final and str(row["finding_id"]) not in final_by_id: failures.append("unresolved finding is absent from final findings")
-    unresolved_ids = {str(row["finding_id"]) for row in unresolved}; remediated_ids = {str(row["finding_id"]) for row in remediated}
+    unresolved_ids = {str(row["finding_id"]) for row in unresolved}
+    remediated_ids = {str(row["finding_id"]) for row in remediated}
     if unresolved_ids & remediated_ids: failures.append("a finding cannot be both unresolved and remediated")
     for row in remediated:
         corresponding = final_by_id.get(str(row["finding_id"]))
@@ -642,7 +663,8 @@ def write_generated_json(repository: str | Path, relative_output: str | Path, pa
         temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
         os.replace(temporary, output)
     finally:
-        if temporary.exists(): temporary.unlink()
+        if temporary.exists():
+            temporary.unlink()
     return output
 
 
@@ -650,34 +672,48 @@ def _main() -> int:
     parser = argparse.ArgumentParser(description="Validate and resolve Dual Hat quality rules.")
     sub = parser.add_subparsers(dest="command", required=True)
     reload_cmd = sub.add_parser("reload", help="discover and validate configured rule files")
-    reload_cmd.add_argument("--repository", type=Path, required=True); reload_cmd.add_argument("--sources", required=True)
+    reload_cmd.add_argument("--repository", type=Path, required=True)
+    reload_cmd.add_argument("--sources", required=True)
     reload_cmd.add_argument("--output", type=Path)
     plan_cmd = sub.add_parser("plan", help="generate an effective review plan")
-    plan_cmd.add_argument("--repository", type=Path, required=True); plan_cmd.add_argument("--sources", required=True)
-    plan_cmd.add_argument("--architecture-rules", required=True); plan_cmd.add_argument("--tier", choices=TIERS, required=True)
+    plan_cmd.add_argument("--repository", type=Path, required=True)
+    plan_cmd.add_argument("--sources", required=True)
+    plan_cmd.add_argument("--architecture-rules", required=True)
+    plan_cmd.add_argument("--tier", choices=TIERS, required=True)
     plan_cmd.add_argument("--context", required=True, help="JSON object")
     plan_cmd.add_argument("--output", type=Path)
-    baseline_cmd = sub.add_parser("validate-baseline"); baseline_cmd.add_argument("path", type=Path)
-    baseline_cmd.add_argument("--repository", type=Path); baseline_cmd.add_argument("--resolver-config", type=Path)
+    baseline_cmd = sub.add_parser("validate-baseline")
+    baseline_cmd.add_argument("path", type=Path)
+    baseline_cmd.add_argument("--repository", type=Path)
+    baseline_cmd.add_argument("--resolver-config", type=Path)
     args = parser.parse_args()
     if args.command == "validate-baseline":
         baseline = _json(args.path)
-        if not isinstance(baseline, Mapping): failures = ("baseline is not an object",)
+        if not isinstance(baseline, Mapping):
+            failures = ("baseline is not an object",)
         elif baseline.get("architecture_disposition_state") == "accepted" or args.repository or args.resolver_config:
-            if not args.repository or not args.resolver_config: failures = ("accepted baseline validation requires governed repository and resolver configuration",)
-            else: failures = validate_baseline_from_repository(baseline, args.repository, args.resolver_config,
+            if not args.repository or not args.resolver_config:
+                failures = ("accepted baseline validation requires governed repository and resolver configuration",)
+            else:
+                failures = validate_baseline_from_repository(baseline, args.repository, args.resolver_config,
                                                                 require_acceptance=baseline.get("architecture_disposition_state") == "accepted")
-        else: failures = validate_baseline(baseline)
-        print(json.dumps({"valid": not failures, "failures": failures}, indent=2)); return int(bool(failures))
+        else:
+            failures = validate_baseline(baseline)
+        print(json.dumps({"valid": not failures, "failures": failures}, indent=2))
+        return int(bool(failures))
     inventory = discover_rule_files(args.repository, args.sources)
     if args.command == "reload":
-        if args.output: write_generated_json(args.repository, args.output, inventory)
-        else: print(json.dumps(inventory, indent=2, sort_keys=True))
+        if args.output:
+            write_generated_json(args.repository, args.output, inventory)
+        else:
+            print(json.dumps(inventory, indent=2, sort_keys=True))
         return int(bool(inventory["errors"]))
     architecture = load_rules(args.repository / args.architecture_rules)
     plan = effective_review_plan(architecture, inventory["rules"], args.tier, json.loads(args.context), inventory["rule_set_hash"], inventory["errors"])
-    if args.output: write_generated_json(args.repository, args.output, plan)
-    else: print(json.dumps(plan, indent=2, sort_keys=True))
+    if args.output:
+        write_generated_json(args.repository, args.output, plan)
+    else:
+        print(json.dumps(plan, indent=2, sort_keys=True))
     return int(not plan["review_authorized"])
 
 

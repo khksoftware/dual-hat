@@ -110,6 +110,10 @@ class ReleasePackageTests(unittest.TestCase):
         for value in (
             b"-----BEGIN " + b"PRIVATE KEY-----\nfixture",
             b"access_" + b"token = '" + b"abcdefghijklmnopqrstuvwxyz123456'",
+            b"xoxb" + b"-0123456789012-0123456789012-abcdefghijklmnopqrstuvwx",
+            b"AIza" + b"SyD-fixturefixturefixturefixturefix",
+            b"sk_liv" + b"e_fixture0123456789abcdefgh",
+            b"eyJhbGciOiJIUzI1NiJ9" + b".eyJzdWIiOiJmaXh0dXJlIn0" + b".fixturefixturefixturefixture",
         ):
             with self.subTest(value=value[:20]):
                 with self.assertRaisesRegex(ContentSecurityError, "possible secrets"):

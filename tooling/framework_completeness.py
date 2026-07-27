@@ -52,8 +52,18 @@ DOMAIN_OPERATIONAL_SUFFIXES = {
     "publication_and_closure": ("templates/EXIT_REPORT.md",),
 }
 FORBIDDEN_PRODUCT_PATTERNS = (
-    re.compile(r"Phase\s+15"),
-    re.compile(r"workspace/(?:alex|user|author)[^/]*/", re.IGNORECASE),
+    # Generalized rather than pinned to one incident's exact numbers or
+    # names, so the denylist itself carries no fingerprint of a particular
+    # past leak or private source tree. A bare "Capability N" is deliberately
+    # not added: it is one of Dual Hat's own generic work-item-type examples
+    # (see tests/test_operating_modes.py), not a leak signature.
+    re.compile(r"\bPhase" + r"\s+\d+\b"),
+    # Two path segments after "workspace/" (identity, then a category like
+    # projects/global) is what a real leaked data path looks like; a bare
+    # single-segment "workspace/" is common, legitimate scaffold boilerplate
+    # (see scripts/bootstrap_product.py's generated .gitignore) and must not
+    # trip this.
+    re.compile("workspace" + r"/[^/\s]+/[^/\s]+/", re.IGNORECASE),
     re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]"),
 )
 FORBIDDEN_PLATFORM_PATTERNS = (

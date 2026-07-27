@@ -2,6 +2,31 @@
 
 # Changelog
 
+## 1.17.3 - 2026-07-27
+
+- Refreshed the agent-host plugin bundle from framework 1.17.0 to the
+  current canonical version; the supported plugin install path had been
+  shipping a framework build with the exact role-transition/authority
+  defect 1.17.2 already fixed. Added an automated version-parity test so
+  the bundle cannot silently drift from `release/VERSION.json` again.
+- Broadened `content_security.py`'s secret-scanning patterns (the last
+  gate before public release) to also recognize several common
+  workspace-chat, cloud-console, and payment-processor API key and bearer
+  token formats, plus JWTs; coverage was previously limited to a smaller
+  set of key/token shapes.
+- Fixed a stale README release-notes link and added a version-tracking
+  assertion so it cannot go stale again the same way.
+- Generalized two product-leakage denylist patterns that were
+  reverse-engineered from one past incident's exact numbers and path
+  names, without over-broadening into false positives on the framework's
+  own generic scaffold content.
+- Cross-referenced the two same-basename `OPERATING_MODES.md` files
+  (`architecture/` and `guides/`) so their distinct scope is clear from
+  either one.
+- Minor readability cleanup: split several semicolon-joined compound
+  statements onto separate lines and moved two justification-free
+  function-local imports to module scope.
+
 ## 1.17.2 - 2026-07-26
 
 - Made explicit that the persistent-execution and no-idle continuation rules

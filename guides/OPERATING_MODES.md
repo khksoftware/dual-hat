@@ -2,6 +2,8 @@
 
 # Integrated and Split Dual Hat Modes
 
+This is the reader-facing guide to Integrated and Split Mode. For the underlying architecture-level state model (operating mode, active role, lifecycle state, work-item type as independent dimensions), see [`architecture/OPERATING_MODES.md`](../architecture/OPERATING_MODES.md) — same basename, different directory, deliberately distinct scope.
+
 ## What Dual Hat is
 
 Dual Hat keeps design authority and implementation accountability distinct. Architecture decides what should be built, its boundaries, and whether the result is accepted. Engineering inspects the repository, executes an approved work order, validates and publishes it, and reports evidence. The hats may share tools, but never authority informally.

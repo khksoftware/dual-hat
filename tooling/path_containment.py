@@ -30,33 +30,48 @@ def is_reparse(path: Path) -> bool:
 
 def contained(root: str | Path, relative: str | Path, *, must_exist: bool = False,
               kind: str | None = None, reject_reparse: bool = True) -> Path:
-    authority = Path(root).resolve(strict=True); candidate = Path(relative)
-    if candidate.is_absolute() or candidate.drive or candidate.root or not candidate.parts: raise ContainmentError("path must be nonempty and relative")
+    authority = Path(root).resolve(strict=True)
+    candidate = Path(relative)
+    if candidate.is_absolute() or candidate.drive or candidate.root or not candidate.parts:
+        raise ContainmentError("path must be nonempty and relative")
     current = authority
     for part in candidate.parts:
-        safe_component(part); current /= part
-        if reject_reparse and current.exists() and is_reparse(current): raise ContainmentError("path crosses a symlink or reparse point")
+        safe_component(part)
+        current /= part
+        if reject_reparse and current.exists() and is_reparse(current):
+            raise ContainmentError("path crosses a symlink or reparse point")
     result = current.resolve(strict=must_exist)
-    try: result.relative_to(authority)
-    except ValueError as exc: raise ContainmentError("path escapes authorized root") from exc
-    if must_exist and kind == "file" and not result.is_file(): raise ContainmentError("path is not a regular file")
-    if must_exist and kind == "directory" and not result.is_dir(): raise ContainmentError("path is not a directory")
+    try:
+        result.relative_to(authority)
+    except ValueError as exc:
+        raise ContainmentError("path escapes authorized root") from exc
+    if must_exist and kind == "file" and not result.is_file():
+        raise ContainmentError("path is not a regular file")
+    if must_exist and kind == "directory" and not result.is_dir():
+        raise ContainmentError("path is not a directory")
     return result
 
 
 def contained_roots(target: str | Path, roots: dict[str, str]) -> dict[str, Path]:
-    authority = Path(target).resolve(); resolved: dict[str, Path] = {}
+    authority = Path(target).resolve()
+    resolved: dict[str, Path] = {}
     for name, relative in roots.items():
         candidate = Path(relative)
-        if candidate.is_absolute() or candidate.drive or candidate.root or not candidate.parts: raise ContainmentError("profile root must be nonempty and relative")
-        for part in candidate.parts: safe_component(part)
+        if candidate.is_absolute() or candidate.drive or candidate.root or not candidate.parts:
+            raise ContainmentError("profile root must be nonempty and relative")
+        for part in candidate.parts:
+            safe_component(part)
         path = (authority / candidate).resolve()
-        try: path.relative_to(authority)
-        except ValueError as exc: raise ContainmentError("profile root escapes product target") from exc
-        if path == authority: raise ContainmentError("profile root cannot equal product target")
+        try:
+            path.relative_to(authority)
+        except ValueError as exc:
+            raise ContainmentError("profile root escapes product target") from exc
+        if path == authority:
+            raise ContainmentError("profile root cannot equal product target")
         resolved[name] = path
     folded = [str(path).casefold() for path in resolved.values()]
-    if len(set(folded)) != len(folded): raise ContainmentError("profile roots collide")
+    if len(set(folded)) != len(folded):
+        raise ContainmentError("profile roots collide")
     for left_name, left in resolved.items():
         for right_name, right in resolved.items():
             if left_name != right_name and (left in right.parents or right in left.parents):
