@@ -2,6 +2,20 @@
 
 # Changelog
 
+## 1.17.4 - 2026-07-27
+
+- Folded the Integrated Mode role-label convention into the mandatory
+  turn-exit audit: both role guides now explicitly check the message
+  prefix as part of the same "before every response boundary" discipline
+  that already governs task-completion and stop-condition checks, instead
+  of leaving it as a separate, unenforced convention.
+- Named concrete resumption points (returning from a background-agent
+  notification, returning from a tangent, resuming from a context-
+  compaction summary) where the full turn-exit audit must explicitly
+  re-run, since self-applied conventions with no code-level enforcement
+  are likeliest to silently lapse exactly at those points across a long,
+  multi-threaded conversation.
+
 ## 1.17.3 - 2026-07-27
 
 - Refreshed the agent-host plugin bundle from framework 1.17.0 to the
