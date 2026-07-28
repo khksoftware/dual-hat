@@ -24,6 +24,76 @@
     "publication_authorized": {
       "type": "boolean"
     },
+    "reconciliation_audit": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_items": {
+          "type": "array"
+        },
+        "closure_authorized": {
+          "type": "boolean"
+        },
+        "engineering_self_report_only": {
+          "const": false
+        },
+        "items": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "author_deferred": {
+                "type": "boolean"
+              },
+              "description": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "evidence": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "source": {
+                "enum": [
+                  "sealed_scope",
+                  "incremental_request",
+                  "interim_finding"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "done",
+                  "partial",
+                  "not_done"
+                ]
+              }
+            },
+            "required": [
+              "source",
+              "description",
+              "status",
+              "evidence"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "reviewer_role": {
+          "const": "independent"
+        },
+        "schema": {
+          "const": "dual-hat-reconciliation-audit/1.0"
+        }
+      },
+      "required": [
+        "schema",
+        "reviewer_role",
+        "engineering_self_report_only",
+        "items",
+        "blocking_items",
+        "closure_authorized"
+      ],
+      "type": "object"
+    },
     "required_lightweight_evidence": {
       "type": "array"
     },
@@ -53,7 +123,8 @@
     "continuity_evidence",
     "publication_authorized",
     "required_lightweight_evidence",
-    "skipped_when_lightweight"
+    "skipped_when_lightweight",
+    "reconciliation_audit"
   ],
   "type": "object"
 }

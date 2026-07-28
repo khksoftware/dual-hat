@@ -189,6 +189,33 @@ class OperatingModeTests(unittest.TestCase):
             self.assertIn("capability or governance work item, regardless of how many streams it is divided into, delegate execution to sub-agents by default",guidance)
             self.assertIn("every remaining task",guidance)
 
+    def test_reconciliation_survives_a_competing_new_thread_and_prefers_resuming_workers(self):
+        # Caught live: a delegated worker returned a checkpoint and stopped as
+        # instructed, but the primary agent got pulled into a newly surfaced
+        # finding without resuming it first, leaving it silently idle while
+        # believed to still be running; separately, continuations of the same
+        # assignment were relaunched fresh instead of resumed, discarding
+        # accumulated context. The reconciliation obligation already existed
+        # ("before every final response, reconcile... delegated workers") but
+        # didn't survive contact with a competing, more salient thread - a
+        # lengthy response addressing the new thread satisfied the letter of
+        # the rule without the reconciliation happening. This test guards the
+        # explicit failure-mode wording added to close that gap.
+        engineering_guide = (ROOT/"governance/ENGINEERING_AGENT_GUIDE.md").read_text(encoding="utf-8")
+        contract = (ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
+        for guidance in (engineering_guide, contract):
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("newly surfaced finding",normalized)
+            self.assertIn("side investigation",normalized)
+            self.assertIn("user tangent",normalized)
+        self.assertIn("most likely to be silently left idle while attention follows the new thread",engineering_guide)
+        self.assertIn("is not reconciled merely because the new thread was addressed thoroughly",engineering_guide)
+        self.assertIn("sits silently idle while it is believed to still be running",contract)
+        self.assertIn("the gap surfaces only when someone asks for a status update much later",contract)
+        normalized_engineering_guide = " ".join(engineering_guide.split())
+        self.assertIn("prefer resuming the existing worker for continuation of the same bounded assignment",normalized_engineering_guide)
+        self.assertIn("discards its accumulated context",normalized_engineering_guide)
+
     def test_delegation_retains_visible_heartbeat_and_terminal_reporting(self):
         contract=(ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
         watchdog=(ROOT/"validation/PROCESS_WATCHDOG.md").read_text(encoding="utf-8")

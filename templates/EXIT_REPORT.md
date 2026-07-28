@@ -15,6 +15,7 @@
 - Documentation/planning/session/handover convergence:
 - Artifact disposition ledger:
 - Debt, risks, exceptions, and unresolved decisions:
+- Independent closure reconciliation audit (sealed scope, incremental requests, interim findings; per-item disposition with cited evidence; blocking items and dispositions):
 - Stakeholder action required:
 - Next gated work:
 - Snapshot/transport and conformance evidence:

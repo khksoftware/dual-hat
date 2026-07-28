@@ -70,6 +70,16 @@ FORBIDDEN_PLATFORM_PATTERNS = (
     re.compile(r"\b(?:Codex|OpenAI|ChatGPT|Windows|PowerShell|GitHub|Gemini)\b", re.IGNORECASE),
     re.compile(r"\bVisual Studio Code\b", re.IGNORECASE),
 )
+# REPOSITORY_BOUNDARIES.md's dependency-direction invariant: "Dual Hat never
+# imports product, engineering, archive, or workspace state." That invariant
+# had no mechanical check anywhere in tooling/ or tests/ before this pattern
+# was added; it is a real Python import statement (a leading-dots relative
+# import counts), not a bare mention of the word, so file-open/path-string
+# references to those directories (legitimate when Dual Hat tooling validates
+# an external product's own engineering/ layout) do not trip it.
+FORBIDDEN_DEPENDENCY_IMPORT_PATTERNS = (
+    re.compile(r"^\s*(?:from\s+\.*|import\s+)(?:product|engineering|archive|workspace)\b", re.MULTILINE),
+)
 RELEASE_CONTROL_PATHS = {
     ".dual-hat-release/content-manifest.json",
     ".dual-hat-release/SHA256SUMS",
@@ -181,6 +191,13 @@ def validate_framework(root: Path) -> tuple[str, ...]:
         for pattern in FORBIDDEN_PRODUCT_PATTERNS:
             if pattern.search(text):
                 failures.append(f"product-specific leakage in {relative}: {pattern.pattern}")
+        if path.suffix.lower() == ".py" and relative != "tooling/framework_completeness.py":
+            for pattern in FORBIDDEN_DEPENDENCY_IMPORT_PATTERNS:
+                if pattern.search(text):
+                    failures.append(
+                        f"dependency-direction violation in {relative}: Dual Hat imports "
+                        f"product/engineering/archive/workspace state ({pattern.pattern})"
+                    )
         if relative != "tooling/framework_completeness.py" and not standalone_owned(relative):
             for pattern in FORBIDDEN_PLATFORM_PATTERNS:
                 if pattern.search(text):

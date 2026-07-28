@@ -26,9 +26,16 @@ observable continuation action in the same turn. Execute the next step, continue
 reactivate its worker, or resume its monitor; do not substitute a promise or a
 reported batch result for execution. Reactivate bounded workers from their persisted
 cursor until their assigned outcome, rather than merely their current batch, reaches
-its terminal condition.
+its terminal condition. When the runtime distinguishes resuming an existing paused
+or checkpointed worker from launching a new one, prefer resuming the existing
+worker for continuation of the same bounded assignment; reserve launching a new
+worker for genuinely new scope. Relaunching a fresh worker for what is actually a
+continuation discards its accumulated context and forces expensive, avoidable
+re-derivation of already-established state before any new work begins.
 
 Before every final response, reconcile the work order, active processes, and delegated workers; classify each authorized outcome; and prove that no safe next action remains. If work remains executable, send only a progress update and continue. Never make the user issue `continue`, request a promised report, or rediscover unfinished work.
+
+A newly surfaced finding, side investigation, or user tangent does not defer or satisfy this reconciliation by being answered at length — it is exactly the moment a delegated worker that returned a checkpoint or partial report and was never explicitly resumed is most likely to be silently left idle while attention follows the new thread. A response that pursues a new thread without first checking, and where needed resuming, every outstanding delegated worker is not reconciled merely because the new thread was addressed thoroughly.
 
 ## Operating sequence
 

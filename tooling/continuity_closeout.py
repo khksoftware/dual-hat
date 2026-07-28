@@ -14,6 +14,47 @@ FULL_TRIGGERS = frozenset({
     "rollback_unclear", "stale_or_fragmented_evidence", "repository_divergence", "user_requested_full_closure",
 })
 
+RECONCILIATION_SOURCES = frozenset({"sealed_scope", "incremental_request", "interim_finding"})
+RECONCILIATION_STATUSES = frozenset({"done", "partial", "not_done"})
+RECONCILIATION_ITEM_REQUIRED_FIELDS = frozenset({"source", "description", "status", "evidence"})
+
+
+def reconciliation_audit(*, reviewer_role: str, engineering_self_report_only: bool, items: Sequence[Mapping[str, object]]) -> dict[str, object]:
+    """Independent, context-isolated audit reconciling the sealed work order's
+    approved scope, every incremental stakeholder request, and every interim
+    finding committed to being addressed against verified repository fact --
+    facts, not words -- rather than Engineering self-report. Required at every
+    capability's closing gate; a partially done or not done item blocks
+    closure unless the author explicitly defers it."""
+    if reviewer_role != "independent" or engineering_self_report_only:
+        raise ValueError("closure reconciliation audit requires a context-isolated independent reviewer, not engineering self-report")
+    if not items:
+        raise ValueError("closure reconciliation audit requires at least one reconciled item")
+    normalized: list[dict[str, object]] = []
+    blocking: list[str] = []
+    for item in items:
+        missing = RECONCILIATION_ITEM_REQUIRED_FIELDS - set(item)
+        if missing:
+            raise ValueError(f"reconciliation item missing fields: {sorted(missing)}")
+        if item["source"] not in RECONCILIATION_SOURCES:
+            raise ValueError(f"unknown reconciliation source: {item['source']}")
+        if item["status"] not in RECONCILIATION_STATUSES:
+            raise ValueError(f"unknown reconciliation status: {item['status']}")
+        if not item.get("evidence"):
+            raise ValueError("reconciliation item requires cited evidence (commit hash, file path, or test name/result), not a narrative claim")
+        deferred = bool(item.get("author_deferred"))
+        if item["status"] != "done" and not deferred:
+            blocking.append(str(item["description"]))
+        normalized.append({"author_deferred": False, **item})
+    return {
+        "schema": "dual-hat-reconciliation-audit/1.0",
+        "reviewer_role": "independent",
+        "engineering_self_report_only": False,
+        "items": normalized,
+        "blocking_items": blocking,
+        "closure_authorized": not blocking,
+    }
+
 
 def work_estimate(*, low_hours: float, high_hours: float, segments: Sequence[str], included: Sequence[str], uncertainties: Sequence[str], expansion_conditions: Sequence[str], revision: int = 1, prior: Mapping[str, object] | None = None, revision_reason: str | None = None) -> dict[str, object]:
     if low_hours <= 0 or high_hours < low_hours or not segments:
@@ -28,7 +69,7 @@ def work_estimate(*, low_hours: float, high_hours: float, segments: Sequence[str
         "prior_revision": prior.get("revision") if prior else None, "revision_reason": revision_reason,
     }
 
-def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continuity_count: int, continuity_evidence: Mapping[str, object], user_requested_publication: bool = False) -> dict[str, object]:
+def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continuity_count: int, continuity_evidence: Mapping[str, object], reconciliation_audit: Mapping[str, object], user_requested_publication: bool = False) -> dict[str, object]:
     unknown = sorted(set(triggers) - FULL_TRIGGERS)
     if unknown:
         raise ValueError(f"unknown full-closure triggers: {unknown}")
@@ -37,6 +78,13 @@ def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continui
         raise ValueError("closeout selection requires architecture-bound continuity evidence")
     if same_stream_next and continuity_evidence.get("architecture_directed") is not True:
         raise ValueError("same-stream continuity is unsupported without architecture direction")
+    required_reconciliation_fields = {"schema", "reviewer_role", "engineering_self_report_only", "items", "blocking_items", "closure_authorized"}
+    if not required_reconciliation_fields.issubset(reconciliation_audit):
+        raise ValueError("closeout selection requires a completed closure reconciliation audit")
+    if reconciliation_audit.get("reviewer_role") != "independent" or reconciliation_audit.get("engineering_self_report_only") is True:
+        raise ValueError("closure reconciliation audit must be independent, not engineering self-report")
+    if reconciliation_audit.get("closure_authorized") is not True:
+        raise ValueError("closure is blocked by unresolved reconciliation findings: " + ", ".join(reconciliation_audit.get("blocking_items") or ()))
     material = sorted(set(triggers))
     advisory_counter = continuity_count >= 3
     full = bool(material or user_requested_publication or not same_stream_next)
@@ -46,8 +94,9 @@ def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continui
         "counter_forced_full_closure": False, "same_stream_next": same_stream_next,
         "continuity_evidence": dict(continuity_evidence),
         "publication_authorized": user_requested_publication,
-        "required_lightweight_evidence": ["checkpoint_commit", "focused_validation", "clean_worktree", "exit_status", "current_handover", "unresolved_findings", "inherited_dependencies", "rollback_point", "pending_publication_inventory", "architecture_disposition_boundary", "no_engineering_self_acceptance"],
+        "required_lightweight_evidence": ["checkpoint_commit", "focused_validation", "clean_worktree", "exit_status", "current_handover", "unresolved_findings", "inherited_dependencies", "rollback_point", "pending_publication_inventory", "architecture_disposition_boundary", "no_engineering_self_acceptance", "independent_closure_reconciliation_audit"],
         "skipped_when_lightweight": ["standalone_export", "remote_publication", "semantic_release", "release_packaging", "manifest_and_checksums", "snapshot", "exhaustive_archival"],
+        "reconciliation_audit": dict(reconciliation_audit),
     }
 
 

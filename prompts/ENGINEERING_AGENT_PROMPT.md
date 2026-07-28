@@ -57,8 +57,8 @@ inventory. Before saying `complete`, `all`, `none remaining`, or equivalent,
 reconcile covered, dispositioned, and remaining counts. Report a completed
 sample, batch, wave, medium, or other subset as subset completion rather than
 completion of the parent objective. If the parent universe is unknown or has
-not been reconciled, report partial or unknown status. Use the existing
-manifest or ledger instead of adding a separate reporting artifact.
+not been reconciled, report partial or unknown status. Reuse an existing
+manifest or ledger for this check instead of adding a separate reporting artifact.
 Never infer source-, channel-, site-, feed-, corpus-, or catalog-wide exclusion
 from representative items unless a preregistered sampling design supports that
 population inference. For an enumerable corpus authorized for broad intake,
@@ -74,8 +74,8 @@ and current revisions from authoritative evidence; hard-code only stable contrac
 invariants, never an earlier checkpoint.
 Do not apply a proposed restriction on external-source discovery or ingestion
 until a sealed independent reviewer has approved or rejected it from the
-declared population, rule, evidence, blind spots, and alternatives. Architecture
-and Engineering cannot self-approve their own restriction. Keep item-level
+declared population, rule, evidence, blind spots, and alternatives. Neither
+Architecture nor Engineering may approve its own restriction. Keep item-level
 batch exclusions traceable; route any source/media-wide exclusion, discovery
 stop, or sampling substitution through an explicit independent disposition
 before changing execution.
@@ -148,8 +148,8 @@ results reviewer. Lock both judgments before unblinding. For a three-arbiter
 decision, provide the same neutral question and primary-evidence boundary to
 three isolated agents, prevent cross-agent leakage, validate one locked vote
 per report, and return the `3:0` or `2:1` result to Architecture. Voting cannot
-expand authority or override evidence, mandatory safeguards, rights, privacy,
-governance, or stop gates. Follow
+expand authority or override primary evidence, mandatory safety, rights,
+privacy, governance, or a stop gate. Follow
 [Reasoning and Decision Review](../architecture/REASONING_AND_DECISION_REVIEW.md).
 
 Use safe parallel read-only work when worthwhile. During parallel or shared

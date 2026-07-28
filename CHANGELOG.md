@@ -2,6 +2,55 @@
 
 # Changelog
 
+## 1.17.7 - 2026-07-28
+
+- Unified two governance rules that had independently drifted apart across
+  their restatements, with no test previously tying any of the copies
+  together: the hypothesis-blind-execution / three-arbiter protocol
+  (`REASONING_AND_DECISION_REVIEW.md`, restated in both role prompts) and
+  the universal-completion-claim rule (`CONFORMANCE_POLICY.md`, restated
+  in both role prompts). Both are now pinned by exact-substring tests
+  across the canonical doc and every restatement.
+- Added a mechanical check for a previously undocumented-only invariant:
+  `REPOSITORY_BOUNDARIES.md` states Dual Hat never imports product,
+  engineering, archive, or workspace state, but nothing in `tooling/` or
+  `tests/` enforced it. `framework_completeness.py`'s leakage scan now
+  matches real Python import statements (including relative imports)
+  against the four forbidden top-level packages, pinned with a test
+  exercising both violating and benign samples.
+- Added an independent closure-reconciliation-audit gate at every
+  capability's closing gate: before terminal disposition, a
+  context-isolated independent reviewer must reconcile the sealed work
+  order's approved scope, every incremental stakeholder request, and every
+  committed interim finding/bug against verified repository fact, not
+  Engineering self-report. Partially done or not-done items block closure
+  unless explicitly deferred by the author. Adds a required
+  `reconciliation_audit` object to the closeout-decision schema.
+- Added `PROCESS_PROPORTIONALITY.md` rule 19: when investigating a flagged
+  defect, stale artifact, or "supposed to be done but wasn't" gap, first
+  determine whether the symptom is one instance of a missing systemic
+  mechanism (an undocumented mandatory step, a check never made mechanical,
+  or an unsynchronized pointer/cross-reference) rather than a genuine
+  one-off, and repair the mechanism itself when it is. Cross-references
+  rule 15's correction-to-control loop in both directions.
+
+## 1.17.6 - 2026-07-27
+
+- Named an exact failure mode explicitly in the turn-exit-audit
+  reconciliation obligation: a delegated worker that returns from a
+  bounded checkpoint (not a genuine stop condition) requires an explicit
+  resume decision recorded at that moment, since pursuing a newly surfaced
+  finding or user tangent instead is exactly how a completed-but-unresumed
+  worker sits silently idle while believed to still be running.
+- Added an explicit preference for resuming an existing paused/checkpointed
+  worker over launching a new one for continuation of the same bounded
+  assignment, since relaunching discards accumulated context and forces
+  avoidable re-derivation of already-established state.
+- Dropped the plugin manifests' independent packaging version sequence
+  (bumped in lockstep with every framework refresh but never for a
+  genuinely independent reason); `plugin.json`'s `version` field now
+  equals the bundled framework version directly.
+
 ## 1.17.5 - 2026-07-27
 
 - Strengthened the delegation rule from "prefer delegating long-running

@@ -45,10 +45,14 @@ intention fails this gate and must be repaired in the same turn.
 
 Before asserting that work, acquisition, migration, review, or another bounded
 activity is complete, name the scope being closed and reconcile it against the
-authoritative inventory by count and disposition. Independently distinguish a
-completed sample, batch, wave, or medium from completion of the parent
+authoritative inventory by count and disposition. Do not assert `complete`,
+`all`, `none remaining`, or an equivalent universal claim without that
+reconciliation. Independently distinguish a completed sample, batch, wave,
+medium, or other subset as subset completion, not completion of the parent
 objective, and state the material remainder. If the parent universe is unknown,
 say so; do not convert bounded evidence into a universal completion claim.
+Reuse an existing manifest or ledger for this check rather than creating a new
+reporting artifact.
 Do not accept a source-, channel-, site-, feed-, corpus-, or catalog-wide
 exclusion from representative examples unless a preregistered sampling design
 supports that population inference. For enumerable broad-intake corpora,
@@ -57,8 +61,8 @@ completeness.
 Treat every Architecture or Engineering proposal that narrows external-source
 discovery or ingestion as provisional. Before applying it, commission a sealed
 independent reviewer to approve or reject the exact population, rule, evidence,
-blind spots, and less restrictive alternatives. Neither proposing role may
-approve its own restriction. Permit traceable batch review for item-level
+blind spots, and less restrictive alternatives. Neither Architecture nor
+Engineering may approve its own restriction. Permit traceable batch review for item-level
 filters, but require an explicit independent disposition for source-wide,
 media-wide, catalog-stopping, or sampling-substitution decisions.
 
