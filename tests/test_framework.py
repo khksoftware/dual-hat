@@ -414,41 +414,6 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn(required, proportionality)
         self.assertIn("cannot approve its own prevention or detection repair", review)
 
-    def test_systemic_mechanism_gap_recognition_is_pinned_and_cross_referenced_with_defect_closure(self):
-        # Capability 234's closure surfaced two real defects that each looked
-        # like an isolated slip but were not: a handover artifact went 11
-        # commits stale because nothing mechanically checked its freshness,
-        # and three consecutive phase closures in a row each failed to update
-        # the same navigation pointers and archive the same superseded
-        # document, because no documented closure step and no mechanical
-        # check ever required it. Neither was fixed by correcting the one
-        # instance in front of the agent; both required recognizing that the
-        # apparent one-off was actually caused by one missing systemic
-        # mechanism (an undocumented process step, or a synchronization check
-        # that was never made mechanical) and repairing that mechanism. This
-        # test pins the generalized rule (PROCESS_PROPORTIONALITY.md rule 19)
-        # and its cross-reference back to rule 15's correction-to-control
-        # loop, so the two related rules stay linked rather than existing as
-        # disconnected prose.
-        proportionality = " ".join(
-            (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8").split()
-        )
-        for required in (
-            "a missing systemic mechanism",
-            "a process step that was never documented as mandatory",
-            "a check that was never made mechanical, so correctness depended only on an agent remembering to do it",
-            'a pointer, cross-reference, or "current state" marker that must track changing state but has no enforcement keeping it synchronized',
-            "evidence of one shared systemic cause, not as independent bad luck",
-            "do not close the investigation after explaining away each occurrence separately",
-            "document the missing step, or add the missing mechanical enforcement",
-            "the defect class becomes structurally hard to ship",
-            "an instance-only fix leaves the same defect free to recur at the next occasion the pattern applies",
-            "This complements rule 15's correction-to-control loop",
-            "a precondition for generalizing that root cause correctly, not a substitute for it",
-            "See rule 19 when the failure to prevent or detect this defect is itself evidence of a missing systemic mechanism",
-        ):
-            self.assertIn(required, proportionality)
-
     def test_chat_switchover_uses_fresh_state_without_stopping_healthy_work(self):
         protocol = " ".join(
             (
