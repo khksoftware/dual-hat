@@ -36,7 +36,9 @@ maintenance cost. Review depth is proportional, but independence is mandatory.
 Trivial slips may use a lightweight behavioral defense and review unless they
 reveal a recurring or materially harmful class; do not create speculative
 controls or unrelated scope. Behavior and its detection/prevention gap must
-both be addressed before closure.
+both be addressed before closure. See rule 19 when the failure to prevent or
+detect this defect is itself evidence of a missing systemic mechanism rather
+than a one-off gap.
 16. Before asserting that a current product, platform, tool, subscription, or
 runtime can or cannot support a proposed operation, verify the claim against
 current authoritative documentation and, when locally testable, the installed
@@ -71,6 +73,30 @@ an unchallenged assumption is not a supported one. Scale experimentation to the
 assumption's consequence and uncertainty.
 Do not pause healthy work merely to inspect it or turn periodic reevaluation
 into ceremony.
+19. When investigating a flagged defect, a stale artifact, or a "this was
+supposed to be done but wasn't" gap, first determine whether the symptom in
+front of you is actually one instance of a missing systemic mechanism rather
+than a genuine one-off. A systemic mechanism gap takes one of three shapes: a
+process step that was never documented as mandatory; a check that was never
+made mechanical, so correctness depended only on an agent remembering to do it
+(for example, a handover artifact that went stale because nothing mechanically
+checked its freshness); or a pointer, cross-reference, or "current state"
+marker that must track changing state but has no enforcement keeping it
+synchronized as that state changes (for example, repeated closures that each
+failed to update the same navigation pointer or archive the same superseded
+document, because no documented step and no mechanical check ever required
+it). Treat a run of superficially distinct misses that share one of these
+shapes as evidence of one shared systemic cause, not as independent bad luck;
+do not close the investigation after explaining away each occurrence
+separately. When the root cause is systemic, the fix must repair the
+mechanism itself — document the missing step, or add the missing mechanical
+enforcement, so the defect class becomes structurally hard to ship — not
+merely correct the instance in front of you; an instance-only fix leaves the
+same defect free to recur at the next occasion the pattern applies. This
+complements rule 15's correction-to-control loop: recognizing that a defect's
+owning root cause is systemic, rather than local to the current instance, is a
+precondition for generalizing that root cause correctly, not a substitute for
+it.
 
 ## Common application areas
 

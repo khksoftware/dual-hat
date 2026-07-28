@@ -1,0 +1,130 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/closeout-decision.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "advisory_three_item_threshold_reached": {
+      "type": "boolean"
+    },
+    "continuity_evidence": {
+      "required": [
+        "architecture_directed",
+        "next_stream",
+        "source"
+      ],
+      "type": "object"
+    },
+    "counter_forced_full_closure": {
+      "const": false
+    },
+    "full_closure_triggers": {
+      "type": "array"
+    },
+    "publication_authorized": {
+      "type": "boolean"
+    },
+    "reconciliation_audit": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_items": {
+          "type": "array"
+        },
+        "closure_authorized": {
+          "type": "boolean"
+        },
+        "engineering_self_report_only": {
+          "const": false
+        },
+        "items": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "author_deferred": {
+                "type": "boolean"
+              },
+              "description": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "evidence": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "source": {
+                "enum": [
+                  "sealed_scope",
+                  "incremental_request",
+                  "interim_finding"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "done",
+                  "partial",
+                  "not_done"
+                ]
+              }
+            },
+            "required": [
+              "source",
+              "description",
+              "status",
+              "evidence"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "reviewer_role": {
+          "const": "independent"
+        },
+        "schema": {
+          "const": "dual-hat-reconciliation-audit/1.0"
+        }
+      },
+      "required": [
+        "schema",
+        "reviewer_role",
+        "engineering_self_report_only",
+        "items",
+        "blocking_items",
+        "closure_authorized"
+      ],
+      "type": "object"
+    },
+    "required_lightweight_evidence": {
+      "type": "array"
+    },
+    "same_stream_next": {
+      "type": "boolean"
+    },
+    "schema": {
+      "const": "dual-hat-closeout-decision/1.0"
+    },
+    "selection": {
+      "enum": [
+        "lightweight_continuity",
+        "full"
+      ]
+    },
+    "skipped_when_lightweight": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "selection",
+    "full_closure_triggers",
+    "advisory_three_item_threshold_reached",
+    "counter_forced_full_closure",
+    "same_stream_next",
+    "continuity_evidence",
+    "publication_authorized",
+    "required_lightweight_evidence",
+    "skipped_when_lightweight",
+    "reconciliation_audit"
+  ],
+  "type": "object"
+}

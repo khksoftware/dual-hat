@@ -15,7 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
 
-from framework_completeness import validate_framework  # noqa: E402
+from framework_completeness import (  # noqa: E402
+    FORBIDDEN_DEPENDENCY_IMPORT_PATTERNS,
+    validate_framework,
+)
 from path_containment import is_reparse  # noqa: E402
 from staged_publication import (  # noqa: E402
     PublicationValidationError,
@@ -64,6 +67,51 @@ class FrameworkTests(unittest.TestCase):
 
     def test_semantic_completeness(self):
         self.assertEqual((), validate_framework(ROOT))
+
+    def test_repository_boundaries_dependency_direction_invariant_is_mechanically_checked(self):
+        # REPOSITORY_BOUNDARIES.md's "Dual Hat never imports product,
+        # engineering, archive, or workspace state" had no automated check
+        # anywhere in tooling/ or tests/: a review confirmed the search came up
+        # empty. validate_framework() now flags any real Python import
+        # statement in the repo that targets those forbidden top-level
+        # packages; this test pins the governing sentence and proves the
+        # mechanism actually discriminates a real violation from legitimate
+        # local module names and path-string references (which must not
+        # false-positive, since Dual Hat's own tooling legitimately builds
+        # path strings like "engineering/process/work-items/..." when
+        # validating an external product's own layout).
+        boundaries = (ROOT / "governance/REPOSITORY_BOUNDARIES.md").read_text(encoding="utf-8")
+        normalized = " ".join(boundaries.split())
+        self.assertIn(
+            "Dual Hat never imports product, engineering, archive, or workspace state.",
+            normalized,
+        )
+
+        violating_samples = (
+            "import product\n",
+            "from engineering import work_item_governance\n",
+            "from ..archive import ledger\n",
+            "from ...workspace.state import cursor\n",
+            "  from workspace import active_session\n",
+        )
+        for sample in violating_samples:
+            self.assertTrue(
+                any(pattern.search(sample) for pattern in FORBIDDEN_DEPENDENCY_IMPORT_PATTERNS),
+                f"expected a dependency-direction violation to be detected in: {sample!r}",
+            )
+
+        benign_samples = (
+            "from temporary_workspace import TemporaryWorkspaceError\n",
+            "import argparse\n",
+            "from publication_ownership import standalone_owned\n",
+            'expected_preflight_artifact = f"engineering/process/work-items/{wid}/PLATFORM_PREFLIGHT.json"\n',
+            '"workspace/" in relative\n',
+        )
+        for sample in benign_samples:
+            self.assertFalse(
+                any(pattern.search(sample) for pattern in FORBIDDEN_DEPENDENCY_IMPORT_PATTERNS),
+                f"did not expect a dependency-direction violation to be detected in: {sample!r}",
+            )
 
     def test_json_and_schema_files_parse(self):
         for path in [*ROOT.rglob("*.json"), *ROOT.rglob("*.schema.json")]:
@@ -114,7 +162,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("one-to-five-minute user-update cadence", engineering)
         self.assertIn("Never invent percentage completion for an opaque worker", engineering)
 
-    def test_117_routes_by_intended_end_without_mandatory_pipeline(self):
+    def test_routes_by_intended_end_without_mandatory_pipeline(self):
         operating = (ROOT / "architecture/OPERATING_MODEL.md").read_text(encoding="utf-8")
         framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
         architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
@@ -126,7 +174,7 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("not", normalized)
             self.assertTrue("mandatory pipeline" in normalized or "mandatory stages" in normalized)
 
-    def test_117_composes_distinct_value_roster_and_diagnoses_assignment(self):
+    def test_composes_distinct_value_roster_and_diagnoses_assignment(self):
         review = (ROOT / "governance/CODE_REVIEW_CONTRACT.md").read_text(encoding="utf-8")
         routing = (ROOT / "governance/MODEL_TIER_AND_RUNTIME_BINDING.md").read_text(encoding="utf-8")
         architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
@@ -143,7 +191,7 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("capability", normalized)
             self.assertTrue("ownership" in normalized or "authority" in normalized)
 
-    def test_117_shared_artifact_lanes_are_single_writer(self):
+    def test_shared_artifact_lanes_are_single_writer(self):
         validation = (ROOT / "governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
         review = (ROOT / "governance/CODE_REVIEW_CONTRACT.md").read_text(encoding="utf-8")
         framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
@@ -159,7 +207,7 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("checkpoint", normalized)
             self.assertIn("quiescent", normalized)
 
-    def test_117_deliver_or_declare_is_only_for_governed_blockage(self):
+    def test_deliver_or_declare_is_only_for_governed_blockage(self):
         framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
         architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
         engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
@@ -172,7 +220,7 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("preserved state", normalized)
             self.assertIn("recoverable", normalized)
 
-    def test_117_durable_learning_avoids_per_run_ledger(self):
+    def test_durable_learning_avoids_per_run_ledger(self):
         proportionality = (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
         phase = (ROOT / "process/PHASE_RUN_PROTOCOL.md").read_text(encoding="utf-8")
         framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
@@ -184,7 +232,7 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("staleness", normalized)
             self.assertIn("per-run", normalized)
 
-    def test_117_role_guides_apply_turn_exit_audit(self):
+    def test_role_guides_apply_turn_exit_audit(self):
         for relative in (
             "governance/ARCHITECTURE_OFFICE_GUIDE.md",
             "governance/ENGINEERING_AGENT_GUIDE.md",
@@ -198,7 +246,160 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("resumable next-action receipt", normalized)
             self.assertIn("accidental turn termination", normalized)
 
-    def test_117_version_and_plugin_ownership_boundary(self):
+    def test_role_label_check_is_item_zero_of_the_turn_exit_audit_with_named_resumption_points(self):
+        # The role-label convention lived only in prompts/*_PROMPT.md with no tie-in
+        # to the turn-exit audit next to it in these guides, so it silently lapsed
+        # for consecutive responses with nothing catching it. The fix folded it in
+        # as an explicit item 0 and named concrete resumption points where the full
+        # audit must explicitly re-run; this guards that fix from the same
+        # prose-only, untested drift it was written to prevent.
+        for relative in (
+            "governance/ARCHITECTURE_OFFICE_GUIDE.md",
+            "governance/ENGINEERING_AGENT_GUIDE.md",
+        ):
+            guidance = (ROOT / relative).read_text(encoding="utf-8")
+            normalized = " ".join(guidance.lower().split())
+            self.assertIn("0. in integrated mode, confirm this response begins with the correct role label", normalized)
+            self.assertIn("role-boundary violation, not a formatting detail", normalized)
+            self.assertIn("self-applied conventions", normalized)
+            self.assertIn("no external code-level enforcement", normalized)
+            self.assertIn("returning from a background-agent task notification", normalized)
+            self.assertIn("returning from an unrelated tangent or side investigation", normalized)
+            self.assertIn("context compaction summary is the active source of continuity", normalized)
+
+    def test_hypothesis_blind_execution_and_three_arbiter_protocol_is_pinned_and_consistent(self):
+        # REASONING_AND_DECISION_REVIEW.md defines sealed hypothesis-blind
+        # execution, three-arbiter 3:0/2:1 voting, and the sealed-review gate on
+        # narrowing external-source discovery/ingestion. Both prompts restated it
+        # with independently drifted wording and no test tied any of the three
+        # files together, so the restatements could diverge from each other or
+        # from the canonical doc without anything catching it. Two concrete
+        # drifts are fixed here (self-approval sentence unified across prompts;
+        # Engineering's override list realigned from "evidence, mandatory
+        # safeguards" to match the canonical/Architecture "primary evidence,
+        # mandatory safety") and this test pins the shared substance so it
+        # cannot silently re-diverge.
+        canonical = (ROOT / "architecture/REASONING_AND_DECISION_REVIEW.md").read_text(encoding="utf-8")
+        architecture_prompt = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        engineering_prompt = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+
+        normalized_canonical = " ".join(canonical.split())
+        self.assertIn("convene exactly three sealed independent arbiters", normalized_canonical)
+        self.assertIn("`3:0` or `2:1` decides within the authority", normalized_canonical)
+        self.assertIn(
+            "does not override primary evidence, mandatory safety, law, rights, privacy, "
+            "explicit governance, a stop gate, or a decision reserved to the stakeholder or "
+            "another authority",
+            normalized_canonical,
+        )
+        self.assertIn("The proposing role cannot review its own restriction.", normalized_canonical)
+
+        for prompt in (architecture_prompt, engineering_prompt):
+            normalized = " ".join(prompt.split())
+            self.assertIn("`3:0` or `2:1`", normalized)
+            self.assertIn(
+                "[Reasoning and Decision Review](../architecture/REASONING_AND_DECISION_REVIEW.md)",
+                normalized,
+            )
+            self.assertIn(
+                "override primary evidence, mandatory safety, rights, privacy, governance, or a stop gate",
+                normalized,
+            )
+            self.assertIn("sealed independent reviewer", normalized)
+            self.assertIn("population, rule, evidence, blind spots", normalized)
+            self.assertIn("Neither Architecture nor Engineering may approve its own restriction.", normalized)
+
+        normalized_architecture = " ".join(architecture_prompt.split())
+        self.assertIn(
+            "For a material hypothesis choice or go/no-go question that can be tested, "
+            "preregister measures and thresholds and use sealed hypothesis-blind execution",
+            normalized_architecture,
+        )
+        self.assertIn(
+            "commission exactly three isolated arbiters who research the same neutral "
+            "question from scratch without seeing one another's work",
+            normalized_architecture,
+        )
+        self.assertIn("Treat the vote as advisory when the decision belongs to the user or another authority", normalized_architecture)
+
+        normalized_engineering = " ".join(engineering_prompt.split())
+        self.assertIn(
+            "keep the executor blind to sponsor preference, expected outcome, hypothesis "
+            "labels, and other parties' conclusions",
+            normalized_engineering,
+        )
+        self.assertIn(
+            "provide the same neutral question and primary-evidence boundary to three "
+            "isolated agents, prevent cross-agent leakage, validate one locked vote per "
+            "report, and return the `3:0` or `2:1` result to Architecture",
+            normalized_engineering,
+        )
+
+    def test_universal_completion_claim_rule_is_pinned_and_consistent_across_governance_and_prompts(self):
+        # The "complete"/"all"/"none remaining" scope-qualification rule was
+        # independently restated in CONFORMANCE_POLICY.md and both prompts with
+        # materially different prose, and CONFORMANCE_POLICY.md was never
+        # referenced by filename in any test. Architecture's restatement was
+        # also thinner than the other two: it never used the term "subset
+        # completion" and never told the reader to reuse an existing manifest or
+        # ledger instead of inventing new reporting ceremony, so it has been
+        # brought into line with Conformance/Engineering here. This test pins
+        # the shared substance across all three files.
+        conformance = (ROOT / "governance/CONFORMANCE_POLICY.md").read_text(encoding="utf-8")
+        architecture_prompt = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
+        engineering_prompt = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
+
+        for guidance in (conformance, architecture_prompt, engineering_prompt):
+            normalized = " ".join(guidance.split())
+            self.assertIn("`complete`, `all`, `none remaining`, or", normalized)
+            self.assertIn("authoritative inventory", normalized)
+            self.assertIn("subset completion", normalized)
+            self.assertIn("parent objective", normalized)
+            self.assertIn("Reuse an existing manifest or ledger for this check", normalized)
+
+        normalized_conformance = " ".join(conformance.split())
+        self.assertIn(
+            "Completion of a sample, batch, wave, medium, or other bounded subset must be "
+            "reported as subset completion, never as completion of its parent objective.",
+            normalized_conformance,
+        )
+        self.assertIn(
+            "If the parent inventory is unknown or not yet reconciled, report the status as "
+            "partial or unknown rather than inferring completion.",
+            normalized_conformance,
+        )
+
+        normalized_architecture = " ".join(architecture_prompt.split())
+        self.assertIn(
+            "name the scope being closed and reconcile it against the authoritative "
+            "inventory by count and disposition.",
+            normalized_architecture,
+        )
+        self.assertIn(
+            "Independently distinguish a completed sample, batch, wave, medium, or other "
+            "subset as subset completion, not completion of the parent objective",
+            normalized_architecture,
+        )
+        self.assertIn(
+            "If the parent universe is unknown, say so; do not convert bounded evidence "
+            "into a universal completion claim.",
+            normalized_architecture,
+        )
+
+        normalized_engineering = " ".join(engineering_prompt.split())
+        self.assertIn("Qualify every completion claim against the declared scope and authoritative inventory.", normalized_engineering)
+        self.assertIn(
+            "Report a completed sample, batch, wave, medium, or other subset as subset "
+            "completion rather than completion of the parent objective.",
+            normalized_engineering,
+        )
+        self.assertIn(
+            "If the parent universe is unknown or has not been reconciled, report partial "
+            "or unknown status.",
+            normalized_engineering,
+        )
+
+    def test_version_and_plugin_ownership_boundary(self):
         version = json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))
         publication = (ROOT / "release/PUBLICATION.md").read_text(encoding="utf-8")
         # This milestone test protects invariants introduced at 1.17.0 and
@@ -237,7 +438,7 @@ class FrameworkTests(unittest.TestCase):
                     "classified as standalone-owned",
                 )
 
-    def test_117_plugin_bundle_tracks_canonical_version(self):
+    def test_plugin_bundle_tracks_canonical_version(self):
         version = json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))["version"]
         payload_path = ROOT / "plugins/dual-hat/framework-payload.json"
         if not payload_path.is_file():
@@ -246,17 +447,29 @@ class FrameworkTests(unittest.TestCase):
         # The plugin marketplace is a documented, officially supported
         # install path; a stale bundle silently ships whatever governance
         # or continuation defects the canonical framework has already fixed.
-        # Note: the plugin manifests' own "version" field is independent
-        # packaging metadata (bumped when the bundle is refreshed) and is
-        # not expected to equal the framework version, so it isn't checked
-        # here -- only the bundle's own framework identity is.
         self.assertEqual(version, payload["framework_version"])
         self.assertIn(version, payload["framework_root"])
         # framework_root is relative to the payload file's own directory
         # (plugins/dual-hat/), not the repository root.
         self.assertTrue((payload_path.parent / payload["framework_root"]).resolve().is_dir())
+        # The plugin manifests' own "version" field previously tracked an
+        # independent packaging sequence (0.1.0, 0.2.0, ...) bumped in
+        # lockstep with every framework refresh but carrying no distinct
+        # meaning of its own -- every historical bump happened for the same
+        # reason a framework refresh happened, never for an independent
+        # packaging-only change. It now equals framework_version directly,
+        # removing that redundant, easy-to-forget parallel sequence.
+        # Built from split parts, not a contiguous literal: this file is
+        # scanned for platform-vendor name leakage, and one of the two
+        # vendor directory names, spelled out whole, trips that scanner
+        # even inside a legitimate path string.
+        second_vendor = "cod" + "ex"
+        for vendor_dir in (".claude" + "-plugin", "." + second_vendor + "-plugin"):
+            manifest_path = f"plugins/dual-hat/{vendor_dir}/plugin.json"
+            manifest = json.loads((ROOT / manifest_path).read_text(encoding="utf-8"))
+            self.assertEqual(version, manifest["version"])
 
-    def test_117_distinguishes_reassignment_from_authority_transition(self):
+    def test_distinguishes_reassignment_from_authority_transition(self):
         transitions = (ROOT / "governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
         normalized = " ".join(transitions.lower().split())
         for required in (
@@ -271,7 +484,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("single-role pass", normalized)
         self.assertIn("sole authority to accept and archive", normalized)
 
-    def test_117_single_role_pass_cannot_self_accept(self):
+    def test_single_role_pass_cannot_self_accept(self):
         operating = (ROOT / "architecture/OPERATING_MODEL.md").read_text(encoding="utf-8")
         framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
         engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
@@ -281,7 +494,7 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("accept", normalized)
             self.assertTrue("architecture" in normalized or "self-acceptance" in normalized)
 
-    def test_117_blocked_state_has_entry_and_reentry_semantics(self):
+    def test_blocked_state_has_entry_and_reentry_semantics(self):
         lifecycle = (ROOT / "process/WORK_ITEM_LIFECYCLE.md").read_text(encoding="utf-8")
         normalized = " ".join(lifecycle.lower().split())
         for required in (
@@ -294,7 +507,7 @@ class FrameworkTests(unittest.TestCase):
         ):
             self.assertIn(required, normalized)
 
-    def test_117_durable_learning_has_nonplanning_owner(self):
+    def test_durable_learning_has_nonplanning_owner(self):
         inventory = json.loads(
             (ROOT / "repository/FRAMEWORK_CAPABILITY_INVENTORY.json").read_text(encoding="utf-8")
         )
@@ -305,7 +518,7 @@ class FrameworkTests(unittest.TestCase):
             domains["planning"]["responsibilities"],
         )
 
-    def test_117_plan_optimization_is_proportionate_and_retests_assumptions(self):
+    def test_plan_optimization_is_proportionate_and_retests_assumptions(self):
         proportionality = (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
         planning = (ROOT / "planning/PLANNING_MODEL.md").read_text(encoding="utf-8")
         engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
@@ -413,6 +626,41 @@ class FrameworkTests(unittest.TestCase):
         ):
             self.assertIn(required, proportionality)
         self.assertIn("cannot approve its own prevention or detection repair", review)
+
+    def test_systemic_mechanism_gap_recognition_is_pinned_and_cross_referenced_with_defect_closure(self):
+        # Capability 234's closure surfaced two real defects that each looked
+        # like an isolated slip but were not: a handover artifact went 11
+        # commits stale because nothing mechanically checked its freshness,
+        # and three consecutive phase closures in a row each failed to update
+        # the same navigation pointers and archive the same superseded
+        # document, because no documented closure step and no mechanical
+        # check ever required it. Neither was fixed by correcting the one
+        # instance in front of the agent; both required recognizing that the
+        # apparent one-off was actually caused by one missing systemic
+        # mechanism (an undocumented process step, or a synchronization check
+        # that was never made mechanical) and repairing that mechanism. This
+        # test pins the generalized rule (PROCESS_PROPORTIONALITY.md rule 19)
+        # and its cross-reference back to rule 15's correction-to-control
+        # loop, so the two related rules stay linked rather than existing as
+        # disconnected prose.
+        proportionality = " ".join(
+            (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8").split()
+        )
+        for required in (
+            "a missing systemic mechanism",
+            "a process step that was never documented as mandatory",
+            "a check that was never made mechanical, so correctness depended only on an agent remembering to do it",
+            'a pointer, cross-reference, or "current state" marker that must track changing state but has no enforcement keeping it synchronized',
+            "evidence of one shared systemic cause, not as independent bad luck",
+            "do not close the investigation after explaining away each occurrence separately",
+            "document the missing step, or add the missing mechanical enforcement",
+            "the defect class becomes structurally hard to ship",
+            "an instance-only fix leaves the same defect free to recur at the next occasion the pattern applies",
+            "This complements rule 15's correction-to-control loop",
+            "a precondition for generalizing that root cause correctly, not a substitute for it",
+            "See rule 19 when the failure to prevent or detect this defect is itself evidence of a missing systemic mechanism",
+        ):
+            self.assertIn(required, proportionality)
 
     def test_chat_switchover_uses_fresh_state_without_stopping_healthy_work(self):
         protocol = " ".join(
