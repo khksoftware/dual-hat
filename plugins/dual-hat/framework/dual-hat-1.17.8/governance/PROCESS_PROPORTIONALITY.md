@@ -98,6 +98,27 @@ owning root cause is systemic, rather than local to the current instance, is a
 precondition for generalizing that root cause correctly, not a substitute for
 it.
 
+20. When a foundational convention -- a path scheme, an identity or naming
+model, a schema version, or any other shared contract multiple consumers
+depend on -- changes, the change is not complete merely because its owning
+module or record was updated and its own tests pass. Close both halves of
+the gap before treating the change as done. First, prove with a mechanical
+check, not manual review, that every consumer moved with the convention:
+scan the repository's active surface for the superseded pattern and treat
+any surviving match outside genuinely historical or explicitly exempted
+content as a closure-blocking failure of the migration itself, not a
+follow-up item. Second, add a standing mechanical check that catches any new
+hardcoded reference to the superseded convention the moment it is
+introduced, so a contributor who does not know the convention ever changed
+cannot silently reintroduce it later. This is the standing defense for one
+especially common shape of rule 19's systemic mechanism gap -- a pointer or
+convention that must track changing state but has no enforcement keeping it
+synchronized -- applied specifically to convention migrations: without both
+halves, a migration can look complete while one or more secondary consumers
+keep resolving the retired convention indefinitely, with nothing to signal
+the drift until an unrelated investigation finds it by accident, months
+later.
+
 ## Common application areas
 
 - **Planning and sealing:** scale work orders to the change; avoid duplicating roadmap, backlog, decision, and scope prose.

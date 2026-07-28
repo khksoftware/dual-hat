@@ -2,6 +2,20 @@
 
 # Changelog
 
+## 1.17.8 - 2026-07-28
+
+- Added `PROCESS_PROPORTIONALITY.md` rule 20: when a foundational convention
+  (a path scheme, an identity/naming model, a schema version, or any other
+  shared contract multiple consumers depend on) changes, the change is not
+  complete until every consumer is proven, mechanically rather than by
+  manual review, to have zero surviving references to the superseded
+  convention, and until a standing mechanical check catches any new
+  hardcoded reference to it going forward. Named as the standing defense
+  for one especially common shape of rule 19's systemic mechanism gap, and
+  cross-referenced with it in both directions. Pinned with a new
+  exact-substring test in `test_framework.py` beside the rule 19 pinning
+  test.
+
 ## 1.17.7 - 2026-07-28
 
 - Unified two governance rules that had independently drifted apart across

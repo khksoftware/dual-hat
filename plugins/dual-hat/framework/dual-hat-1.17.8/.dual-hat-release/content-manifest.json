@@ -1,6 +1,6 @@
 {
-  "archive_root": "dual-hat-1.17.7",
-  "file_count": 182,
+  "archive_root": "dual-hat-1.17.8",
+  "file_count": 183,
   "files": [
     {
       "bytes": 86,
@@ -8,9 +8,9 @@
       "sha256": "8CF8107F9304362DFAABC270D634F5B83E082D9B0A7E36AE2786C37518AF7304"
     },
     {
-      "bytes": 26856,
+      "bytes": 27610,
       "path": "CHANGELOG.md",
-      "sha256": "F9C33891CFE41BB55B326597FDB6DCF65D820ED25A2EC2F108E6E06DF60BC7AF"
+      "sha256": "29EBC0DA9B34F589F31E3B94A932C04CB653FFF57E58375134F33DD4B9A5CBCF"
     },
     {
       "bytes": 11357,
@@ -25,7 +25,7 @@
     {
       "bytes": 5841,
       "path": "README.md",
-      "sha256": "B99A38E0070077FF1D7BD30AC6FB8F313130E0BB82240F002F0EB58422BA6810"
+      "sha256": "0F5E4049A3B8C9891461F6B3B46990D9FF5643ABB36CA6E0BD67F64EE8DA0231"
     },
     {
       "bytes": 352,
@@ -228,9 +228,9 @@
       "sha256": "C3EFF51E0945672E851F5B004C29FD4993AEE8B4FC3D58C6ACCB96B67DE19794"
     },
     {
-      "bytes": 11491,
+      "bytes": 12903,
       "path": "governance/PROCESS_PROPORTIONALITY.md",
-      "sha256": "921B81670969A5124573D1D76129E691B44C833CF0D218A183214676540AB71D"
+      "sha256": "331E1E3359E09DE3CBBA86B6852BA3078B160F588C7E5EC5F75322EC454199B0"
     },
     {
       "bytes": 1220,
@@ -428,6 +428,11 @@
       "sha256": "4B3DB36F5248612E265310CED07A1FFAF0122A9976C78B5C9329031088C65F99"
     },
     {
+      "bytes": 1947,
+      "path": "release/RELEASE_NOTES_v1.17.8.md",
+      "sha256": "C6E800B4D0ED29813F070797D9E405BD16F509A409151417C3E070A07D8AD550"
+    },
+    {
       "bytes": 3563,
       "path": "release/RELEASE_POLICY.md",
       "sha256": "926651718225E7AF09E106916F209678728F2E69A63EF36B005735415D4E72B5"
@@ -435,7 +440,7 @@
     {
       "bytes": 267,
       "path": "release/VERSION.json",
-      "sha256": "B43EEF46B92F62EB66837EE50BDEE5680A9C71B3821AF4C1DB09246E5A7EBC4A"
+      "sha256": "3092F91F5AC934AD38DADD9571E8040621C671C083CF32804745CF02D3897398"
     },
     {
       "bytes": 862,
@@ -768,9 +773,9 @@
       "sha256": "F840B93E85F0A62F80D5E785060E70C2186FC3B43A90FBC1CE120B7BB6236C15"
     },
     {
-      "bytes": 47819,
+      "bytes": 50000,
       "path": "tests/test_framework.py",
-      "sha256": "C0D56AD7D258E743562156DC27DED132E3F1C9F772E0D97C9683F92A49A14C22"
+      "sha256": "8AD10D41E503E8EDF08874A7FA1A95716E1636ED9CD43044869A588BF18C4878"
     },
     {
       "bytes": 2296,
@@ -915,5 +920,5 @@
   ],
   "license_expression": "Apache-2.0",
   "schema": "dual-hat-release-content-manifest/1.0",
-  "version": "1.17.7"
+  "version": "1.17.8"
 }

@@ -662,6 +662,36 @@ class FrameworkTests(unittest.TestCase):
         ):
             self.assertIn(required, proportionality)
 
+    def test_convention_migration_requires_zero_stale_references_and_a_standing_literal_check(self):
+        # A path-scoping convention changed once, and two of its consumer
+        # scripts kept a hardcoded reference to the retired convention instead
+        # of moving with it. Neither broke loudly -- each kept silently
+        # resolving the superseded location -- and the drift was found only by
+        # accident, months later, during an unrelated investigation. That is
+        # exactly rule 19's "pointer or convention that must track changing
+        # state but has no enforcement keeping it synchronized" shape, and it
+        # is common enough across path schemes, identity/naming models, and
+        # schema versions to warrant its own standing rule rather than relying
+        # on rule 19's general recognition step to be applied fresh each time.
+        # This test pins rule 20 and its cross-reference back to rule 19, so
+        # the general gap-recognition rule and this specific standing defense
+        # stay linked rather than existing as disconnected prose.
+        proportionality = " ".join(
+            (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8").split()
+        )
+        for required in (
+            "a path scheme, an identity or naming model, a schema version, or any other shared contract",
+            "the change is not complete merely because its owning module or record was updated and its own tests pass",
+            "prove with a mechanical check, not manual review, that every consumer moved with the convention",
+            "a closure-blocking failure of the migration itself, not a follow-up item",
+            "add a standing mechanical check that catches any new hardcoded reference to the superseded convention",
+            "cannot silently reintroduce it later",
+            "the standing defense for one especially common shape of rule 19's systemic mechanism gap",
+            "applied specifically to convention migrations",
+            "nothing to signal the drift until an unrelated investigation finds it by accident",
+        ):
+            self.assertIn(required, proportionality)
+
     def test_chat_switchover_uses_fresh_state_without_stopping_healthy_work(self):
         protocol = " ".join(
             (
