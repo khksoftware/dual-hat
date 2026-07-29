@@ -13,6 +13,10 @@ Use Dual Hat when a software project needs more than code generation: explicit a
 
 Dual Hat is not an application runtime, programming library, hosted service, or substitute for the product's own architecture and toolchain. It does not make product decisions automatically or grant an agent unrestricted authority. It provides the governance, planning, execution, validation, continuity, and publication structure within which the user, Architecture Office, and Engineering Agent build the product.
 
+## Start here
+
+A fresh agent or chat session gaining working knowledge of Dual Hat reads [`START_HERE.md`](START_HERE.md) first, in full, before any role-specific or product-specific material. It is the single required entry point and sequences every other foundational document below in the order they must be read, replacing an assembled-by-hand reading list.
+
 ## Choose how the roles work together
 
 Dual Hat supports both **Integrated Mode** and **Split Mode**, with Integrated as the default. The plain-language [Integrated and Split Dual Hat Modes guide](guides/OPERATING_MODES.md) explains roles, pros and cons, approval, safe switching, recovery, review, acceptance, archival, platform profiles, and ordinary commands. The [platform-profile contract](governance/PLATFORM_PROFILE_CONTRACT.md) makes capability preflight and hard-stop behavior prominent.
@@ -31,7 +35,7 @@ Do not copy or dump the whole extracted release package into the product reposit
 
 Read [Repository and Product Onboarding](process/ONBOARDING.md) for the three repository scenarios and approval boundary, [Installation and Project Binding](guides/INSTALLATION_AND_BINDING.md) for setup/update/rollback/removal, and [Troubleshooting](guides/TROUBLESHOOTING.md) when detection or binding stops safely.
 
-First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](guides/TROUBLESHOOTING.md); and [1.17.8 release notes](release/RELEASE_NOTES_v1.17.8.md).
+First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](guides/TROUBLESHOOTING.md); and [1.18.0 release notes](release/RELEASE_NOTES_v1.18.0.md).
 
 ## Framework areas
 
@@ -47,6 +51,10 @@ First-use map: [no-repository, nearly-empty, and existing-project onboarding](pr
 - `release/`: version, release policy, release notes, packaging, and publication rules.
 
 The framework is Apache-2.0 licensed. Product profiles may add or narrow rules without duplicating or weakening generic authority. A source repository may remain canonical while an external Dual Hat repository is a forward-only derived publication; see [publication](release/PUBLICATION.md).
+
+## A note on agent drift
+
+Note: Claude appears to be much more prone than other models to drifting away from this framework's governance, and needs to be regularly reminded. This is its innate quality which cannot be remediated by the framework itself.
 
 ## Contact
 

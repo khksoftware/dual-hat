@@ -43,7 +43,7 @@ unrelated hardening.
 
 Independent specialists and delegated agents are also subject to the
 correction-to-control loop in
-[Process Proportionality](PROCESS_PROPORTIONALITY.md). When their own error,
+[Governing Principles](GOVERNING_PRINCIPLES.md). When their own error,
 omission, or inaccurate claim is identified, they must correct the instance,
 generalize the failure mode, identify the owning cause, apply a proportionate
 reusable countermeasure, and report directly analogous current-session impact.

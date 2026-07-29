@@ -390,7 +390,7 @@ class OperatingModeTests(unittest.TestCase):
         self.assertIn("active/output locations limited to current operational artifacts",prompt)
 
     def test_current_capability_limits_require_documentation_and_runtime_probe(self):
-        proportionality=(ROOT/"governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
+        proportionality=(ROOT/"governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
         architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
         engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
         for guidance in (proportionality,architecture,engineering):

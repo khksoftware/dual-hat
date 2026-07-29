@@ -3,6 +3,7 @@
   "$id": "https://example.invalid/dual-hat/technical-debt.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
+  "description": "Generic Dual Hat cross-product technical-debt record contract (see dual-hat/planning/TECHNICAL_DEBT.md). This is an aspirational target contract, not a description of any specific product's live implementation: a product's own actual records may key on a different identifier than 'id', carry a different field set than severity/priority/remediation_trigger, and use a different status vocabulary than the proposed/accepted/scheduled/in_progress/blocked/resolved/superseded/rejected enum below. No code path in this repository loads this file or validates any record against it. Do not assume a product's technical-debt records conform to this schema without checking that product's own governance protocol and live backlog for its real, enforced shape.",
   "properties": {
     "accepted": {
       "type": "boolean"

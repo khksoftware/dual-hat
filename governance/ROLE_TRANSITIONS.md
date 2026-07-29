@@ -41,6 +41,8 @@ monitoring after the update. A terminal response is allowed only when terminatio
 preflight releases the lease. Generated prose ending, a question being answered,
 an available final-response channel, or a platform turn boundary cannot release it.
 
+This applies identically to every sub-agent Engineering delegates to. A question, ambiguity, or materially consequential decision surfacing in a sub-agent's own work is never resolved by that sub-agent or by the delegating Engineering Agent acting alone. The affected task pauses at that exact point; the sub-agent relays the full relevant context to its supervisor, which relays it to the Architecture Office rather than guessing or proceeding on the sub-agent's own judgment. Execution of that specific task does not resume until Architecture provides guidance. Architecture, not Engineering or the sub-agent, decides -- based on the nature of the decision -- whether to resolve it directly or bring the user into the loop.
+
 ## Approval and transition rules
 
 A design question during Engineering does not change role. Entering Engineering requires an approved, hash-valid sealed order and unambiguous execution intent. Dirty worktrees, interrupted mutations, stale remotes, missing local state, or stale order hashes block mode transfer until reconciled or explicitly packaged as unresolved state.

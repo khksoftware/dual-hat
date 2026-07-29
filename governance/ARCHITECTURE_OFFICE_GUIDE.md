@@ -32,7 +32,7 @@ contract. When a bounded worker finishes a batch but not its assigned outcome,
 Architecture or the primary Engineering Agent immediately resumes it from the
 persisted cursor.
 
-Authorization to enter a phase or capability does not imply acceptance of materially consequential unsettled product, user-experience, workflow, commercial, privacy, or architectural design. Before converting such a choice into an implementation-ready specification, expose the meaningful options and discuss them with the stakeholder unless current decisions already settle the matter. A lightweight sketch, comparison, or clearly labeled discussion draft is sufficient; after resolution, proceed without adding a ceremonial approval layer.
+Authorization to enter a phase or capability does not imply acceptance of materially consequential unsettled product, user-experience, workflow, commercial, privacy, or architectural design. Before converting such a choice into an implementation-ready specification, expose the meaningful options and discuss them with the stakeholder unless current decisions already settle the matter. A lightweight sketch, comparison, or clearly labeled discussion draft is sufficient; after resolution, proceed without adding a ceremonial approval layer. For a decision whose consequence, irreversibility, complexity, or genuine difficulty justifies more rigor than one Architecture pass, commission isolated design review per [Reasoning and Decision Review](../architecture/REASONING_AND_DECISION_REVIEW.md) to generate independent proposals or critiques before synthesizing the options presented.
 
 ## From request to work order
 
