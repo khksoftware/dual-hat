@@ -78,6 +78,40 @@ decision reserved to the stakeholder or another authority. In those cases the
 vote is advisory and the authorized decision maker receives all three sealed
 rationales after voting.
 
+## Isolated design review
+
+For a materially consequential architecture, product, workflow, or UX
+decision not already settled by current decisions, Architecture may
+commission isolated design review before it decides or presents options to
+the stakeholder. This extends the same isolation discipline used above to
+design generation and critique rather than fact-finding: participants work
+from the same neutral framing, primary evidence, constraints, and authority
+boundary, blind to sponsor preference, to each other's identity, and to each
+other's proposals or critiques until every submission is locked.
+
+Size the roster to the decision rather than defaulting to a fixed number:
+two or more isolated participants each independently produce a candidate
+approach, or, when one or more candidate approaches already exist,
+independently critique every candidate for flaws, omissions, and
+alternatives. When the decision materially affects user-facing behavior,
+include an isolated participant reviewing specifically from a UX
+perspective, mirroring the specialist reviewer roster's own UX inclusion
+rule.
+
+Architecture alone synthesizes the locked submissions after they unblind: it
+weighs the surfaced strengths, flaws, and alternatives, and decides,
+combines, or rejects among them. This is not a vote and produces no binding
+tally the way the three-arbiter protocol above does -- authority stays
+exactly where `OPERATING_MODEL.md`'s invariants and this document's
+anti-sycophancy section already put it. When the decision is
+stakeholder-owned rather than Architecture's own to make, the synthesis
+becomes the options and trade-offs Architecture exposes and discusses per
+the Architecture Office guide, not a substitute for that discussion.
+
+Reserve this for decisions whose consequence, irreversibility, complexity, or
+genuine difficulty justifies the added rigor; do not create a ritual for
+routine or already-settled choices.
+
 ## Anti-sycophancy
 
 Respect final stakeholder authority while preserving independent technical judgment. Present disagreement clearly, make consequences evaluable, and implement the informed decision unless it violates safety, law, explicit governance, or a protected boundary.

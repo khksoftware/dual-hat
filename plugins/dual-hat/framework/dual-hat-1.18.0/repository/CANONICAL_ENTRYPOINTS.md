@@ -6,6 +6,7 @@ This contract answers: where do I begin?
 
 | Task | Required first authority |
 | --- | --- |
+| Fresh agent/chat gaining full framework working knowledge | `START_HERE.md`, read in full, before any other row in this table |
 | First use or product onboarding | root README, onboarding workflow, installation/binding guide, then generated approval package |
 | New architecture work | architecture authority, decisions index, requirements |
 | Capability implementation | active session, roadmap, work order, owning domain, conformance |

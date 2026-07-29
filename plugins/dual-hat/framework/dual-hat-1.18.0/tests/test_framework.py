@@ -149,7 +149,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertFalse((ROOT / "docs").exists())
 
     def test_research_iterations_do_not_require_capability_churn(self):
-        proportionality = (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
+        proportionality = (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
         lifecycle = (ROOT / "process/CAPABILITY_LIFECYCLE.md").read_text(encoding="utf-8")
         self.assertIn("prefer explicit iterations within the same capability", proportionality)
         self.assertIn("does not require a separate capability identity", lifecycle)
@@ -221,7 +221,7 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn("recoverable", normalized)
 
     def test_durable_learning_avoids_per_run_ledger(self):
-        proportionality = (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
+        proportionality = (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
         phase = (ROOT / "process/PHASE_RUN_PROTOCOL.md").read_text(encoding="utf-8")
         framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
         for guidance in (proportionality, phase, framework):
@@ -403,10 +403,13 @@ class FrameworkTests(unittest.TestCase):
         version = json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))
         publication = (ROOT / "release/PUBLICATION.md").read_text(encoding="utf-8")
         # This milestone test protects invariants introduced at 1.17.0 and
-        # still binding for the remainder of the 1.17.x line; the exact
-        # published patch version is expected to advance without requiring
-        # a change here.
-        self.assertTrue(version["version"].startswith("1.17."))
+        # still binding for every subsequent minor/patch release; the exact
+        # published version is expected to advance without requiring a
+        # change here, so this checks the numeric floor directly rather
+        # than pinning one minor-line prefix that would need editing again
+        # at the next minor bump.
+        version_parts = tuple(int(part) for part in version["version"].split("."))
+        self.assertGreaterEqual(version_parts, (1, 17, 0))
         current_release_notes = f"release/RELEASE_NOTES_v{version['version']}.md"
         self.assertTrue((ROOT / current_release_notes).is_file())
         source_map_path = ROOT / "export/EXPORT_SOURCES.json"
@@ -519,7 +522,7 @@ class FrameworkTests(unittest.TestCase):
         )
 
     def test_plan_optimization_is_proportionate_and_retests_assumptions(self):
-        proportionality = (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8")
+        proportionality = (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
         planning = (ROOT / "planning/PLANNING_MODEL.md").read_text(encoding="utf-8")
         engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
         for guidance in (proportionality, planning, engineering):
@@ -601,7 +604,7 @@ class FrameworkTests(unittest.TestCase):
     def test_defect_closure_repairs_and_independently_reviews_the_failed_defense(self):
         proportionality = " ".join(
             (
-                ROOT / "governance/PROCESS_PROPORTIONALITY.md"
+                ROOT / "governance/GOVERNING_PRINCIPLES.md"
             ).read_text(encoding="utf-8").lower().split()
         )
         review = " ".join(
@@ -639,12 +642,12 @@ class FrameworkTests(unittest.TestCase):
         # apparent one-off was actually caused by one missing systemic
         # mechanism (an undocumented process step, or a synchronization check
         # that was never made mechanical) and repairing that mechanism. This
-        # test pins the generalized rule (PROCESS_PROPORTIONALITY.md rule 19)
+        # test pins the generalized rule (GOVERNING_PRINCIPLES.md rule 19)
         # and its cross-reference back to rule 15's correction-to-control
         # loop, so the two related rules stay linked rather than existing as
         # disconnected prose.
         proportionality = " ".join(
-            (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8").split()
+            (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8").split()
         )
         for required in (
             "a missing systemic mechanism",
@@ -677,7 +680,7 @@ class FrameworkTests(unittest.TestCase):
         # the general gap-recognition rule and this specific standing defense
         # stay linked rather than existing as disconnected prose.
         proportionality = " ".join(
-            (ROOT / "governance/PROCESS_PROPORTIONALITY.md").read_text(encoding="utf-8").split()
+            (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8").split()
         )
         for required in (
             "a path scheme, an identity or naming model, a schema version, or any other shared contract",

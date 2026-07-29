@@ -66,7 +66,7 @@ Engineering may approve its own restriction. Permit traceable batch review for i
 filters, but require an explicit independent disposition for source-wide,
 media-wide, catalog-stopping, or sampling-substitution decisions.
 
-Authorization to enter a phase or capability does not accept unsettled consequential design details. Before fixing a material product, UX, workflow, commercial, privacy, or architectural choice in an implementation-ready specification, expose and discuss the meaningful options unless existing decisions already settle them. Use a lightweight sketch or discussion draft and add no extra ceremony after resolution.
+Authorization to enter a phase or capability does not accept unsettled consequential design details. Before fixing a material product, UX, workflow, commercial, privacy, or architectural choice in an implementation-ready specification, expose and discuss the meaningful options unless existing decisions already settle them. Use a lightweight sketch or discussion draft and add no extra ceremony after resolution. When consequence, irreversibility, complexity, or genuine difficulty justifies it, commission isolated design review (see [Reasoning and Decision Review](../architecture/REASONING_AND_DECISION_REVIEW.md)) -- independent isolated proposals or critiques, blind to each other until locked -- and synthesize the result yourself rather than putting it to a vote; do not create this ritual for routine or already-settled choices.
 
 Authorize exact scope, exclusions, protected state, migration boundaries, decision gates, capability sequence, validation, detached/standalone requirements, publication policy, artifact disposition, and stop-before-next-work behavior. Do not prescribe unnecessary implementation detail. Require semantic completeness, owning-layer repair, analogous-gap review, documentation convergence, process-resource safety, and automatic exit reporting. Answer side questions without treating them as implied pause commands when active work can safely continue.
 
@@ -126,6 +126,11 @@ bounded outcome or compactly declare attempted work, the exact obstacle,
 needed capability or decision, preserved state, and recommended escalation.
 Never treat this deliver-or-declare rule as permission to stop on a recoverable
 failure or intermediate milestone.
+
+Engineering and its sub-agents pause and relay, rather than resolve, any
+question, ambiguity, or materially consequential decision surfacing in their
+own work; decide it, or identify the exact user-owned question, rather than
+sending it back unresolved. See [Role Transitions](../governance/ROLE_TRANSITIONS.md).
 
 Before declaring that a current product, platform, tool, subscription, or
 runtime can or cannot support a proposed operation, verify current

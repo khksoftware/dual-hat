@@ -2,6 +2,135 @@
 
 # Changelog
 
+## 1.18.0 - 2026-07-29
+
+- Added `START_HERE.md` as the single required entry point for a fresh
+  agent or chat session to gain full working knowledge of the framework,
+  sequencing README, the operating model, onboarding, bootstrap, the
+  operating guide and installation/binding guidance, both role
+  guide/prompt pairs, and the work-item lifecycle and closure protocols in
+  order. Replaces an assembled-by-hand reading list. `README.md` points to
+  it near the top and `repository/CANONICAL_ENTRYPOINTS.md` gains a first
+  row for it.
+- Added an isolated design review mechanism to
+  `architecture/REASONING_AND_DECISION_REVIEW.md`: for a materially
+  consequential, unsettled architecture/product/workflow/UX decision, the
+  Architecture Office may commission two or more isolated participants to
+  independently produce candidate approaches or critique existing ones --
+  blind to each other's identity and output until locked, including an
+  isolated UX-perspective participant when the decision is user-facing.
+  Unlike the existing three-arbiter protocol this is not a vote:
+  Architecture alone synthesizes the unblinded submissions and decides,
+  combines, or rejects among them, preserving the framework's
+  single-authority invariant.
+- Added four additive delegation rules to
+  `governance/VALIDATION_AND_PARALLELISM.md`: every delegated sub-agent's
+  messages begin with a brief description of its assigned role or task,
+  mirroring the primary agent's own role-label convention; unless a sealed
+  work order says otherwise, every sub-agent defaults to the Engineering
+  Agent role and is bound by every rule that governs it; the delegating
+  agent supervises rather than trusts sub-agents -- staying on standby,
+  tracking progress, and treating sub-agent self-reports as unverified
+  until independently checked against live evidence, while remaining
+  responsive to the user without delay; and a question, ambiguity, or
+  materially consequential decision surfacing in a sub-agent's own work is
+  never resolved by the sub-agent -- it pauses and escalates to the
+  Architecture Office.
+- Added `GOVERNING_PRINCIPLES.md` rules 21 through 31:
+  - Rule 21: a governance change codified during an active chat session
+    takes effect immediately within that session -- for the primary
+    agent's own remaining behavior and for every subagent already active
+    or subsequently launched -- rather than binding only a future fresh
+    session.
+  - Rule 22: before authoring new procedural logic for a workflow the
+    framework already governs as a repeated, structured process, an agent
+    first checks for an existing canonical entry point and uses it, or
+    escalates before building a parallel one.
+  - Rule 23: an agent resuming across a context compaction, and an agent
+    whose own single long-running task has run for an extended duration
+    without revisiting a foundational fact it read only once early on,
+    both re-derive their working method or belief from the actual current
+    source rather than a stale prior summary or an early-and-never-
+    refreshed read; a report asserting something was "verified" or
+    "confirmed" must state what was actually re-checked and when.
+  - Rule 24: a checkpoint report's completeness or coverage claims must
+    cite the concrete mechanism used to determine the denominator, not
+    just the number.
+  - Rule 25: finding one instance of a defect is itself the trigger to
+    actively search for sibling instances sharing the same root cause --
+    both a literal search for the same pattern, name, or call shape, and
+    an independent abstract-pattern search that names the defect's
+    structural shape and looks for anything matching it across different
+    file formats, naming conventions, or subsystems that share no literal
+    string -- and to prefer a systemic, generic countermeasure over a
+    collection of narrow instance-by-instance patches. The search
+    performed and its result must be stated in the fix's own report.
+  - Rule 26: defect remediation follows Red-Green-Refactor as the
+    standing pattern -- write a test reproducing the defect and confirm it
+    genuinely fails first, then fix the defect (generalized per rule 19
+    and searched for siblings per rule 25), then clean the fix and its
+    tests into systemic, generic form without changing verified behavior.
+    An unchanged passing test suite proves nothing failed before the fix,
+    only that nothing new broke.
+  - Rule 27: when a mechanism generates or evaluates output per unit,
+    item, or instance that is supposed to be sensitive to that instance's
+    own input, verification requires comparing output across genuinely
+    different instances and treating unexpected sameness as a failure,
+    not only confirming per-instance self-consistency, which a
+    degenerate, input-blind implementation can pass indefinitely.
+  - Rule 28: a governed ledger-backed projection is not protected by its
+    append-only history unless something mechanically confirms the live
+    projection matches what replaying the ledger produces; add a standing
+    reproducibility check, run at minimum before any further governed
+    write to the same projection, that fails loudly rather than merely
+    logging on divergence.
+  - Rule 29: rule 25's adjacent-search mandate does not by itself protect
+    the task that motivated the search. Track the original triggering
+    task as a named, standing obligation distinct from whatever adjacent
+    work it spawned, and treat it as still open until independently
+    verified complete, regardless of how much adjacent work has finished
+    in the meantime.
+  - Rule 30: any pairing of a code or content change with a governed
+    tracking record meant to reflect whether it happened has exactly one
+    moment of genuine completion -- when both halves are verified
+    together, in the same check, not two separable steps where finishing
+    the first is trusted to imply the second happened.
+  - Rule 31 (Definition of Done): every governed work-item type this
+    framework tracks to a closed, resolved, accepted, or complete status
+    must have an explicit, criterion-based, mechanically-checkable
+    Definition of Done, authored and owned by the Architecture Office
+    before that type's first instance opens, never invented by whoever is
+    closing an instance. The performing entity may exceed but never
+    narrow or skip a criterion, and must honestly report exactly which
+    criterion is unmet rather than misrepresent partial success as full
+    success. The recipient of a completed work item must independently
+    verify the checklist itself rather than accept the report at face
+    value. The DoD must be explicitly carried through every leg of a
+    handover chain, with its absence itself a violation. Where a type has
+    no DoD yet, closure is blocked until the Architecture Office defines
+    one, though in-flight work may continue and no already-closed
+    instance is retroactively reopened. Rule 30 is folded in as this
+    rule's closure-time discipline; rules 24 through 28 are named as
+    existing DoD-fragment instances this rule generalizes.
+- Added a note near the end of `README.md`, verbatim per explicit
+  stakeholder instruction: a caution that one particular assistant model
+  family is more prone than others to drifting away from this framework's
+  governance and needs regular reminding, described as an innate quality
+  the framework itself cannot remediate. This note names a specific
+  model, which is in tension with the framework's general practice
+  elsewhere of not naming specific providers or models in portable source;
+  implemented as explicitly instructed, with the tension noted here for
+  future reconsideration.
+
+This is a minor release: it adds a new required onboarding document, a
+new architecture-review mechanism, and eleven new governing-principles
+rules including a capstone Definition-of-Done requirement that changes
+how closure works for every governed work-item type going forward. All
+changes are additive and backward-compatible -- no existing schema,
+required field, or documented contract is removed or narrowed -- but the
+combination changes framework layout and contracts beyond what a patch
+release covers.
+
 ## 1.17.8 - 2026-07-28
 
 - Added `PROCESS_PROPORTIONALITY.md` rule 20: when a foundational convention
