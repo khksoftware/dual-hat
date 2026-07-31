@@ -168,7 +168,8 @@ This is preventive; it does not replace rule 20's after-the-fact migration
 closure, which still applies once a canonical entry point is introduced and
 existing parallel implementations must be found and retired.
 
-23. An agent whose own context has been compacted, who is resuming a
+23. Stale-belief re-verification and delegated-status verification. An
+agent whose own context has been compacted, who is resuming a
 long-running task across a gap, or whose own run has simply continued
 long enough that an early read of something could plausibly have
 changed underneath it, re-derives its working method for any governed
@@ -190,17 +191,51 @@ sufficiently long uninterrupted run at first (or first renewed) use of
 the mechanism or fact, not on every subsequent call within that same
 window; a report that asserts something was "verified" or "confirmed"
 states what was actually re-checked and when, not merely that the agent
-believes it to be so. This applies equally to the liveness of a
-delegated worker, not only to facts and mechanisms: an agent resuming
-from a context-compaction summary re-verifies, immediately and before
-any other action, whether every worker it believed active is still
-tracked and reachable, rather than carrying forward a pre-compaction
-belief that delegated work is still running unexamined until something
-else forces the check. Where a worker's tracking handle no longer
-resolves, the agent immediately falls back to direct evidence-based
-verification of that worker's actual product -- the real files,
-commits, or other output it was assigned to produce -- rather than
-waiting for a user question to force it.
+believes it to be so.
+
+The same discipline governs every claim about a delegated task's
+status -- dispatched, running, tracked, reachable, or in progress -- not
+only the continued liveness of a worker already known to exist. An
+orchestrating agent must never report or record, in conversation, in a
+todo/task-tracking list, or in any session or handover artifact, that a
+delegated task is dispatched, in progress, running, or being waited on
+unless that status is actually verified against a real task handle: a
+dispatch call the agent just made, or an independent check against the
+live task registry. Deciding to delegate something, narrating that
+decision, or marking a tracking artifact as reflecting in-flight work
+are each necessary but never sufficient evidence that the work is
+actually in flight -- the tracking artifact and the real dispatch state
+must never be allowed to drift apart, and a tracking artifact reading
+"in progress" while nothing was ever launched is a false status report
+regardless of how the entry came to say so. This obligation is not
+confined to compaction or resumption boundaries; it is due at any point
+in a session, including the ordinary case where an interruption -- a
+new request, a tangential question, a side investigation -- arrives
+after the agent decided to dispatch a task but before the dispatch call
+was actually made, in which case the tracking artifact must reflect
+"not yet dispatched," not "in progress," and resuming the interrupted
+work is itself the trigger to check whether the intended dispatch
+actually happened rather than to assume it did because a todo item
+already says so. Resuming from a context-compaction summary remains one
+important named trigger for this check, not the only one: an agent
+resuming from one re-verifies, immediately and before any other action,
+whether every worker it believed active is still tracked and reachable,
+rather than carrying forward a pre-compaction belief that delegated
+work is still running unexamined until something else forces the check
+-- but the same verification is due at any point the agent is about to
+assert or record a delegated task's status, not only there. Where a
+worker's tracking handle no longer resolves, the agent immediately
+falls back to direct evidence-based verification of that worker's
+actual product -- the real files, commits, or other output it was
+assigned to produce -- rather than waiting for a user question to force
+it. Confirmed necessary by a real incident distinct from the compaction
+case: mid-session, with no compaction involved, an orchestrating agent
+said in conversation that it was proceeding with a piece of delegated
+work, marked its own todo-list entry in progress, and then never
+actually dispatched it, reporting it as still waiting across several
+subsequent turns while the work had in fact never been dispatched --
+caught only when a stakeholder directly asked when the agent had last
+checked its progress.
 
 24. A checkpoint report for a governed, repeated process states, for any
 completeness or coverage claim it makes (e.g., "N of M applicable items
@@ -427,6 +462,26 @@ reproducibility check (rule 28); where the type is a per-instance
 generative mechanism, its DoD includes the cross-instance sameness
 check (rule 27). These are not new obligations bolted alongside DoD --
 they are existing rules this one names and generalizes.
+
+32. A candidate change to this document's own rules -- a new rule or an
+amendment to an existing one -- requires review by an independent
+Architect (a software-processes/AI-shepherding specialization reviewer,
+distinct from whoever drafted the change) before that change may be
+considered codified, adopted, or slated for propagation into Dual Hat.
+Committing the drafted text to this document's canonical source is not,
+by itself, adoption; the change remains a draft, and every tracking
+artifact that describes it -- a propagation ledger entry, a session or
+handover record -- must state that status explicitly rather than imply
+the change is final. The independent Architect re-derives the rule's
+own justification, wording precision, interaction with existing rules,
+and absence of unintended scope, rather than accepting the drafting
+agent's rationale at face value; the drafting agent or session may
+never perform this review on its own change, matching the independence
+this document already requires of DoD closure (rule 31) and of the
+technical-debt independent-review authority. This rule is itself a
+governance-rule change and is therefore subject to its own
+requirement: it is drafted and committed pending that same independent
+Architect review, not yet finally adopted.
 
 ## Common application areas
 
