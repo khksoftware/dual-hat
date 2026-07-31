@@ -2,6 +2,32 @@
 
 # Changelog
 
+## 1.18.1 - 2026-07-30
+
+- Broadened `GOVERNING_PRINCIPLES.md` rule 23: a delegated task must never
+  be reported, recorded, or tracked as dispatched, in progress, running, or
+  awaited unless verified against a real dispatch call just made or an
+  independent task-registry check, at any point in a session -- not only
+  when resuming from a context compaction or revisiting a long-running
+  task's stale early read, which remain named as important covered cases.
+  An interruption between deciding to delegate and actually delegating must
+  leave the tracking artifact reading "not yet dispatched," never "in
+  progress."
+- Added `GOVERNING_PRINCIPLES.md` rule 32: any candidate governance-rule
+  change, new or amending, requires review by an independent Architect
+  reviewer distinct from whoever drafted the change before it counts as
+  codified, adopted, or slated for propagation. Committing rule text to
+  canonical source is drafting, not adoption. Generalizes the
+  independence-and-evidence standard already required for Definition-of-Done
+  closure and technical-debt acceptance review to the framework's own rule
+  set; applies to itself.
+- Added an independent-review-before-final-acceptance requirement to
+  `planning/TECHNICAL_DEBT.md`'s generic technical-debt authority: a
+  resolved item's status is the resolving party's own completion claim, not
+  final acceptance, which additionally requires a reviewer distinct from
+  the resolver to re-derive the resolution's own validation directly and
+  record reviewer identity, verdict, and evidence checked separately.
+
 ## 1.18.0 - 2026-07-29
 
 - Added `START_HERE.md` as the single required entry point for a fresh
