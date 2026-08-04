@@ -33,7 +33,7 @@ CONTROL_PATHS = {"export/EXPORT_READINESS.json", "export/EXPORT_SOURCES.json"}
 # classification failure here must reflect real unclassified content, not
 # whatever cache a tool happened to leave in the working tree.
 IGNORED_LOCAL_TOOL_DIRS = {
-    ".pytest_cache", ".mypy_cache", ".ruff_cache", ".claude",
+    ".pytest_cache", ".mypy_cache", ".ruff_cache", ".claude", ".agents",
 }
 ARCHIVE_DATE = (1980, 1, 1, 0, 0, 0)
 
