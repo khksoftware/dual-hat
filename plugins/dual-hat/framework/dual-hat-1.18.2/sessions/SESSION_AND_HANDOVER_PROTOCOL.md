@@ -18,6 +18,8 @@ Markdown and JSON must be semantically equal, schema-valid, current-path-valid, 
 
 After interruption, verify live Git and external state, inspect owned child processes, recover only from committed or explicitly registered temporary state, and refresh bounded context before continuing. Session cleanup removes stale execution residue and marks abandoned work honestly.
 
+Refreshing bounded context after any interruption that can lose conversation memory -- context compaction chief among them -- requires reading the current active-session record's own state sections in full, not relying on a prior summary of it or on a partial earlier read. A context-loss summary is lossy by construction and must never be trusted as a substitute for the active-session record it was generated alongside; the record, not the summary, is authoritative. Before treating any tracked item's own status or lifecycle field as current, cross-check it against the actual repository history for a matching completion commit -- a status field can lag genuinely completed work, and lagging status is not itself evidence that the work remains undone.
+
 ## Chat switchover
 
 The exact trigger phrase `Ready to switch chats.` requests a governed chat switchover. Continue to the nearest safe, low-ambiguity boundary without pausing healthy background work merely to prepare the handoff. At that boundary, classify and reconcile every in-flight task, delegated agent, owned process, mutation, and review. Take a fresh authoritative snapshot at the actual handoff time; never construct the handoff from stale or assumed state.
