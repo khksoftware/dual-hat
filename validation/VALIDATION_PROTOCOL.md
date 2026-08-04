@@ -65,4 +65,4 @@ Define the complete validation inventory first. Assign each group exactly once w
 
 ## Detached and phase-end rules
 
-Apply the detached decision in [Conformance Policy](../governance/CONFORMANCE_POLICY.md). Phase/release closure performs the test-health review in the [Phase-Run Protocol](../process/PHASE_RUN_PROTOCOL.md). Flakes are diagnosed, not normalized; obsolete tests are deleted with rationale; duplicate low-value tests are consolidated; missing semantic checks are added.
+Apply the detached decision in [Conformance Policy](../governance/CONFORMANCE_POLICY.md). Phase/release closure performs the test-health review in the [Phase-Run Protocol](../process/PHASE_RUN_PROTOCOL.md). Flakes are diagnosed, not normalized; obsolete tests are deleted with rationale; duplicate low-value tests are consolidated; missing semantic checks are added. A confirmed genuine failure is never left as an unaccountable "known failure": fix it immediately or the moment its blocker clears, or record it as accepted debt with an explicit remediation trigger, per [Governing Principles](../governance/GOVERNING_PRINCIPLES.md) rule 34.
