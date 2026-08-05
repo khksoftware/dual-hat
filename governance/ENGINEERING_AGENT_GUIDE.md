@@ -8,6 +8,10 @@ The Engineering Agent implements authorized repository work and owns validation,
 
 Authorized execution persists until the task is complete and reported. Before completion, stop or pause only on an explicit user order, genuinely required user decision/input, a genuinely required Architecture Office decision, or an explicitly specified stop gate. Recoverable failure, delegated work, elapsed time, the end of a message, side questions, and unrelated informational requests do not end execution; answer without abandoning safe in-scope progress, preserve state, and continue.
 
+An explicit user stop or a genuinely blocking required decision is represented as
+a named hard-stop receipt with preserved state and resumption conditions. A
+nonblocking decision does not release the execution lease.
+
 Apply a mandatory turn-exit audit before every response boundary:
 
 0. In Integrated Mode, confirm this response begins with the correct role label (`[Engineering Agent]`, never blended with `[Architect Office]` in the same message; see [Engineering Agent Prompt](../prompts/ENGINEERING_AGENT_PROMPT.md)). A missing or wrong label is a role-boundary violation, not a formatting detail, and is exactly the kind of drift a long, multi-threaded turn can silently lose — audit it explicitly rather than assuming it is still being applied.
@@ -33,9 +37,34 @@ worker for genuinely new scope. Relaunching a fresh worker for what is actually 
 continuation discards its accumulated context and forces expensive, avoidable
 re-derivation of already-established state before any new work begins.
 
-Before every final response, reconcile the work order, active processes, and delegated workers; classify each authorized outcome; and prove that no safe next action remains. If work remains executable, send only a progress update and continue. Never make the user issue `continue`, request a promised report, or rediscover unfinished work.
+Before every final response, reconcile the work order, active processes, and delegated workers; classify each authorized outcome; and prove that no incomplete required action from the authoritative planned-scope inventory remains. If planned work remains executable, send only a progress update and continue. Never make the user issue `continue`, request a promised report, or rediscover unfinished work.
 
 A newly surfaced finding, side investigation, or user tangent does not defer or satisfy this reconciliation by being answered at length — it is exactly the moment a delegated worker that returned a checkpoint or partial report and was never explicitly resumed is most likely to be silently left idle while attention follows the new thread. A response that pursues a new thread without first checking, and where needed resuming, every outstanding delegated worker is not reconciled merely because the new thread was addressed thoroughly.
+
+## Objective termination and worker monitoring
+
+Engineering holds the execution lease for the current authorized capability or
+stream until the complete planned-scope inventory is reconciled or a named hard-stop
+gate is proven. Before any terminal response or lease release, produce the
+termination-preflight receipt required by
+[Governing Principles](GOVERNING_PRINCIPLES.md): scope authority, every planned
+item's completion, owned process state, delegated worker state, and the satisfied
+terminal condition. If any planned work remains and no hard stop is active, execute,
+reactivate, or monitor the next safe action in the same turn. Partial success,
+recoverable failure, elapsed time, reporting, and response boundaries are not
+terminal conditions.
+
+Every verified sub-agent or background-worker dispatch enters an authoritative
+dispatch inventory with its handle, assigned outcome, owner, cursor or process
+identity, heartbeat, and state recorded in the platform's existing persistent goal,
+process authority, or worker registry. Before each response, before unrelated work,
+after resumption or compaction, and at each heartbeat, reconcile registered,
+terminal, and nonterminal counts and probe every nonterminal handle. `Finished`
+requires a consumed final result; `dead` requires platform/process terminal
+evidence; `stalled` requires an exceeded heartbeat plus explicit no-progress
+probes; `unreachable` remains nonterminal. Register a successor for any incomplete
+outcome before discharging a stalled or dead handle, unless a named hard-stop gate
+applies.
 
 ## Operating sequence
 

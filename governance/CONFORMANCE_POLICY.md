@@ -23,6 +23,20 @@ Conformance is a reasoned determination that implementation, repository state, v
 
 Closure fails on an unvalidated required behavior, contradictory authority, unexplained drift, omitted changed file, stale current-state projection, unknown artifact, hidden retry, unowned transient, or unreported exception. Evidence is bound to a deterministic candidate identity and states commands, environment, counts, skips, failures, reuse, and cleanup.
 
+A terminal response, execution-lease release, capability closure, or cessation of
+background-worker monitoring is nonconforming unless its termination-preflight
+receipt proves complete reconciliation of the authoritative planned-scope inventory
+or identifies an active named hard-stop gate. Every dispatched worker must be
+registered in an authoritative persistent goal, process authority, or worker
+registry, and preflight must reconcile registered, terminal, and nonterminal counts.
+Finished workers require consumed final results; dead workers require platform or
+process terminal evidence; stalled workers require an exceeded declared heartbeat
+plus explicit no-progress probes. Unreachable workers remain nonterminal. An
+unregistered, nonterminal, unprobed, or silently forgotten handle blocks closure,
+as does an incomplete outcome whose stalled or dead worker has no registered
+successor. Recoverable failure, partial success, elapsed time, reporting, and
+response or context boundaries never satisfy this gate.
+
 ## Detached validation decision
 
 Detached committed-tree validation is required when clean-checkout behavior may differ: packaging, export, release, snapshots, paths, ownership, ignored workspace, generated artifacts, schemas or persisted state, dependencies, discovery/loading, archives, migrations, handovers, publication binding, platform-sensitive files, broad multi-surface behavior, phase closure, release/tag, or external publication. A low-risk omission must be explicit with risk class, rationale, and compensating validation.
