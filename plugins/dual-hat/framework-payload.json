@@ -1,10 +1,10 @@
 {
   "$comment": "SPDX-License-Identifier: Apache-2.0",
-  "content_manifest": "./framework/dual-hat-1.18.2/.dual-hat-release/content-manifest.json",
-  "framework_root": "./framework/dual-hat-1.18.2",
-  "framework_version": "1.18.2",
+  "content_manifest": "./framework/dual-hat-1.18.3/.dual-hat-release/content-manifest.json",
+  "framework_root": "./framework/dual-hat-1.18.3",
+  "framework_version": "1.18.3",
   "generation": "Exact extraction of the checksum-bound Dual Hat 1.18.1 standalone package; do not hand-edit the payload.",
   "schema": "dual-hat-plugin-framework-payload/1.0",
-  "source_release_archive": "dual-hat-1.18.2.zip",
-  "source_release_sha256": "47E3E7F1501EA88DB798391F3ACCB3A128A6DB5D3BBC4E1D6D23D778C69A92F5"
+  "source_release_archive": "dual-hat-1.18.3.zip",
+  "source_release_sha256": "3DBA468B29CE1ECD7B5D72568F25C6244E742DBE5F4FC4D3DEEB3DBABE93C3D8"
 }

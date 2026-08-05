@@ -2,6 +2,16 @@
 
 # Changelog
 
+## 1.18.3 - 2026-08-05
+
+## 1.18.3 - 2026-08-05
+
+### Changed
+
+- Require every accepted objective to continue through a planned-scope terminal receipt or a named hard-stop receipt.
+- Require an authoritative persistent worker-monitor registry with evidence-defined finish, stall, death, and unreachable states.
+- Require successor registration before discharging an incomplete worker outcome.
+
 ## 1.18.2 - 2026-08-04
 
 - Added `GOVERNING_PRINCIPLES.md` rule 33: the stakeholder's only direct,

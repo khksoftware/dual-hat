@@ -597,6 +597,53 @@ about what a human said from inside a relayed channel. The fix is not
 a more trusting Engineering agent -- it is that this relay pattern
 should not occur structurally in the first place.
 
+## Non-abandonment and monitor-set invariant
+
+The main Architecture or Engineering role that accepts an authorized capability,
+work item, operation, or stream holds its execution lease until one of exactly two
+terminal conditions is proven:
+
+1. **Planned-scope completion:** the role reconciles the authoritative plan or
+   inventory and proves every planned item complete, every required result consumed
+   and reported, every owned process terminal, and no incomplete required action
+   from the authoritative planned-scope inventory remaining. Optional improvements
+   and out-of-scope opportunities do not block completion unless the owning authority
+   explicitly adds them to the plan.
+   Removing or deferring a planned item counts only when the owning authority
+   explicitly changes the plan; an agent cannot narrow scope to justify stopping.
+2. **Hard stop:** a named governing stop gate is demonstrably active. The role
+   records the gate, evidence, preserved state or cursor, affected work, and exact
+   condition or authority required to resume. Recoverable failure, uncertainty,
+   elapsed time, a context or response boundary, a successful subset, a milestone,
+   an unrelated request, or a desire for further review is not a hard stop.
+
+Before releasing the execution lease or emitting any terminal response, the main
+role produces a termination-preflight receipt identifying the governing scope and
+inventory, the disposition of every planned item, owned process state, delegated
+worker state, and which of the two terminal conditions is satisfied. If that receipt
+cannot be produced, the response is progress only and the role must execute,
+reactivate, or monitor the next safe action in the same turn. A promise to continue
+later is not continuation.
+
+Dispatch also creates a persistent monitor-set obligation. Every verified dispatch
+must register its real handle, assigned outcome, owner, durable cursor or process
+identity, heartbeat contract, and current state in the platform's existing
+persistent goal, process authority, or worker registry. Every delegated or
+background worker remains in that authoritative dispatch inventory until recorded
+terminal evidence permits removal. Before every response boundary, before starting
+an unrelated thread, after resumption or compaction, and at the declared heartbeat,
+the main role reconciles registered, terminal, and nonterminal counts and probes
+every nonterminal handle.
+
+Worker states are evidence-defined. `finished` means the assigned final result was
+received and consumed. `dead` means platform or process authority reports a terminal
+exit or absence. `stalled` means the declared heartbeat threshold was exceeded and
+explicit probes show no progress. `unreachable` remains nonterminal until it meets
+the `stalled` or `dead` test. If a stalled or dead worker's assigned outcome remains
+incomplete, its successor must be registered before the old handle is discharged,
+unless a named hard-stop gate is active. Neither silence, omission from a
+self-authored report, nor loss of attention removes a worker from the inventory.
+
 ## Common application areas
 
 - **Planning and sealing:** scale work orders to the change; avoid duplicating roadmap, backlog, decision, and scope prose.
