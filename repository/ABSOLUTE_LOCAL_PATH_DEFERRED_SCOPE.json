@@ -1,0 +1,6 @@
+{
+    "schema": "dual-hat-absolute-local-path-deferred-scope-registry",
+    "schema_version": "1.0",
+    "purpose": "tooling/repository_hygiene.py's validate_no_embedded_absolute_local_paths (GOVERNING_PRINCIPLES.md rule 35's standing check) treats every entry here as excluded from THIS check's current enforcement, but -- unlike ABSOLUTE_LOCAL_PATH_CITATIONS.json -- an entry here is NOT a claim that the excluded content is compliant; it records a real or plausible finding this check's construction deliberately declined to adjudicate, and why, so a future reviewer does not have to re-run the sweep to know what is pending. This registry starts empty: the sweep that built this check found zero absolute-local-path embeddings in this repository's active, tracked content, so nothing needed deferring. It must never grow silently as a way to dodge a new violation -- every entry needs the same kind of explicit human review this check's own construction required.",
+    "entries": []
+}
