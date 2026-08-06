@@ -64,8 +64,33 @@ FORBIDDEN_PRODUCT_PATTERNS = (
     # (see scripts/bootstrap_product.py's generated .gitignore) and must not
     # trip this.
     re.compile("workspace" + r"/[^/\s]+/[^/\s]+/", re.IGNORECASE),
-    re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]"),
 )
+# Kept separate from FORBIDDEN_PRODUCT_PATTERNS above (rather than folded
+# back into that tuple) because this one pattern, alone among the three, has
+# a real exemption below -- test files -- that the other two do not and
+# must not gain; a real "Phase N" or leaked workspace/ path is a real leak
+# regardless of which file carries it.
+FORBIDDEN_ABSOLUTE_PATH_PATTERN = re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]")
+# Narrow, path-shape-only test-file recognition -- deliberately the same
+# shape tooling/repository_hygiene.py's own TEST_FILE_PATH_COMPONENT/
+# TEST_FILENAME carve-out already uses for the identical judgment call
+# (a synthetic absolute-path-shaped fixture proving a detector's own
+# rejection/exemption behavior is not a live path anything resolves), so
+# every leakage-adjacent check in this repository agrees on what counts as
+# a test file rather than each inventing its own definition. Confirmed
+# necessary by a real incident: a real, human-authored export of content
+# already live in this repository failed here because this check had no
+# way to distinguish tests/test_repository_hygiene.py's own synthetic
+# drive-letter-rooted fixture values (proving the sibling detector's own
+# rejection behavior) from a genuine leak.
+TEST_FILE_PATH_COMPONENT = re.compile(r"(?:^|/)tests?/")
+TEST_FILENAME_PATTERN = re.compile(r"(?i)(?:^|/)(?:test_[^/]+|[^/]+_test)\.py$")
+
+
+def _is_test_file_path(relative_path: str) -> bool:
+    return bool(TEST_FILE_PATH_COMPONENT.search(relative_path) or TEST_FILENAME_PATTERN.search(relative_path))
+
+
 FORBIDDEN_PLATFORM_PATTERNS = (
     re.compile(r"\b(?:Codex|OpenAI|ChatGPT|Windows|PowerShell|GitHub|Gemini)\b", re.IGNORECASE),
     re.compile(r"\bVisual Studio Code\b", re.IGNORECASE),
@@ -191,6 +216,8 @@ def validate_framework(root: Path) -> tuple[str, ...]:
         for pattern in FORBIDDEN_PRODUCT_PATTERNS:
             if pattern.search(text):
                 failures.append(f"product-specific leakage in {relative}: {pattern.pattern}")
+        if FORBIDDEN_ABSOLUTE_PATH_PATTERN.search(text) and not _is_test_file_path(relative):
+            failures.append(f"product-specific leakage in {relative}: {FORBIDDEN_ABSOLUTE_PATH_PATTERN.pattern}")
         if path.suffix.lower() == ".py" and relative != "tooling/framework_completeness.py":
             for pattern in FORBIDDEN_DEPENDENCY_IMPORT_PATTERNS:
                 if pattern.search(text):

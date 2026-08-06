@@ -1,6 +1,6 @@
 {
-  "archive_root": "dual-hat-1.18.3",
-  "file_count": 188,
+  "archive_root": "dual-hat-1.18.4",
+  "file_count": 193,
   "files": [
     {
       "bytes": 106,
@@ -8,9 +8,9 @@
       "sha256": "BF0A6EB0F6B042E39CC51F1FE2B18B958D569BAB3F99C6D17E8F4084CF262D6A"
     },
     {
-      "bytes": 40737,
+      "bytes": 41979,
       "path": "CHANGELOG.md",
-      "sha256": "07465EC65B00FDB3E071A0145205A65DBC226D86787D5223E2A40AC287A4B790"
+      "sha256": "5C7AB0C49DF83F162C2F78A9956727F64FC0F2B54A4028CBC9E26FCC32F5DEFD"
     },
     {
       "bytes": 11357,
@@ -218,9 +218,9 @@
       "sha256": "9176993994A98BE3B86A446442A166C6AB20243AC88E98BD1FD1993CF6AFE408"
     },
     {
-      "bytes": 46774,
+      "bytes": 49210,
       "path": "governance/GOVERNING_PRINCIPLES.md",
-      "sha256": "F6E5B12EB09B670371DBE923E8FFE1D6F68EEC1118799C5C2CA02D25E5590600"
+      "sha256": "941CD98184279CD569BD73E5FBFEF7B21BEB73F6E6F72C759E462C706C236965"
     },
     {
       "bytes": 1551,
@@ -458,6 +458,11 @@
       "sha256": "5F1B1C990A00B81A296225474242969F52C5D2CE2636F821718D719F3B4CB492"
     },
     {
+      "bytes": 1730,
+      "path": "release/RELEASE_NOTES_v1.18.4.md",
+      "sha256": "B151575A347A7FF65754B871B90B21635B907CC5C55E113855BA99B7486CCCD2"
+    },
+    {
       "bytes": 3563,
       "path": "release/RELEASE_POLICY.md",
       "sha256": "926651718225E7AF09E106916F209678728F2E69A63EF36B005735415D4E72B5"
@@ -465,7 +470,17 @@
     {
       "bytes": 267,
       "path": "release/VERSION.json",
-      "sha256": "D349A88985A91A903499048070B07D27B276A8C57DDDA543844A3E06B8455B5A"
+      "sha256": "CC473D8DEFC3220C3DB2C52B91D17E6930BD0967E500F94375C6E75B8E574A7B"
+    },
+    {
+      "bytes": 1699,
+      "path": "repository/ABSOLUTE_LOCAL_PATH_CITATIONS.json",
+      "sha256": "D486D2B349591B87B567E9CA3EACA793E9C7CECBFA1945849F869C83345367A0"
+    },
+    {
+      "bytes": 1035,
+      "path": "repository/ABSOLUTE_LOCAL_PATH_DEFERRED_SCOPE.json",
+      "sha256": "851E4F64DE9C04F5F33CF2F8E91F88D0164CB0F318722138F8E39FCB6AC69210"
     },
     {
       "bytes": 862,
@@ -838,6 +853,11 @@
       "sha256": "A0423A53181AE732AB9ACAB65A00B3C9C1FFDEBB94FA1D32D8F43C5CCA5AA918"
     },
     {
+      "bytes": 5038,
+      "path": "tests/test_repository_hygiene.py",
+      "sha256": "EFE5AA28E2E34A9D9F448CAB4BD82C47B87B833ECA89F771B22AC314FB78B514"
+    },
+    {
       "bytes": 2579,
       "path": "tests/test_temporary_workspace.py",
       "sha256": "F092EBEE94A51E5160F369D19D43972F511F82FB38740A7E323423237CD1D9A6"
@@ -858,9 +878,9 @@
       "sha256": "631A488A6AF4296DBA3B276ED0353D24052F69321A4901E143F032FFE9A81AE7"
     },
     {
-      "bytes": 9725,
+      "bytes": 11437,
       "path": "tooling/framework_completeness.py",
-      "sha256": "94DB70EFE71B7CFAAF34DF86185B245BDAADE44A12C5A216B4F6D7BC64380CBD"
+      "sha256": "122CBED9FD0DFC06066B1F1B05FC83468830004BCCEF4D201E717FB89DCA8891"
     },
     {
       "bytes": 9656,
@@ -908,6 +928,11 @@
       "sha256": "96612FB113D71588AFB1D15A79598E27C5E5ED34ED8E3E040985EDBD07546CAE"
     },
     {
+      "bytes": 8290,
+      "path": "tooling/repository_hygiene.py",
+      "sha256": "D5D0125D55EEE1F2135C856D57DB48E37085F88D46C3EE95A1573E7745D15D81"
+    },
+    {
       "bytes": 1361,
       "path": "tooling/run_tests.py",
       "sha256": "AF0C955C0FB1BAE3E58E278F3E77150A52A3EF542C01F730E8894140C7F52F0E"
@@ -945,5 +970,5 @@
   ],
   "license_expression": "Apache-2.0",
   "schema": "dual-hat-release-content-manifest/1.0",
-  "version": "1.18.3"
+  "version": "1.18.4"
 }
