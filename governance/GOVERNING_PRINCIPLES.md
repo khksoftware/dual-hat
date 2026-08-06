@@ -597,6 +597,29 @@ about what a human said from inside a relayed channel. The fix is not
 a more trusting Engineering agent -- it is that this relay pattern
 should not occur structurally in the first place.
 
+35. A durable file -- version-controlled, a governed artifact, a
+template, or any generated-but-committed output, as distinct from a
+genuinely transient file local to one machine's own working state (a
+scratch directory, a local-only log) -- must never embed an absolute
+local filesystem path: a machine-specific drive letter, home directory,
+or install location. Such a path is valid only on the machine and
+account that produced it, and silently breaks for any other clone,
+checkout, or contributor -- including the file's own self-reference
+(for example, a canonical-source note naming its own file's location),
+which must read correctly regardless of where the repository happens to
+be cloned. Use a path relative to the repository root, or another
+already-established, durably meaningful anchor, instead. Confirmed
+necessary by a real incident: a newly authored skill's own "this exact
+file is the canonical source" note named its canonical path with a
+machine-specific absolute prefix, caught only when the stakeholder
+pointed it out directly.
+
+This rule is itself a governance-rule change and is therefore drafted
+and committed pending the independent Architect review rule 32 already
+requires before a new or amended rule may be considered codified,
+adopted, or slated for propagation into Dual Hat; committing this text
+is not, by itself, that adoption.
+
 ## Non-abandonment and monitor-set invariant
 
 The main Architecture or Engineering role that accepts an authorized capability,
