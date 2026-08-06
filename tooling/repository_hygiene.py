@@ -17,9 +17,10 @@ import subprocess
 def _active_tracked_files(root: Path) -> tuple[Path, ...]:
     """Git-tracked and untracked-but-present files, excluding archive/ trees.
 
-    Mirrors engineering/tooling/repository_hygiene.py's own helper of the
-    same name in the EOS repository, so the two repositories' rule-35
-    standing checks agree on what "active surface" means.
+    Mirrors the equivalent helper a consuming product's own repository-
+    hygiene tooling may define, so a consuming product's own rule-35
+    standing check and this framework's own check agree on what "active
+    surface" means.
     """
     git_backed = subprocess.run(
         ("git", "rev-parse", "--is-inside-work-tree"), cwd=root,
@@ -46,9 +47,9 @@ def _active_tracked_files(root: Path) -> tuple[Path, ...]:
 # GOVERNING_PRINCIPLES.md rule 35: a durable file must never embed an
 # absolute local filesystem path used as a live structural pointer or
 # self-reference. Scoped to the two concrete shapes rule 35's own incident
-# names -- a Windows drive-letter path and a Unix/WSL home-directory path --
-# not every string that merely looks like a path. See the EOS repository's
-# engineering/tooling/repository_hygiene.py (the primary place this
+# names -- a drive-letter-rooted path and a Unix/WSL home-directory path --
+# not every string that merely looks like a path. See a consuming product's
+# own repository-hygiene tooling (typically the primary place this
 # convention gets enforced day to day) for the fuller design rationale this
 # module intentionally mirrors, including why a keyword-based citation
 # heuristic was rejected in favor of structural exemptions plus an explicit,
@@ -60,13 +61,13 @@ ABSOLUTE_LOCAL_PATH_PATTERNS = (
     WINDOWS_DRIVE_ABSOLUTE_PATH, UNIX_HOME_ABSOLUTE_PATH, WSL_MOUNTED_DRIVE_ABSOLUTE_PATH,
 )
 
-# Same structural, non-live-pointer genres the EOS check recognizes: test/
-# fixture files (a deliberately synthetic value proving rejection behavior is
-# not a live path anything resolves), JSON Schema example/default values
-# (illustrative by genre), a markdown #Lnn review-evidence citation
-# (GitHub-style permalink convention), and a regex pattern definition line
-# (which can legitimately contain these substrings as regex source, not a
-# path).
+# Same structural, non-live-pointer genres a consuming product's own check
+# recognizes: test/fixture files (a deliberately synthetic value proving
+# rejection behavior is not a live path anything resolves), JSON Schema
+# example/default values (illustrative by genre), a markdown #Lnn
+# review-evidence citation (a version-control-hosted permalink convention), and a
+# regex pattern definition line (which can legitimately contain these
+# substrings as regex source, not a path).
 TEST_FILE_PATH_COMPONENT = re.compile(r"(?:^|/)tests?/")
 TEST_FILENAME = re.compile(r"(?i)(?:^|/)(?:test_[^/]+|[^/]+_test)\.py$")
 SCHEMA_FILENAME = re.compile(r"(?i)\.schema\.json$")

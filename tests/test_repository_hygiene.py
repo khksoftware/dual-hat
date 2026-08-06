@@ -76,7 +76,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             self._git_init(root)
             test_file = root / "tests/test_example.py"
             test_file.parent.mkdir(parents=True)
-            test_file.write_text('BAD = "C:\\\\Attacker\\\\codex.exe"\n', encoding="utf-8")
+            test_file.write_text('BAD = "C:\\\\Attacker\\\\payload.exe"\n', encoding="utf-8")
             schema_file = root / "schemas/example.schema.json"
             schema_file.parent.mkdir(parents=True)
             schema_file.write_text('{"example": "C:/Python/python.exe"}\n', encoding="utf-8")

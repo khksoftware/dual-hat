@@ -2,6 +2,26 @@
 
 # Changelog
 
+## 1.18.4 - 2026-08-06
+
+- Added `GOVERNING_PRINCIPLES.md` rule 35: a durable file -- version-controlled,
+  a governed artifact, a template, or any generated-but-committed output -- must
+  never embed an absolute local filesystem path used as a live structural
+  pointer or self-reference. Explicitly carves out a path quoted verbatim as
+  illustrative or historical evidence (an incident citation, a changelog
+  entry) and a path recorded as a factual claim about where a process
+  actually ran (an audit-log entry, a provenance record), since neither
+  functions as a live pointer. Adopting the convention carries rule 20's
+  standard closure discipline: a one-time mechanical sweep of the
+  repository's active surface plus a standing mechanical check that catches
+  a new embedding the moment one is introduced.
+- Added rule 35's own required standing mechanical check: an absolute-local-path
+  detector (`tooling/repository_hygiene.py`) with test/schema/citation/regex-
+  source carve-outs, its regression suite, and two exemption registries
+  (`repository/ABSOLUTE_LOCAL_PATH_CITATIONS.json`,
+  `repository/ABSOLUTE_LOCAL_PATH_DEFERRED_SCOPE.json`) for a human-reviewed
+  citation or an explicitly tracked, not-yet-adjudicated finding.
+
 ## 1.18.3 - 2026-08-05
 
 ## 1.18.3 - 2026-08-05
