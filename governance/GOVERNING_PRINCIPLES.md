@@ -601,24 +601,42 @@ should not occur structurally in the first place.
 template, or any generated-but-committed output, as distinct from a
 genuinely transient file local to one machine's own working state (a
 scratch directory, a local-only log) -- must never embed an absolute
-local filesystem path: a machine-specific drive letter, home directory,
-or install location. Such a path is valid only on the machine and
-account that produced it, and silently breaks for any other clone,
-checkout, or contributor -- including the file's own self-reference
-(for example, a canonical-source note naming its own file's location),
-which must read correctly regardless of where the repository happens to
-be cloned. Use a path relative to the repository root, or another
-already-established, durably meaningful anchor, instead. Confirmed
-necessary by a real incident: a newly authored skill's own "this exact
-file is the canonical source" note named its canonical path with a
-machine-specific absolute prefix, caught only when the stakeholder
-pointed it out directly.
+local filesystem path used as a live structural pointer or
+self-reference: a machine-specific drive letter, home directory, or
+install location that something else -- a reader, a script, the file's
+own claim about its own location -- depends on resolving correctly. Such
+a path is valid only on the machine and account that produced it, and
+silently breaks for any other clone, checkout, or contributor --
+including the file's own self-reference (for example, a canonical-source
+note naming its own file's location), which must read correctly
+regardless of where the repository happens to be cloned. Use a path
+relative to the repository root, or another already-established, durably
+meaningful anchor (for example, a documented environment variable, a
+configured install root, or a named anchor already defined elsewhere in
+the repository), instead.
 
-This rule is itself a governance-rule change and is therefore drafted
-and committed pending the independent Architect review rule 32 already
-requires before a new or amended rule may be considered codified,
-adopted, or slated for propagation into Dual Hat; committing this text
-is not, by itself, that adoption.
+This does not reach a machine-specific absolute path quoted verbatim as
+illustrative or historical evidence -- an incident citation, a changelog
+entry, retrospective text describing what a past mistake actually
+contained -- where nothing depends on the quoted path resolving; nor
+does it reach a path recorded as a factual claim about where a specific
+process actually ran (an audit-log entry, a provenance record), provided
+nothing else treats that path as a live pointer. The distinction is
+whether the path functions as navigation something will follow, not
+whether the string appears in the file at all.
+
+Adopting or amending this convention carries rule 20's standard
+closure discipline: a one-time mechanical sweep of the repository's
+active surface for existing absolute-path embeddings that are live
+structural pointers (not the citation/provenance exception above), and a
+standing mechanical check that catches a new one the moment it is
+introduced, so the convention does not silently erode the way rule 20
+already warns any foundational-convention change can.
+
+Confirmed necessary by a real incident: a newly authored skill's own
+"this exact file is the canonical source" note named its canonical path
+with a machine-specific absolute prefix, caught only when the
+stakeholder pointed it out directly.
 
 ## Non-abandonment and monitor-set invariant
 
