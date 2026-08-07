@@ -638,6 +638,82 @@ Confirmed necessary by a real incident: a newly authored skill's own
 with a machine-specific absolute prefix, caught only when the
 stakeholder pointed it out directly.
 
+36. Survey before designing -- do not reinvent what already exists.
+**DRAFTED, PENDING INDEPENDENT ARCHITECT REVIEW under rule 32; not yet
+adopted.** Before designing a capability, proposing an approach the
+stakeholder or another role is expected to act on, or asking the
+stakeholder to choose between designs, first establish from the system's
+actual current source whether the capability -- or an adjacent one with
+settled semantics it should extend -- already exists. The survey is
+proportionate to what is proposed: for a small, local change one
+targeted search, stated, discharges it. The obligation does not shrink
+to nothing because the change seems small, and it never expands into
+ceremony.
+
+Read and search the real code and artifacts; memory of the system, a
+prior summary, and plausibility are not evidence. The survey searches
+for the capability's behavior, not only the name the requester or the
+agent happened to use for it: one search for a single invented term,
+returning nothing, is not a survey, because the gap between the
+requester's word and the system's own vocabulary is precisely how an
+existing capability stays hidden. Rule 25's literal-and-abstract search
+distinction applies here before the fact as it does after one -- search
+the concrete names, then search the behavior however differently it may
+be expressed. State what was searched and what was found or ruled out
+alongside whatever is proposed; an unstated survey is indistinguishable
+from an unperformed one.
+
+This is broader than rule 22, which forbids constructing a parallel
+implementation of a process this framework already governs: rule 22 is
+about what is built, this rule is about what is proposed, and a proposal
+made without a survey precedes and causes the duplication rule 22 then
+has to forbid. It is rule 23's discipline applied before a design exists
+rather than during a long run, and it makes mandatory, with a named
+failure mode, the repository-inspection step the Architecture Office's
+request-to-work-order sequence and the reasoning review's first step
+already place ahead of comparing alternatives -- guidance that was
+present and did not fire.
+
+Where the capability already exists, extend it and match its
+established semantics. A second behavior sharing the name of an existing
+one is worse than either behavior alone, because every later reader must
+first discover which of the two they are looking at. Where it exists but
+is genuinely unfit, say so explicitly against the real implementation
+rather than designing past it in silence.
+
+The failure this rule exists to prevent is not merely wasted effort. An
+option set assembled without a survey can be presented with full
+apparent rigor -- tradeoffs weighed, alternatives compared, mockups
+drawn -- and that presentation makes an uninformed question
+indistinguishable from a considered one. The stakeholder cannot audit a
+premise they were never shown, so they answer in good faith and their
+decision is spent on a question that should never have been asked. Rigor
+of presentation is therefore not evidence of grounding, and an agent
+must not let the effort it put into framing a choice stand in for having
+checked whether the choice was real.
+
+When a decision has already been taken on a premise later found false,
+Architecture does not silently re-put the question. Where the corrected
+premise leaves no genuine remaining choice -- the discovered reality
+determines the answer -- Architecture corrects the decision itself,
+states the correction and the false premise to the stakeholder in the
+same turn it is discovered, and records both, rather than spending a
+second stakeholder decision to repair the first one's framing. Where a
+genuine choice does remain among fit options, the question returns to
+the stakeholder with the corrected premise stated; the cost of the first
+decision is never a reason to absorb the second. A correction is never a
+route to settling a matter rule 8 reserves to the stakeholder. It
+remains subject to stakeholder override, which requires that the
+stakeholder actually be told -- recording it alone does not discharge
+this -- and the record must keep the original framing visible rather
+than quietly replacing it, so the error stays auditable.
+
+Confirmed necessary by a real incident: an agent acting as Architecture
+proposed a feature to the stakeholder as three carefully-drawn options,
+having never searched for it, when the capability already shipped in six
+variants across seven surfaces of the same application and carried
+settled semantics that none of the three options matched.
+
 ## Non-abandonment and monitor-set invariant
 
 The main Architecture or Engineering role that accepts an authorized capability,
