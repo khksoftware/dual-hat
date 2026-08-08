@@ -2,6 +2,57 @@
 
 # Changelog
 
+## 1.18.5 - 2026-08-07
+
+- Added `GOVERNING_PRINCIPLES.md` rule 36: survey before designing -- do not
+  reinvent what already exists. Before designing a capability, proposing an
+  approach another role is expected to act on, or asking the stakeholder to
+  choose between designs, establish from the system's actual current source
+  whether the capability -- or an adjacent one with settled semantics it should
+  extend -- already exists. The survey searches for the capability's behavior,
+  not only the name the requester or the agent happened to use for it, and what
+  was searched is stated alongside whatever is proposed, since an unstated
+  survey is indistinguishable from an unperformed one. Where the capability
+  already exists, extend it and match its established semantics; where it exists
+  but is genuinely unfit, say so explicitly against the real implementation
+  rather than designing past it in silence. Where a decision was already taken
+  on a premise the survey later falsifies, the correction and the false premise
+  are stated to the stakeholder rather than the question being silently re-put,
+  and the correction can never settle a matter the cardinal rules reserve to the
+  stakeholder. Proportionate by design: for a small, local change one targeted
+  search, stated, discharges it.
+- Added a notice at the head of `GOVERNING_PRINCIPLES.md` stating that changing
+  that document's own rules requires review by an independent Architect distinct
+  from the agent or session that drafted the change, and that committing the
+  drafted text is not itself adoption. Rule 32 remains the full statement of the
+  requirement and governs; the notice exists only so that a reader reaches the
+  requirement without first reading two-thirds of the document. No rule is
+  renumbered and no rule is relocated.
+- Removed the false status claim from rule 32's own closing sentence, which
+  still described rule 32 as drafted and committed pending review and not yet
+  finally adopted. That independent review was in fact performed and rule 32 was
+  adopted and released, so the claim had been false since adoption -- a
+  self-describing status marker with nothing keeping it synchronized as the
+  underlying state changed. The sentence now reads only "This rule is itself a
+  governance-rule change and is therefore subject to its own requirement",
+  retaining in the present tense the true and durable half -- that rule 32 binds
+  its own future amendments -- and dropping the half that had gone stale. Rule
+  32's operative requirement is unchanged and nothing else in the rule is
+  reworded. Provenance of rule 32's own adoption remains recorded where it
+  belongs, in this changelog and in the 1.18.1 release notes, rather than
+  restated inside the rule.
+- Fixed a structural misattribution between rules 33 and 34. Rule 33's last two
+  paragraphs -- the prohibition on a delegated agent treating a relayed claim of
+  stakeholder authorization as verified consent, and that prohibition's incident
+  citation -- were physically sitting inside rule 34's body, because the commit
+  that added rule 34 inserted it into the middle of rule 33 and rule 33's tail
+  was never moved back. A reader therefore attributed rule 33's core prohibition
+  to rule 34, a rule about confirmed test failures never being ambient state.
+  Both paragraphs are moved back to the end of rule 33 as a pure relocation: not
+  one word is reworded, merged, or renumbered, and rule 33's body is now
+  byte-identical to its form before the insertion. Neither rule's requirements
+  change; only what each rule contains is corrected.
+
 ## 1.18.4 - 2026-08-06
 
 - Added `GOVERNING_PRINCIPLES.md` rule 35: a durable file -- version-controlled,

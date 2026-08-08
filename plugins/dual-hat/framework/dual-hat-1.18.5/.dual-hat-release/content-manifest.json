@@ -1,6 +1,6 @@
 {
-  "archive_root": "dual-hat-1.18.4",
-  "file_count": 193,
+  "archive_root": "dual-hat-1.18.5",
+  "file_count": 194,
   "files": [
     {
       "bytes": 106,
@@ -8,9 +8,9 @@
       "sha256": "BF0A6EB0F6B042E39CC51F1FE2B18B958D569BAB3F99C6D17E8F4084CF262D6A"
     },
     {
-      "bytes": 41979,
+      "bytes": 45594,
       "path": "CHANGELOG.md",
-      "sha256": "5C7AB0C49DF83F162C2F78A9956727F64FC0F2B54A4028CBC9E26FCC32F5DEFD"
+      "sha256": "D32432294BA82C0F7C8FAC617C5425F3F2D5D194328DB853DA393A351CF85196"
     },
     {
       "bytes": 11357,
@@ -218,9 +218,9 @@
       "sha256": "9176993994A98BE3B86A446442A166C6AB20243AC88E98BD1FD1993CF6AFE408"
     },
     {
-      "bytes": 49210,
+      "bytes": 54055,
       "path": "governance/GOVERNING_PRINCIPLES.md",
-      "sha256": "941CD98184279CD569BD73E5FBFEF7B21BEB73F6E6F72C759E462C706C236965"
+      "sha256": "C67F3B18CCA285720AE8C21AC31406A13AD4AA81FD2B27512066019F8DAD4D52"
     },
     {
       "bytes": 1551,
@@ -463,6 +463,11 @@
       "sha256": "B151575A347A7FF65754B871B90B21635B907CC5C55E113855BA99B7486CCCD2"
     },
     {
+      "bytes": 6986,
+      "path": "release/RELEASE_NOTES_v1.18.5.md",
+      "sha256": "439C88A7C8A1836D0B9849985B1F13AA0228A467DD8C875A72149F7E4ACCD844"
+    },
+    {
       "bytes": 3563,
       "path": "release/RELEASE_POLICY.md",
       "sha256": "926651718225E7AF09E106916F209678728F2E69A63EF36B005735415D4E72B5"
@@ -470,7 +475,7 @@
     {
       "bytes": 267,
       "path": "release/VERSION.json",
-      "sha256": "CC473D8DEFC3220C3DB2C52B91D17E6930BD0967E500F94375C6E75B8E574A7B"
+      "sha256": "3547E9EC676A09229EA2FA9A349B6B326238E62C6B084689CCB8CCE0A5DFD039"
     },
     {
       "bytes": 1699,
@@ -970,5 +975,5 @@
   ],
   "license_expression": "Apache-2.0",
   "schema": "dual-hat-release-content-manifest/1.0",
-  "version": "1.18.4"
+  "version": "1.18.5"
 }
