@@ -8,11 +8,34 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
+sys.path.insert(0, str(ROOT / "tests"))
+# The single-canonical-home predicate is defined once, in test_framework.py, and
+# shared rather than restated -- a test suite for a work item about removing
+# duplication should not open by duplicating its own helper. Only the plain
+# mixin is imported; importing a TestCase would make the loader collect
+# test_framework's own tests a second time under this module.
+from test_framework import CanonicalHomeAssertions  # noqa: E402
 from work_item_governance import *
 from profile_conformance import (capability_evidence_digest, capability_preflight, evidence_content_sha256,
     governed_repository_digest, resolve_profile, runtime_gap_stop_report, runtime_profile_failures, validate_profile)
+# The modules themselves, not only their names: the version-authority proofs
+# below observe what the governance module hands its collaborators and feed it
+# malformed release evidence, neither of which a star-imported name can reach.
+# Importing a module binds no version -- resolution stays at call time.
+import profile_conformance, release_package, work_item_governance  # noqa: E402
 
 DUAL_HAT_CAPABILITY_PROOFS = {"sealed_work_order", "repository_state_preservation", "explicit_user_and_architecture_reporting", "resumable_handoff", "detached_validation", "post_run_residue_inspection"}
+
+def core_version():
+    """Resolve the active core version the way every consumer must: at call time.
+
+    A module-level binding here would be the same import-scope resolution the
+    governance module refuses, one file further out, and would take every test in
+    this module down on release evidence most of them never consult.
+    """
+    version, failures = active_core_version()
+    if failures: raise AssertionError(f"active core version is unresolvable from governed release evidence: {failures}")
+    return version
 
 def receipts(profile, root):
     interpreter=Path(sys.executable).resolve(); interpreter_hash=hashlib.sha256(interpreter.read_bytes()).hexdigest().upper(); result={}
@@ -35,11 +58,11 @@ def contexts(value):
     profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
     expected=f"engineering/process/work-items/{value['work_item_id']}/PLATFORM_PREFLIGHT.json"
     execution_profile=copy.deepcopy(profile); execution_profile["preflight_artifact"]=expected
-    preflight=capability_preflight(execution_profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT,receipts(execution_profile,ROOT))
+    preflight=capability_preflight(execution_profile,profile["mandatory_capabilities"],core_version(),ROOT,receipts(execution_profile,ROOT))
     preflight.update({"preflight_artifact":expected,"work_item_id":value["work_item_id"],"work_order_revision":value["current_revision"],"work_order_hash":value["work_order_hash"],"platform_profile_id":profile["profile_id"],"platform_profile_version":profile["profile_version"]})
     return handover, profile, preflight
 
-class OperatingModeTests(unittest.TestCase):
+class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
     def test_public_work_item_schema_and_example_cover_the_executable_contract(self):
         schema=json.loads((ROOT/"schemas/work-item.schema.json").read_text(encoding="utf-8")); example=json.loads((ROOT/"examples/integrated-work-item.example.json").read_text(encoding="utf-8"))
         self.assertEqual((),validate_sealed(example)); self.assertFalse(set(example)-set(schema["properties"])); self.assertIn("extension_classification",schema["properties"])
@@ -61,13 +84,20 @@ class OperatingModeTests(unittest.TestCase):
         self.assertTrue(all(transition_allowed(a,b) for a,b in zip(path,path[1:]))); self.assertFalse(transition_allowed("engineering_complete","accepted"))
         self.assertTrue(transition_allowed("architecture_review","remediation_required")); self.assertTrue(transition_allowed("remediation_required","engineering"))
     def test_integrated_mode_requires_visible_single_hat_labels(self):
-        modes=(ROOT/"guides/OPERATING_MODES.md").read_text(encoding="utf-8")
-        transitions=(ROOT/"governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # governance/ROLE_TRANSITIONS.md, which governs role and mode
+        # transitions; guides/OPERATING_MODES.md restates the label rule for a
+        # reader. The two prompt assertions are file-specific -- each names its
+        # own label -- so they stay unconditional.
         architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
         engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for text in (modes,transitions):
-            self.assertIn("[Architect Office]",text); self.assertIn("[Engineering Agent]",text)
-            self.assertIn("one hat",text.casefold())
+        substance=("[architect office]","[engineering agent]","one hat")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="governance/ROLE_TRANSITIONS.md",
+            canonical_substance=substance,
+            secondaries={"guides/OPERATING_MODES.md": substance},
+        )
         self.assertIn("begin every assistant-authored chat message with `[Architect Office]`",architecture)
         self.assertIn("begin every assistant-authored chat message with `[Engineering Agent]`",engineering)
     def test_mode_switch_package_and_dirty_block(self):
@@ -82,27 +112,71 @@ class OperatingModeTests(unittest.TestCase):
         self.assertTrue(architecture_direct_mutation_allowed(safe)); unsafe={**safe,"uncertain_reach":True}; self.assertFalse(architecture_direct_mutation_allowed(unsafe))
         self.assertTrue(archival_allowed("accepted")); self.assertTrue(archival_allowed("accepted_with_follow_up",follow_up_blocking=False)); self.assertFalse(archival_allowed("remediation_required")); self.assertFalse(archival_allowed("accepted",actor="engineering"))
     def test_profile_conformance_and_fallback(self):
-        profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8")); self.assertEqual((),validate_profile(profile,DUAL_HAT_CORE_VERSION)); self.assertTrue(resolve_profile(profile,DUAL_HAT_CORE_VERSION)["core_applies"])
-        with self.assertRaises(ValueError): resolve_profile(None,DUAL_HAT_CORE_VERSION)
-        weak=copy.deepcopy(profile); weak["guarantees"]["security_not_weakened"]=False; self.assertTrue(validate_profile(weak,DUAL_HAT_CORE_VERSION))
-        unexplained=copy.deepcopy(profile); unexplained["capability_evidence_rationale"].pop("independent_deep_review"); self.assertTrue(validate_profile(unexplained,DUAL_HAT_CORE_VERSION))
-        mismatch=copy.deepcopy(profile); mismatch["supported_configuration"]["operating_system"]="definitely-not-this-host"; self.assertTrue(runtime_profile_failures(mismatch)); self.assertTrue(capability_preflight(mismatch,["sealed_work_order"],DUAL_HAT_CORE_VERSION,ROOT,receipts(mismatch,ROOT))["hard_stop"])
+        profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8")); self.assertEqual((),validate_profile(profile,core_version())); self.assertTrue(resolve_profile(profile,core_version())["core_applies"])
+        with self.assertRaises(ValueError): resolve_profile(None,core_version())
+        weak=copy.deepcopy(profile); weak["guarantees"]["security_not_weakened"]=False; self.assertTrue(validate_profile(weak,core_version()))
+        unexplained=copy.deepcopy(profile); unexplained["capability_evidence_rationale"].pop("independent_deep_review"); self.assertTrue(validate_profile(unexplained,core_version()))
+        mismatch=copy.deepcopy(profile); mismatch["supported_configuration"]["operating_system"]="definitely-not-this-host"; self.assertTrue(runtime_profile_failures(mismatch)); self.assertTrue(capability_preflight(mismatch,["sealed_work_order"],core_version(),ROOT,receipts(mismatch,ROOT))["hard_stop"])
+    def test_admission_gate_applies_the_version_from_governed_release_evidence(self):
+        """The core version the gate applies is the one release evidence declares.
+
+        Asserted over the value actually handed to both consumers rather than
+        over whichever symbol supplies it, so the invariant survives any later
+        change in how the version is obtained; and anchored on a direct read of
+        release/VERSION.json rather than on the resolver, so the shipped example
+        and the resolver cannot satisfy it by being wrong in the same direction.
+        """
+        shipped=json.loads((ROOT/"release/VERSION.json").read_text(encoding="utf-8"))["version"]
+        applied=[]; original_validate=work_item_governance.validate_profile; original_preflight=profile_conformance.capability_preflight
+        def spy_validate(profile,core_version): applied.append(core_version); return original_validate(profile,core_version)
+        def spy_preflight(profile,requirements,core_version,*rest,**named): applied.append(core_version); return {}
+        work_item_governance.validate_profile=spy_validate; profile_conformance.capability_preflight=spy_preflight
+        try: work_item_governance.execution_contract_failures(order(),current_handover=None,platform_profile={"mandatory_capabilities":{"sealed_work_order":True}},platform_preflight={})
+        finally: work_item_governance.validate_profile=original_validate; profile_conformance.capability_preflight=original_preflight
+        self.assertEqual([shipped,shipped],applied,"the profile admission gate and the preflight derivation must both apply the version release/VERSION.json declares")
+
+    def test_malformed_release_evidence_fails_conformance_rather_than_import(self):
+        """Malformed version evidence is a conformance failure, never an ImportError.
+
+        work_item_governance is imported by the sealing, classification,
+        transition and archival controls and by call sites that never touch a
+        platform profile. Resolution bound at import would turn unreadable or
+        ambiguous release evidence into an ImportError for every one of them,
+        through a channel carrying none of the conformance vocabulary a caller
+        is equipped to handle. Failure belongs in the returned failures tuple.
+        """
+        shipped=json.loads((ROOT/"release/VERSION.json").read_text(encoding="utf-8"))
+        cases={"wrong schema string":{**shipped,"schema":"dual-hat-version/2.0"},
+            "unknown field":{**shipped,"unexpected_field":"present"},
+            "empty version":{**shipped,"version":""},
+            "non-semver version":{**shipped,"version":"1.18"},
+            "maturity contradicting the version":{**shipped,"version":"0.9.0","maturity":"stable_1_x"}}
+        approved=order(); profile={"mandatory_capabilities":{"sealed_work_order":True}}
+        for name,record in cases.items():
+            with self.subTest(case=name), TemporaryDirectory() as temporary:
+                root=Path(temporary); (root/"release").mkdir(); (root/"release/VERSION.json").write_text(json.dumps(record),encoding="utf-8")
+                original_root=release_package.ROOT; release_package.ROOT=root
+                try: failures=work_item_governance.execution_contract_failures(approved,current_handover=None,platform_profile=profile)
+                except ImportError as exc: self.fail(f"{name}: malformed release evidence raised ImportError instead of reporting a conformance failure: {exc}")
+                finally: release_package.ROOT=original_root
+                self.assertTrue(any("governed release evidence" in row for row in failures),f"{name}: no governed-release-evidence conformance failure entry in {failures}")
+
     def test_preflight_blocks_known_gap_and_partial_conformance(self):
         profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
-        self.assertTrue(capability_preflight(profile,["sealed_work_order"],DUAL_HAT_CORE_VERSION,ROOT,receipts(profile,ROOT))["execution_authorized"])
-        result=capability_preflight(profile,["missing_mandatory_rule"],DUAL_HAT_CORE_VERSION,ROOT,receipts(profile,ROOT)); self.assertTrue(result["hard_stop"]); self.assertFalse(result["execution_authorized"])
-        profile["mandatory_capabilities"]["sealed_work_order"]=False; self.assertTrue(validate_profile(profile,DUAL_HAT_CORE_VERSION))
+        self.assertTrue(capability_preflight(profile,["sealed_work_order"],core_version(),ROOT,receipts(profile,ROOT))["execution_authorized"])
+        result=capability_preflight(profile,["missing_mandatory_rule"],core_version(),ROOT,receipts(profile,ROOT)); self.assertTrue(result["hard_stop"]); self.assertFalse(result["execution_authorized"])
+        profile["mandatory_capabilities"]["sealed_work_order"]=False; self.assertTrue(validate_profile(profile,core_version()))
         minimal=copy.deepcopy(profile); minimal["mandatory_capabilities"]={"sealed_work_order":True}; minimal["capability_evidence"]={"sealed_work_order":["test:fake.py"]}
-        self.assertIn("platform profile omits mandatory Dual Hat core capabilities",validate_profile(minimal,DUAL_HAT_CORE_VERSION))
+        self.assertIn("platform profile omits mandatory Dual Hat core capabilities",validate_profile(minimal,core_version()))
         approved=order(); handover,profile,preflight=contexts(approved); preflight["capability_evidence_sha256"]="F"*64
         self.assertIn("platform preflight evidence binding is stale or forged",execution_contract_failures(approved,current_handover=handover,platform_profile=profile,platform_preflight=preflight,evidence_root=ROOT))
         handover,profile,preflight=contexts(approved); preflight["preflight_artifact"]="engineering/process/work-items/other/PLATFORM_PREFLIGHT.json"
         self.assertIn("platform preflight contradicts work order or profile",execution_contract_failures(approved,current_handover=handover,platform_profile=profile,platform_preflight=preflight,evidence_root=ROOT))
         fake=copy.deepcopy(profile); fake["capability_evidence"]={name:["test:missing-evidence.py"] for name in fake["mandatory_capabilities"]}
-        self.assertFalse(capability_preflight(fake,fake["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT)["execution_authorized"])
+        self.assertFalse(capability_preflight(fake,fake["mandatory_capabilities"],core_version(),ROOT)["execution_authorized"])
         misbound=copy.deepcopy(profile); misbound["capability_evidence"]["independent_deep_review"]=["test:tests/test_quality_review.py"]
-        self.assertIn("semantically misbound", " ".join(capability_preflight(misbound,misbound["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,ROOT,receipts(misbound,ROOT))["failures"]))
-        self.assertTrue(capability_preflight(profile,["independent_deep_review"],DUAL_HAT_CORE_VERSION,ROOT,receipts(profile,ROOT))["execution_authorized"])
+        self.assertIn("semantically misbound", " ".join(capability_preflight(misbound,misbound["mandatory_capabilities"],core_version(),ROOT,receipts(misbound,ROOT))["failures"]))
+        self.assertTrue(capability_preflight(profile,["independent_deep_review"],core_version(),ROOT,receipts(profile,ROOT))["execution_authorized"])
 
     def test_preflight_receipts_bind_test_bytes_profile_and_content_not_live_head(self):
         profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
@@ -111,19 +185,19 @@ class OperatingModeTests(unittest.TestCase):
             subprocess.run(("git","init"),cwd=root,check=True,capture_output=True); subprocess.run(("git","add","proof.py"),cwd=root,check=True,capture_output=True)
             profile["preflight_artifact"]="platform-preflight.json"
             profile["capability_evidence"]={name:["test:proof.py"] for name in profile["mandatory_capabilities"]}
-            bound=receipts(profile,root); first=capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,bound)
+            bound=receipts(profile,root); first=capability_preflight(profile,profile["mandatory_capabilities"],core_version(),root,bound)
             self.assertTrue(first["execution_authorized"]); self.assertNotIn("evidence_repository_commit",first)
             self.assertEqual(bound,receipts(profile,root)); self.assertTrue(first["runtime_profile_verified"])
             proof.write_bytes(proof.read_bytes().replace(b"\r\n",b"\n").replace(b"\n",b"\r\n"))
-            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,bound)["execution_authorized"])
+            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],core_version(),root,bound)["execution_authorized"])
             proof.write_text("DUAL_HAT_CAPABILITY_PROOFS="+repr(set(profile["mandatory_capabilities"]))+"\nimport unittest\nclass Proof(unittest.TestCase):\n def test_two(self): self.assertTrue(True)\n",encoding="utf-8")
-            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,bound)["hard_stop"])
-            refreshed=receipts(profile,root); second=capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,refreshed)
+            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],core_version(),root,bound)["hard_stop"])
+            refreshed=receipts(profile,root); second=capability_preflight(profile,profile["mandatory_capabilities"],core_version(),root,refreshed)
             self.assertNotEqual(first["verified_capability_evidence_sha256"],second["verified_capability_evidence_sha256"])
             contradictory=copy.deepcopy(refreshed); contradictory["test:proof.py"]["passed"]=2
-            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,contradictory)["hard_stop"])
+            self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],core_version(),root,contradictory)["hard_stop"])
             changed=copy.deepcopy(profile); changed["profile_version"]="1.1.1"
-            self.assertNotEqual(second["platform_profile_sha256"],capability_preflight(changed,changed["mandatory_capabilities"],DUAL_HAT_CORE_VERSION,root,refreshed)["platform_profile_sha256"])
+            self.assertNotEqual(second["platform_profile_sha256"],capability_preflight(changed,changed["mandatory_capabilities"],core_version(),root,refreshed)["platform_profile_sha256"])
     def test_runtime_gap_generates_blocking_resumable_handoff(self):
         handoff={"active_role":"engineering","operating_mode":"integrated","work_item_id":"GOV-1","sealed_work_order_hash":"A"*64,"platform_profile":{"id":"p","version":"1"},"repository_and_remote_state":{},"dirty_worktree_state":{},"completed_steps":[],"pending_steps":[],"partial_outputs":[],"temporary_and_ignored_state":[],"containment_actions":[],"permitted_next_action":"await Architecture"}
         report=runtime_gap_stop_report(gap_kind="tool_defect",unmet_requirement="mandatory validation",limitation="validator unavailable",handoff=handoff)
@@ -155,11 +229,19 @@ class OperatingModeTests(unittest.TestCase):
         failures=boundary_review_failures(violated); self.assertIn("acceptance is blocked by unresolved material boundary violation",failures); self.assertIn("boundary violation lacks specific remediation",failures); self.assertIn("boundary violation lacks systemic control strengthening",failures)
         self.assertTrue(boundary_review_failures({**review,"engineering_self_report_only":True})); self.assertTrue(boundary_review_failures({**review,"tests_only":True}))
     def test_architecture_proposes_next_work_after_acceptance_without_authorizing_it(self):
-        guide=(ROOT/"governance/ARCHITECTURE_OFFICE_GUIDE.md").read_text(encoding="utf-8")
-        prompt=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        for text in (guide,prompt):
-            self.assertIn("propose the next work to plan",text)
-            self.assertIn("does not authorize execution",text.replace("planning guidance distinct from execution authority","does not authorize execution"))
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # governance/ARCHITECTURE_OFFICE_GUIDE.md. The original expressed the
+        # prompt's alternate wording with an inline .replace(); that is carried
+        # over exactly as an interchangeable-alternatives tuple, which the
+        # predicate already supports, so nothing is loosened or tightened.
+        substance=("propose the next work to plan",
+                   ("does not authorize execution",
+                    "planning guidance distinct from execution authority"))
+        self.assert_single_canonical_home(
+            canonical="governance/ARCHITECTURE_OFFICE_GUIDE.md",
+            canonical_substance=substance,
+            secondaries={"prompts/ARCHITECTURE_OFFICE_PROMPT.md": substance},
+        )
     def test_current_handover_is_generic_and_historical_schema_is_retained(self):
         schema=json.loads((ROOT/"schemas/current-handover.schema.json").read_text(encoding="utf-8")); template=json.loads((ROOT/"templates/CURRENT_HANDOVER.json").read_text(encoding="utf-8"))
         self.assertEqual("dual-hat-current-handover/1.1",template["schema"]); self.assertIn("active_work_item",template); self.assertNotIn("active_capability",template)
@@ -167,27 +249,36 @@ class OperatingModeTests(unittest.TestCase):
         self.assertEqual("^[a-z][a-z0-9_]*$",schema["properties"]["active_work_item"]["properties"]["work_item_type"]["pattern"])
 
     def test_third_party_dependency_evaluation_is_mandatory_in_both_hats(self):
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md -- the contract that
+        # defines the evaluation. Its two contract-only requirements ("safety"
+        # and the fuller "pros/cons comparison") stay unconditional; only the
+        # seven criteria the prompts restate are re-pointed.
         contract=(ROOT/"governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md").read_text(encoding="utf-8")
-        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        for required in ("license", "cost", "reliability", "safety", "hardware", "support status", "pros/cons comparison"):
-            self.assertIn(required,contract)
-        for prompt in (engineering,architecture):
-            self.assertIn("third-party",prompt)
-            self.assertIn("license",prompt)
-            self.assertIn("cost",prompt)
-            self.assertIn("reliability",prompt)
-            self.assertIn("hardware",prompt)
-            self.assertIn("support status",prompt)
-            self.assertIn("pros/cons",prompt)
+        self.assertIn("safety",contract)
+        self.assertIn("pros/cons comparison",contract)
+        substance=("third-party","license","cost","reliability","hardware",
+                   "support status","pros/cons")
+        self.assert_single_canonical_home(
+            canonical="governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md",
+            canonical_substance=substance,
+            secondaries={
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": substance,
+            },
+        )
 
     def test_long_running_work_prefers_subagent_offload_without_false_parallelism(self):
-        contract=(ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
-        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (contract,engineering):
-            self.assertIn("on standby to orchestrate and remain immediately available for user interaction",guidance)
-            self.assertIn("capability or governance work item, regardless of how many streams it is divided into, delegate execution to sub-agents by default",guidance)
-            self.assertIn("every remaining task",guidance)
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # governance/VALIDATION_AND_PARALLELISM.md, which owns delegation.
+        substance=("on standby to orchestrate and remain immediately available for user interaction",
+                   "capability or governance work item, regardless of how many streams it is divided into, delegate execution to sub-agents by default",
+                   "every remaining task")
+        self.assert_single_canonical_home(
+            canonical="governance/VALIDATION_AND_PARALLELISM.md",
+            canonical_substance=substance,
+            secondaries={"prompts/ENGINEERING_AGENT_PROMPT.md": substance},
+        )
 
     def test_reconciliation_survives_a_competing_new_thread_and_prefers_resuming_workers(self):
         # Caught live: a delegated worker returned a checkpoint and stopped as
@@ -201,13 +292,19 @@ class OperatingModeTests(unittest.TestCase):
         # lengthy response addressing the new thread satisfied the letter of
         # the rule without the reconciliation happening. This test guards the
         # explicit failure-mode wording added to close that gap.
+        # Re-pointed (GOV-0011 deliverable 2) on the three failure-mode phrases
+        # only. Canonical home governance/VALIDATION_AND_PARALLELISM.md, which
+        # owns delegation and reconciliation. Every file-specific assertion
+        # below stays unconditional.
         engineering_guide = (ROOT/"governance/ENGINEERING_AGENT_GUIDE.md").read_text(encoding="utf-8")
         contract = (ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
-        for guidance in (engineering_guide, contract):
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("newly surfaced finding",normalized)
-            self.assertIn("side investigation",normalized)
-            self.assertIn("user tangent",normalized)
+        failure_modes = ("newly surfaced finding","side investigation","user tangent")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="governance/VALIDATION_AND_PARALLELISM.md",
+            canonical_substance=failure_modes,
+            secondaries={"governance/ENGINEERING_AGENT_GUIDE.md": failure_modes},
+        )
         self.assertIn("most likely to be silently left idle while attention follows the new thread",engineering_guide)
         self.assertIn("is not reconciled merely because the new thread was addressed thoroughly",engineering_guide)
         self.assertIn("sits silently idle while it is believed to still be running",contract)
@@ -230,111 +327,137 @@ class OperatingModeTests(unittest.TestCase):
         self.assertIn("persistent watcher",contract)
 
     def test_numeric_progress_binds_exact_population_identity(self):
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # governance/VALIDATION_AND_PARALLELISM.md. The two original loops are
+        # merged into one substance list -- they ran over the same two files, so
+        # splitting them was incidental, not semantic. The inline
+        # .replace("yesterday's checkpoint", "earlier checkpoint") becomes an
+        # alternatives tuple, preserving exactly which strings satisfy it.
+        # The contract-only "proxy row count" stays unconditional.
         contract=(ROOT/"governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
-        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (contract,prompt):
-            normalized=" ".join(guidance.split())
-            self.assertIn("counted unit",normalized)
-            self.assertIn("denominator population",normalized)
-            self.assertIn("completion predicate",normalized)
-            self.assertIn("secondary evidence",normalized)
-            self.assertIn("routed/split extras",normalized)
-            self.assertIn("uniqueness, coverage, and cursor arithmetic",normalized)
+        substance=("counted unit","denominator population","completion predicate",
+                   "secondary evidence","routed/split extras",
+                   "uniqueness, coverage, and cursor arithmetic",
+                   "living","authoritative evidence","hard-code",
+                   ("earlier checkpoint","yesterday's checkpoint"))
+        self.assert_single_canonical_home(
+            canonical="governance/VALIDATION_AND_PARALLELISM.md",
+            canonical_substance=substance,
+            secondaries={"prompts/ENGINEERING_AGENT_PROMPT.md": substance},
+        )
         self.assertIn("proxy row count",contract)
-        for guidance in (contract,prompt):
-            normalized=" ".join(guidance.split())
-            self.assertIn("living",normalized)
-            self.assertIn("authoritative evidence",normalized)
-            self.assertIn("hard-code",normalized)
-            self.assertIn("earlier checkpoint",normalized.replace("yesterday's checkpoint","earlier checkpoint"))
 
     def test_active_task_continuity_has_only_governed_early_stops(self):
+        # Re-pointed (GOV-0011 deliverable 2). This test was RED at HEAD -- the
+        # known B-1 -- because it required "no safe in-scope action remains" in
+        # ENGINEERING_AGENT_PROMPT.md, where that string no longer lives. It is
+        # resolved by re-pointing onto the canonical-home contract, NOT by
+        # restoring the string, which would reinstate the duplicate this work
+        # item exists to remove.
+        #
+        # Canonical home: framework/DUAL_HAT_FRAMEWORK.md. Measured, not
+        # assumed -- it carries all nine loop phrases in full (ROLE_TRANSITIONS
+        # also carries nine of nine; ENGINEERING_AGENT_PROMPT carries eight).
+        # The framework contract is chosen over the role-transitions document
+        # because an obligation binding whenever ANY role may stop is a
+        # framework-wide invariant, which is what that file declares itself to
+        # hold; ROLE_TRANSITIONS applies it and GOVERNING_PRINCIPLES states the
+        # principle. Choosing by which file other files already happen to link
+        # to would have inverted that shape to save one pointer.
+        #
+        # The three file-specific assertions below stay UNCONDITIONAL and
+        # outside the canonical-home disjunction. They are not duplication --
+        # each exists in exactly one file -- so folding them in would convert an
+        # unconditional obligation into a waivable one for no gain.
         framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
         architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        transitions=(ROOT/"governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
         self.assertIn("Active-task continuity",framework)
-        for guidance in (framework,engineering,transitions):
-            self.assertIn("explicitly orders",guidance)
-            self.assertIn("user decision",guidance)
-            self.assertIn("Architecture Office decision",guidance)
-            self.assertIn("explicitly specified stop gate",guidance)
-            self.assertIn("end of a message",guidance)
-            self.assertIn("side question",guidance)
-            self.assertIn("termination preflight", guidance)
-            self.assertIn("no safe in-scope action remains", guidance)
-            self.assertIn("persistent", guidance)
         self.assertIn("transition directly to `[Architect Office]`",framework)
         self.assertIn("task is complete and reported",architecture)
+        substance=("explicitly orders","user decision","Architecture Office decision",
+                   "explicitly specified stop gate","end of a message","side question",
+                   "termination preflight","no safe in-scope action remains","persistent")
+        self.assert_single_canonical_home(
+            canonical="framework/DUAL_HAT_FRAMEWORK.md",
+            canonical_substance=substance,
+            secondaries={
+                "governance/ROLE_TRANSITIONS.md": substance,
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+            },
+        )
 
     def test_active_goal_interlocks_response_with_continuation_action(self):
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # framework/DUAL_HAT_FRAMEWORK.md, which carries all eleven phrases in
+        # full; so do all three secondaries today, so the pre-consolidation
+        # branch holds unchanged and nothing is unguarded in the interim.
+        # The three framework-only assertions stay unconditional: they are not
+        # duplication and must not become waivable.
         framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        transitions=(ROOT/"governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
-        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (framework,transitions,engineering,architecture):
-            normalized=" ".join(guidance.split())
-            self.assertIn("same turn",normalized)
-            self.assertIn("observable continuation action",normalized)
-            self.assertIn("reactivate",normalized)
-            self.assertIn("persisted cursor",normalized)
-            self.assertIn("execution lease",normalized)
-            self.assertIn("classify",normalized)
-            self.assertIn("progress response",normalized)
-            self.assertIn("terminal",normalized)
-            self.assertIn("response",normalized)
-            self.assertIn("boundary",normalized)
-            self.assertIn("cannot release it",normalized)
         self.assertIn("promise",framework)
         self.assertIn("automatic continuation",framework)
         self.assertIn("Repeated premature termination",framework)
+        substance=("same turn","observable continuation action","reactivate",
+                   "persisted cursor","execution lease","classify","progress response",
+                   "terminal","response","boundary","cannot release it")
+        self.assert_single_canonical_home(
+            canonical="framework/DUAL_HAT_FRAMEWORK.md",
+            canonical_substance=substance,
+            secondaries={
+                "governance/ROLE_TRANSITIONS.md": substance,
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": substance,
+            },
+        )
 
     def test_active_goal_has_response_end_watchdog(self):
-        framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (framework,engineering,architecture):
-            normalized=" ".join(guidance.split()).lower()
-            self.assertIn("response-end watchdog",normalized)
-            self.assertIn("poll",normalized)
-            self.assertIn("reactivate",normalized)
-            self.assertIn("worker",normalized)
-            self.assertIn("continuation receipt",normalized)
-            self.assertIn("durable cursor or process identity",normalized)
-            self.assertIn("same turn",normalized)
-            self.assertIn("prose-only status",normalized)
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # framework/DUAL_HAT_FRAMEWORK.md: the response-end watchdog is stated
+        # there as a framework-wide invariant and restated by both prompts.
+        substance=("response-end watchdog","poll","reactivate","worker",
+                   "continuation receipt","durable cursor or process identity",
+                   "same turn","prose-only status")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="framework/DUAL_HAT_FRAMEWORK.md",
+            canonical_substance=substance,
+            secondaries={
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": substance,
+            },
+        )
 
     def test_persistent_goal_is_checked_and_restored_at_response_boundaries(self):
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # framework/DUAL_HAT_FRAMEWORK.md. "checked execution invariant" is
+        # framework-only and stays unconditional.
         framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        transitions=(ROOT/"governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
-        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (framework,transitions,engineering,architecture):
-            normalized=" ".join(guidance.split()).lower()
-            self.assertIn("goal",normalized)
-            self.assertIn("continuation instruction",normalized)
-            self.assertIn("context",normalized)
-            self.assertIn("restore",normalized)
-            self.assertIn("before answering",normalized)
-            self.assertIn("reactivate",normalized)
         self.assertIn("checked execution invariant",framework)
+        substance=("goal","continuation instruction","context","restore",
+                   "before answering","reactivate")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="framework/DUAL_HAT_FRAMEWORK.md",
+            canonical_substance=substance,
+            secondaries={
+                "governance/ROLE_TRANSITIONS.md": substance,
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": substance,
+            },
+        )
 
     def test_itemized_review_cannot_skip_from_partial_triage_to_persistence(self):
-        framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (framework,engineering):
-            normalized=" ".join(guidance.split()).lower()
-            for required in (
-                "evidence acquired",
-                "partially triaged",
-                "fully adjudicated",
-                "persist-ready",
-                "completion predicate",
-                "no omissions or duplicates",
-                "context-exhausted worker",
-                "durable evidence and cursor",
-            ):
-                self.assertIn(required,normalized)
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # framework/DUAL_HAT_FRAMEWORK.md.
+        substance=("evidence acquired","partially triaged","fully adjudicated",
+                   "persist-ready","completion predicate","no omissions or duplicates",
+                   "context-exhausted worker","durable evidence and cursor")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="framework/DUAL_HAT_FRAMEWORK.md",
+            canonical_substance=substance,
+            secondaries={"prompts/ENGINEERING_AGENT_PROMPT.md": substance},
+        )
 
     def test_closure_requires_proactive_delivery_of_promised_results(self):
         closure=(ROOT/"process/PUBLICATION_AND_CLOSURE.md").read_text(encoding="utf-8")
@@ -342,43 +465,62 @@ class OperatingModeTests(unittest.TestCase):
             self.assertIn(required,closure)
 
     def test_validation_gate_cannot_share_compound_command_with_mutation(self):
-        guide=(ROOT/"governance/ENGINEERING_AGENT_GUIDE.md").read_text(encoding="utf-8")
-        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (guide,prompt):
-            self.assertIn("validation gate",guidance)
-            self.assertIn("compound shell",guidance)
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # governance/ENGINEERING_AGENT_GUIDE.md -- measured, not preferred:
+        # validation/VALIDATION_PROTOCOL.md would be the topical owner but does
+        # not carry either phrase today, and a canonical home must be asserted
+        # in full or the assertion is a lie about where the obligation lives.
+        substance=("validation gate","compound shell")
+        self.assert_single_canonical_home(
+            canonical="governance/ENGINEERING_AGENT_GUIDE.md",
+            canonical_substance=substance,
+            secondaries={"prompts/ENGINEERING_AGENT_PROMPT.md": substance},
+        )
 
     def test_gates_distinguish_committed_inputs_from_runtime_state(self):
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # validation/VALIDATION_PROTOCOL.md, which owns gate semantics; the
+        # guide and the prompt restate it. The protocol-only assertion stays
+        # unconditional.
         protocol=(ROOT/"validation/VALIDATION_PROTOCOL.md").read_text(encoding="utf-8")
-        guide=(ROOT/"governance/ENGINEERING_AGENT_GUIDE.md").read_text(encoding="utf-8")
-        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (protocol,guide,prompt):
-            normalized=" ".join(guidance.split())
-            self.assertIn("lifecycle and packaging class",normalized)
-            self.assertIn("committed-tree identity",normalized)
-            self.assertIn("runtime data",normalized)
-            self.assertIn("production",normalized)
+        substance=("lifecycle and packaging class","committed-tree identity",
+                   "runtime data","production")
+        self.assert_single_canonical_home(
+            canonical="validation/VALIDATION_PROTOCOL.md",
+            canonical_substance=substance,
+            secondaries={
+                "governance/ENGINEERING_AGENT_GUIDE.md": substance,
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+            },
+        )
         self.assertIn("must not require such state to be Git tracked"," ".join(protocol.split()))
 
     def test_transition_gates_distinguish_prestate_from_replay(self):
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # validation/VALIDATION_PROTOCOL.md; protocol-only assertion stays
+        # unconditional.
         protocol=(ROOT/"validation/VALIDATION_PROTOCOL.md").read_text(encoding="utf-8")
-        guide=(ROOT/"governance/ENGINEERING_AGENT_GUIDE.md").read_text(encoding="utf-8")
-        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (protocol,guide,prompt):
-            normalized=" ".join(guidance.split())
-            self.assertIn("pre-state",normalized)
-            self.assertIn("post-state",normalized)
-            self.assertIn("immutable execution evidence",normalized)
-            self.assertIn("public command surface",normalized)
+        substance=("pre-state","post-state","immutable execution evidence",
+                   "public command surface")
+        self.assert_single_canonical_home(
+            canonical="validation/VALIDATION_PROTOCOL.md",
+            canonical_substance=substance,
+            secondaries={
+                "governance/ENGINEERING_AGENT_GUIDE.md": substance,
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+            },
+        )
         self.assertIn("later maintenance commits must not invalidate historical evidence"," ".join(protocol.split()))
 
     def test_zero_test_execution_is_not_passing_evidence(self):
-        protocol=(ROOT/"validation/VALIDATION_PROTOCOL.md").read_text(encoding="utf-8")
-        prompt=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (protocol,prompt):
-            self.assertIn("nonzero",guidance)
-            self.assertIn("zero",guidance)
-            self.assertIn("validation failure",guidance)
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # validation/VALIDATION_PROTOCOL.md.
+        substance=("nonzero","zero","validation failure")
+        self.assert_single_canonical_home(
+            canonical="validation/VALIDATION_PROTOCOL.md",
+            canonical_substance=substance,
+            secondaries={"prompts/ENGINEERING_AGENT_PROMPT.md": substance},
+        )
 
     def test_closure_dispositions_scoped_outputs_off_current_surfaces(self):
         closure=(ROOT/"process/PUBLICATION_AND_CLOSURE.md").read_text(encoding="utf-8")
@@ -390,17 +532,21 @@ class OperatingModeTests(unittest.TestCase):
         self.assertIn("active/output locations limited to current operational artifacts",prompt)
 
     def test_current_capability_limits_require_documentation_and_runtime_probe(self):
-        proportionality=(ROOT/"governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
-        architecture=(ROOT/"prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        engineering=(ROOT/"prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (proportionality,architecture,engineering):
-            normalized=" ".join(guidance.split()).lower()
-            self.assertIn("current authoritative documentation",normalized)
-            self.assertIn("installed surface",normalized)
-            self.assertIn("authentication",normalized)
-            self.assertIn("unconfigured",normalized)
-            self.assertTrue("logged out" in normalized or "logged-out" in normalized)
-            self.assertIn("entitlement",normalized)
-            self.assertIn("environment",normalized)
+        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # governance/GOVERNING_PRINCIPLES.md, which states the rule; both
+        # prompts restate it. The logged-out disjunction was an assertTrue with
+        # an inline `or`; it becomes an alternatives tuple, which is the same
+        # predicate expressed in the shared helper's vocabulary.
+        substance=("current authoritative documentation","installed surface","authentication",
+                   "unconfigured",("logged out","logged-out"),"entitlement","environment")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="governance/GOVERNING_PRINCIPLES.md",
+            canonical_substance=substance,
+            secondaries={
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": substance,
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+            },
+        )
 
 if __name__ == "__main__": unittest.main()

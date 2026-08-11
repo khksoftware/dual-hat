@@ -18,7 +18,7 @@ Switch modes only at a safe lifecycle boundary. Preserve the sealed work order a
 
 Integrated mode is the default. Architecture and Engineering use one connected Execution Host or Repository Workspace. The user approves a sealed work order, explicitly enters Engineering, and explicitly returns to Architecture Review. Direct repository evidence and current local state remain available without copying.
 
-Every assistant-authored chat message in Integrated Mode MUST begin with exactly one active-hat label: `[Architect Office]` while performing Architecture or Architecture Review work, or `[Engineering Agent]` while performing Engineering work. The label applies to interim updates, questions, decisions, reports, and final responses. One message carries one hat; change the active role at a governed boundary before using the other label. Tool output and verbatim third-party content are evidence inside the labeled message, not a third role.
+The mandatory active-hat label rule for Integrated Mode — which label, on which messages, and when it may change — is stated in full by [Role Transitions](../governance/ROLE_TRANSITIONS.md). Tool output and verbatim third-party content are evidence inside the labeled message, not a third role.
 
 Advantages: reduced copying; direct repository evidence; faster remediation loops; smoother pause/resume; lower stale-snapshot risk; easier automated handoff and archival.
 

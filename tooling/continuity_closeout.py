@@ -6,6 +6,9 @@ from __future__ import annotations
 
 from typing import Mapping, Sequence
 
+from dispatch_reconciliation import DISPATCH_INVENTORY_SCHEMA
+from dispatch_reconciliation import dispatch_inventory as reconcile_dispatch_inventory
+
 
 FULL_TRIGGERS = frozenset({
     "phase_close", "milestone_close", "ownership_domain_change", "next_item_not_prompt",
@@ -69,7 +72,18 @@ def work_estimate(*, low_hours: float, high_hours: float, segments: Sequence[str
         "prior_revision": prior.get("revision") if prior else None, "revision_reason": revision_reason,
     }
 
-def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continuity_count: int, continuity_evidence: Mapping[str, object], reconciliation_audit: Mapping[str, object], user_requested_publication: bool = False) -> dict[str, object]:
+def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continuity_count: int, continuity_evidence: Mapping[str, object], reconciliation_audit: Mapping[str, object], dispatch_inventory: Mapping[str, object], user_requested_publication: bool = False) -> dict[str, object]:
+    """Select continuity or full closeout, refusing outright where a gate blocks.
+
+    The delegated-dispatch disposition is **re-derived here from the registered
+    workers** rather than read off the inventory's own summary. A gate that
+    believes a caller's `closure_authorized` flag is a control over the
+    reconciler's output, not over what a caller hands the gate: a hand-forged
+    inventory holding a nonterminal worker would otherwise authorize closure
+    without the reconciler ever running. Re-derivation calls the one
+    implementation of the state vocabulary rather than restating it here, so the
+    gate cannot drift away from the reconciler it enforces.
+    """
     unknown = sorted(set(triggers) - FULL_TRIGGERS)
     if unknown:
         raise ValueError(f"unknown full-closure triggers: {unknown}")
@@ -85,6 +99,22 @@ def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continui
         raise ValueError("closure reconciliation audit must be independent, not engineering self-report")
     if reconciliation_audit.get("closure_authorized") is not True:
         raise ValueError("closure is blocked by unresolved reconciliation findings: " + ", ".join(reconciliation_audit.get("blocking_items") or ()))
+    required_dispatch_fields = {"schema", "workers", "registered_count", "terminal_count", "nonterminal_count", "blocking_workers", "closure_authorized", "unregistered_dispatch_detectable"}
+    if not required_dispatch_fields.issubset(dispatch_inventory):
+        raise ValueError("closeout selection requires a completed delegated-dispatch reconciliation")
+    if dispatch_inventory.get("schema") != DISPATCH_INVENTORY_SCHEMA:
+        raise ValueError(f"delegated-dispatch inventory declares {dispatch_inventory.get('schema')!r}, not the published {DISPATCH_INVENTORY_SCHEMA}")
+    registered = dispatch_inventory.get("workers")
+    if not isinstance(registered, (list, tuple)):
+        raise ValueError(f"delegated-dispatch inventory's workers must be the registered worker list, not {type(registered).__name__}")
+    reconciled = reconcile_dispatch_inventory(workers=registered)
+    if reconciled["closure_authorized"] is not True:
+        raise ValueError("closure is blocked by unreconciled delegated workers: " + ", ".join(reconciled["blocking_workers"]))
+    if dispatch_inventory.get("closure_authorized") is not True:
+        raise ValueError("closure is blocked by unreconciled delegated workers: " + ", ".join(dispatch_inventory.get("blocking_workers") or ()))
+    for field in ("registered_count", "terminal_count", "nonterminal_count", "blocking_workers", "unregistered_dispatch_detectable"):
+        if dispatch_inventory.get(field) != reconciled[field]:
+            raise ValueError(f"delegated-dispatch inventory contradicts its own registered workers at {field}: claims {dispatch_inventory.get(field)!r}, reconciles to {reconciled[field]!r}")
     material = sorted(set(triggers))
     advisory_counter = continuity_count >= 3
     full = bool(material or user_requested_publication or not same_stream_next)
@@ -94,7 +124,7 @@ def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continui
         "counter_forced_full_closure": False, "same_stream_next": same_stream_next,
         "continuity_evidence": dict(continuity_evidence),
         "publication_authorized": user_requested_publication,
-        "required_lightweight_evidence": ["checkpoint_commit", "focused_validation", "clean_worktree", "exit_status", "current_handover", "unresolved_findings", "inherited_dependencies", "rollback_point", "pending_publication_inventory", "architecture_disposition_boundary", "no_engineering_self_acceptance", "independent_closure_reconciliation_audit"],
+        "required_lightweight_evidence": ["checkpoint_commit", "focused_validation", "clean_worktree", "exit_status", "current_handover", "unresolved_findings", "inherited_dependencies", "rollback_point", "pending_publication_inventory", "architecture_disposition_boundary", "no_engineering_self_acceptance", "independent_closure_reconciliation_audit", "delegated_dispatch_reconciliation"],
         "skipped_when_lightweight": ["standalone_export", "remote_publication", "semantic_release", "release_packaging", "manifest_and_checksums", "snapshot", "exhaustive_archival"],
         "reconciliation_audit": dict(reconciliation_audit),
     }

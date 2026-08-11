@@ -10,7 +10,10 @@ Once authorized, continue the active conversation and execution until the task i
 
 Represent an explicit user stop or genuinely blocking required decision as a named
 hard-stop receipt with preserved state and resumption conditions. A nonblocking
-decision cannot release the execution lease.
+decision cannot release the execution lease. The active-task continuity
+obligation is stated in full in
+[Dual Hat Framework](../framework/DUAL_HAT_FRAMEWORK.md); this prompt restates
+only what an executing agent needs inline and does not supersede it.
 
 Treat a side question as a concurrent response obligation: answer under the appropriate hat, identify the concrete Engineering action still running or immediately next, and continue milestone reporting. Do not end the turn merely because the question has been answered.
 

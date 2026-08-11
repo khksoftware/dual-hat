@@ -65,7 +65,17 @@ def version_record() -> dict[str, object]:
 
 
 def release_maturity(release_version: str) -> str:
-    return "stable_1_x" if int(release_version.split(".", 1)[0]) >= 1 else "functional_pre_1_0"
+    """Derive the maturity label from the major the version actually carries.
+
+    Parameterised on the major rather than enumerating a boundary per major.
+    A hand-written boundary is a convention with nothing keeping it
+    synchronized: the 0.x-to-1.x one was written by hand, nothing kept it
+    synchronized, and the identical contradiction returned at 1.x-to-2.x with
+    every major from 2 upward labelled stable_1_x. A third hand-written
+    boundary would guarantee a third recurrence at 3.0.0.
+    """
+    major = int(release_version.split(".", 1)[0])
+    return f"stable_{major}_x" if major >= 1 else "functional_pre_1_0"
 
 
 def source_files() -> dict[str, bytes]:
@@ -171,6 +181,18 @@ def _remote_identity(value: str) -> str:
     return f"{host}/{path}" if host and path else ""
 
 
+def _remote_endpoint_identities(*arguments: str) -> tuple[str, ...]:
+    """Every configured endpoint's identity, in configured order.
+
+    `git remote get-url` without --all reports a single url while git writes
+    to every configured `remote.origin.pushurl`, so the singular query cannot
+    prove what a push will reach. Blank lines are dropped; an unparseable url
+    is kept as "" rather than filtered out, so a malformed endpoint fails the
+    identity comparison instead of disappearing from it.
+    """
+    return tuple(_remote_identity(line) for line in _git(*arguments).splitlines() if line.strip())
+
+
 def _fresh_remote_ref(remote: str = "origin", branch: str = "main") -> str:
     output=_git("ls-remote","--heads",remote,f"refs/heads/{branch}")
     rows=[line.split() for line in output.splitlines() if line.strip()]
@@ -185,14 +207,19 @@ def fresh_remote_repository_state(expected_remote_identity: str, *, expected_rem
     if not approved: raise RuntimeError("approved remote identity is invalid")
     head=_git("rev-parse","HEAD"); branch=_git("branch","--show-current"); upstream=_git("rev-parse","--abbrev-ref","--symbolic-full-name","@{upstream}")
     if branch!="main" or upstream!="origin/main": raise RuntimeError("standalone publication is not on canonical main and origin/main")
-    fetch_identity=_remote_identity(_git("remote","get-url","origin")); push_identity=_remote_identity(_git("remote","get-url","--push","origin"))
-    if fetch_identity!=approved or push_identity!=approved: raise RuntimeError("standalone publication fetch or push endpoint is not the explicitly approved repository identity")
+    fetch_identities=_remote_endpoint_identities("remote","get-url","--all","origin"); push_identities=_remote_endpoint_identities("remote","get-url","--all","--push","origin")
+    if not fetch_identities or not push_identities or set(fetch_identities)|set(push_identities)!={approved}: raise RuntimeError("standalone publication fetch or push endpoint is not the explicitly approved repository identity")
     remote_head=_fresh_remote_ref(); cached_head=_git("rev-parse",upstream)
     if expected_remote_commit is not None and remote_head!=expected_remote_commit: raise RuntimeError("fresh remote main differs from the authorized expected starting or publication commit")
     if remote_head!=head or cached_head!=remote_head: raise RuntimeError("fresh remote main, cached upstream, and local publication HEAD are not aligned")
-    return {"schema":"dual-hat-fresh-remote-state/1.0","remote":"origin","branch":"main","remote_ref":"refs/heads/main",
+    # The record enumerates every endpoint proven rather than naming one. A
+    # scalar cannot state how many endpoints an assurance covers, so it reads
+    # as complete whether it is or not -- which is the defect, not merely its
+    # symptom. The plural field's own length is the verified-endpoint count,
+    # so no second field exists that could disagree with it.
+    return {"schema":"dual-hat-fresh-remote-state/2.0","remote":"origin","branch":"main","remote_ref":"refs/heads/main",
             "local_commit":head,"cached_upstream_commit":cached_head,"fresh_remote_commit":remote_head,
-            "fetch_endpoint_identity":fetch_identity,"push_endpoint_identity":push_identity}
+            "fetch_endpoint_identities":list(fetch_identities),"push_endpoint_identities":list(push_identities)}
 
 
 def release_provenance_record(
@@ -225,12 +252,12 @@ def release_provenance_record(
     committed=verify_portable_publication_commit(ROOT,publication_commit)
     if committed.get("commit")!=publication_commit or committed.get("manifest_sha256")!=marker.get("manifest_sha256"):
         raise RuntimeError("committed publication tree does not match marker and manifest provenance")
-    return {"schema":"dual-hat-remote-publication-provenance/1.0","canonical_source_commit":source,
+    return {"schema":"dual-hat-remote-publication-provenance/2.0","canonical_source_commit":source,
             "external_publication_commit":publication_commit,
             "publication_tree":_git("rev-parse",f"{publication_commit}^{{tree}}"),
             "manifest_tree_sha256":manifest["tree_sha256"],"manifest_sha256":marker["manifest_sha256"],
             "remote":"origin","branch":"main","remote_ref":"refs/heads/main","fresh_remote_commit":publication_commit,
-            "fetch_endpoint_identity":remote_state["fetch_endpoint_identity"],"push_endpoint_identity":remote_state["push_endpoint_identity"]}
+            "fetch_endpoint_identities":remote_state["fetch_endpoint_identities"],"push_endpoint_identities":remote_state["push_endpoint_identities"]}
 
 
 def release_provenance(expected_remote_identity: str) -> tuple[str, str]:
@@ -322,7 +349,7 @@ def build(output: Path, source_commit: str | None = None, external_publication_c
     else:
         head = _git("rev-parse", "HEAD")
         derived_source, derived_publication = head, head
-        provenance_record={"schema":"dual-hat-remote-publication-provenance/1.0","verification":"not_applicable_nonpublishable_plan"}
+        provenance_record={"schema":"dual-hat-remote-publication-provenance/2.0","verification":"not_applicable_nonpublishable_plan"}
     if source_commit is not None and source_commit != derived_source:
         raise RuntimeError("requested canonical source commit contradicts repository provenance")
     if external_publication_commit is not None and external_publication_commit != derived_publication:
@@ -472,7 +499,7 @@ def validate_release_set(output: Path, *, source_commit: str | None = None,
                 or manifest.get("external_publication_commit") != derived["external_publication_commit"]
                 or manifest.get("publication_provenance") != derived):
             raise RuntimeError("release manifest does not match verified standalone publication provenance")
-    elif manifest.get("publication_provenance")!={"schema":"dual-hat-remote-publication-provenance/1.0","verification":"not_applicable_nonpublishable_plan"}:
+    elif manifest.get("publication_provenance")!={"schema":"dual-hat-remote-publication-provenance/2.0","verification":"not_applicable_nonpublishable_plan"}:
         raise RuntimeError("nonpublishable release plan contains invalid publication provenance")
     inspect_content_set({manifest_path.name: manifest_path.read_bytes(), checksum_path.name: checksum_path.read_bytes()})
     return {

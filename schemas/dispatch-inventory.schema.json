@@ -1,0 +1,123 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$id": "https://example.invalid/dual-hat/dispatch-inventory.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The authoritative dispatch inventory required by GOVERNING_PRINCIPLES.md: every verified dispatch registers its real handle, assigned outcome, owner, durable cursor or process identity, heartbeat contract, and current state, and remains registered until recorded terminal evidence permits removal. CONFORMANCE_POLICY.md makes an unregistered, nonterminal, unprobed, or silently forgotten handle block closure, as it does an incomplete outcome whose stalled or dead worker has no registered successor. This schema governs the record that makes that sentence executable.",
+  "properties": {
+    "blocking_workers": {
+      "description": "One entry per detected condition, each naming the handle it blocks on.",
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "closure_authorized": {
+      "type": "boolean"
+    },
+    "nonterminal_count": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "registered_count": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "schema": {
+      "const": "dual-hat-dispatch-inventory/1.0"
+    },
+    "terminal_count": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "unregistered_dispatch_detectable": {
+      "const": false,
+      "description": "Stated residual, recorded in the artifact rather than only in prose: a self-populated inventory cannot detect a delegation that was never registered at all, because an empty inventory and a session with no delegation are byte-identical. This record proves reconciliation of what was registered and never claims more."
+    },
+    "workers": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_outcome": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "durable_cursor": {
+            "description": "Durable cursor or process identity, as required at registration.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "handle": {
+            "description": "The real platform handle the dispatch returned, never a narrative name.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "heartbeat_interval_seconds": {
+            "description": "The heartbeat contract, which must be bound before launch.",
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "last_probe_age_seconds": {
+            "description": "Age of the most recent probe of this handle at the moment of reconciliation.",
+            "minimum": 0,
+            "type": "number"
+          },
+          "outcome_complete": {
+            "description": "Whether the assigned outcome was actually completed, independent of the worker's state.",
+            "type": "boolean"
+          },
+          "owner": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "state": {
+            "description": "Evidence-defined worker state. finished and dead are terminal; running, unreachable and stalled are nonterminal.",
+            "enum": [
+              "running",
+              "unreachable",
+              "stalled",
+              "dead",
+              "finished"
+            ]
+          },
+          "successor_handle": {
+            "description": "Registered successor, required before a stalled or dead worker with an incomplete outcome is discharged.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "terminal_evidence": {
+            "description": "Recorded terminal evidence. A terminal state claimed without it does not discharge the handle.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "handle",
+          "assigned_outcome",
+          "owner",
+          "durable_cursor",
+          "heartbeat_interval_seconds",
+          "last_probe_age_seconds",
+          "state",
+          "outcome_complete"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "workers",
+    "registered_count",
+    "terminal_count",
+    "nonterminal_count",
+    "blocking_workers",
+    "closure_authorized",
+    "unregistered_dispatch_detectable"
+  ],
+  "title": "Delegated-dispatch inventory reconciled at the closure gate",
+  "type": "object"
+}

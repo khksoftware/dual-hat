@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
 
 from continuity_closeout import FULL_TRIGGERS, deferred_publication_inventory, reconciliation_audit, select_closeout, work_estimate
+from dispatch_reconciliation import dispatch_inventory
 
 DUAL_HAT_CAPABILITY_PROOFS = {"closure_reconciliation_audit"}
 
@@ -19,21 +20,26 @@ class ContinuityCloseoutTests(unittest.TestCase):
         reviewer_role="independent", engineering_self_report_only=False,
         items=[{"source": "sealed_scope", "description": "implement the sealed feature", "status": "done", "evidence": "commit abc1234"}],
     )
+    DISPATCH = dispatch_inventory(workers=[{
+        "handle": "worker-1", "assigned_outcome": "implement the sealed feature", "owner": "engineering",
+        "durable_cursor": "commit abc1234", "heartbeat_interval_seconds": 300, "last_probe_age_seconds": 10,
+        "state": "finished", "outcome_complete": True, "terminal_evidence": "final result received and consumed",
+    }])
 
     def test_lightweight_and_every_full_trigger(self):
-        light = select_closeout(same_stream_next=True, triggers=[], continuity_count=1, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT)
+        light = select_closeout(same_stream_next=True, triggers=[], continuity_count=1, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT, dispatch_inventory=self.DISPATCH)
         self.assertEqual("lightweight_continuity", light["selection"]); self.assertFalse(light["publication_authorized"])
         self.assertIn("independent_closure_reconciliation_audit", light["required_lightweight_evidence"])
         self.assertEqual(self.AUDIT, light["reconciliation_audit"])
         for trigger in FULL_TRIGGERS:
-            with self.subTest(trigger=trigger): self.assertEqual("full", select_closeout(same_stream_next=True, triggers=[trigger], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT)["selection"])
+            with self.subTest(trigger=trigger): self.assertEqual("full", select_closeout(same_stream_next=True, triggers=[trigger], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT, dispatch_inventory=self.DISPATCH)["selection"])
 
     def test_counter_is_advisory_and_user_request_wins(self):
-        advisory = select_closeout(same_stream_next=True, triggers=[], continuity_count=3, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT)
+        advisory = select_closeout(same_stream_next=True, triggers=[], continuity_count=3, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT, dispatch_inventory=self.DISPATCH)
         self.assertEqual("lightweight_continuity", advisory["selection"]); self.assertTrue(advisory["advisory_three_item_threshold_reached"]); self.assertFalse(advisory["counter_forced_full_closure"])
-        requested = select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT, user_requested_publication=True)
+        requested = select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT, dispatch_inventory=self.DISPATCH, user_requested_publication=True)
         self.assertEqual("full", requested["selection"]); self.assertTrue(requested["publication_authorized"])
-        with self.assertRaises(ValueError): select_closeout(same_stream_next=True,triggers=[],continuity_count=0,continuity_evidence={"architecture_directed":False,"next_stream":"governance","source":"guess"},reconciliation_audit=self.AUDIT)
+        with self.assertRaises(ValueError): select_closeout(same_stream_next=True,triggers=[],continuity_count=0,continuity_evidence={"architecture_directed":False,"next_stream":"governance","source":"guess"},reconciliation_audit=self.AUDIT, dispatch_inventory=self.DISPATCH)
 
     def test_estimate_and_material_revision(self):
         initial = work_estimate(low_hours=4,high_hours=7,segments=["implementation"],included=["validation"],uncertainties=["shared contracts"],expansion_conditions=["hard stop"])
@@ -71,7 +77,7 @@ class ContinuityCloseoutTests(unittest.TestCase):
         )
         self.assertFalse(blocked["closure_authorized"])
         self.assertEqual(["user asked for extra export mode", "bug found in validation"], blocked["blocking_items"])
-        with self.assertRaises(ValueError): select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=blocked)
+        with self.assertRaises(ValueError): select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=blocked, dispatch_inventory=self.DISPATCH)
 
         deferred = reconciliation_audit(
             reviewer_role="independent", engineering_self_report_only=False,
@@ -79,7 +85,7 @@ class ContinuityCloseoutTests(unittest.TestCase):
         )
         self.assertTrue(deferred["closure_authorized"])
         self.assertEqual((), tuple(deferred["blocking_items"]))
-        authorized = select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=deferred)
+        authorized = select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=deferred, dispatch_inventory=self.DISPATCH)
         self.assertEqual("lightweight_continuity", authorized["selection"])
 
     def test_publication_and_closure_and_lifecycle_governance_text(self):

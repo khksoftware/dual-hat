@@ -5,9 +5,11 @@ SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -19,6 +21,8 @@ DUAL_HAT_CAPABILITY_PROOFS = {"governed_publication", "binary_secret_gate", "com
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
+sys.path.insert(0, str(ROOT / "tests"))
+from test_framework import available_reparse_flavours, make_reparse, remove_reparse  # noqa: E402
 import release_package  # noqa: E402
 from content_security import ContentSecurityError, inspect_content_set, sha256  # noqa: E402
 from release_artifacts import is_release_product  # noqa: E402
@@ -73,6 +77,119 @@ class ReleasePackageTests(unittest.TestCase):
         (root / "plugins/dual-hat/plugin.json").write_bytes(plugin)
         return portable, plugin
 
+    @classmethod
+    def _publication_sandbox(cls, root: Path, name: str = "work") -> tuple[Path, Path]:
+        """A throwaway repository on origin/main, and the bare repo it publishes to.
+
+        Real git, real refs, no network: every endpoint is a bare repository
+        inside the caller's temporary directory. The endpoint checks under test
+        run against genuine ``remote.origin.*`` configuration rather than a
+        stubbed ``_git``, because the defect these tests exist for is what git
+        itself returns for a query -- a stub would encode the same wrong belief
+        the shipped code holds and would agree with it.
+        """
+        approved = root / f"{name}-approved.git"
+        work = root / name
+        cls._git(root, "init", "--bare", "-b", "main", str(approved))
+        cls._git(root, "init", "-b", "main", str(work))
+        cls._git(work, "config", "user.name", "Dual Hat Release Test")
+        cls._git(work, "config", "user.email", "dual-hat-release@example.invalid")
+        (work / "README.md").write_text("sandbox\n", encoding="utf-8")
+        cls._git(work, "add", "README.md")
+        cls._git(work, "commit", "-m", "Sandbox publication commit")
+        cls._git(work, "remote", "add", "origin", str(approved))
+        cls._git(work, "push", "-u", "origin", "main")
+        return work, approved
+
+    def test_every_configured_push_endpoint_is_proven_not_only_the_first(self) -> None:
+        # git pushes to EVERY configured remote.origin.pushurl, and
+        # `git remote get-url --push` without --all reports only the first.
+        # The Red for this is not that a flag is missing from a command string
+        # -- that would pass against a fix that added the flag and ignored the
+        # extra lines. The Red is that with a genuinely unapproved second push
+        # endpoint configured, the shipped check returns a PASS record.
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            work, approved = self._publication_sandbox(root)
+            unapproved = root / "unapproved.git"
+            self._git(root, "init", "--bare", "-b", "main", str(unapproved))
+            self._git(work, "remote", "set-url", "--push", "origin", str(approved))
+            self._git(work, "remote", "set-url", "--add", "--push", "origin", str(unapproved))
+            self.assertEqual(
+                2, len(self._git(work, "remote", "get-url", "--all", "--push", "origin").splitlines()),
+                "fixture did not configure a second push endpoint",
+            )
+            with patch.object(release_package, "ROOT", work):
+                with self.assertRaisesRegex(RuntimeError, "endpoint"):
+                    release_package.fresh_remote_repository_state(str(approved))
+
+    def test_every_configured_fetch_endpoint_is_proven_not_only_the_first(self) -> None:
+        # The defect is the query shape and it is present on both lines. The
+        # push endpoint is left explicitly approved here so that only the
+        # fetch side is unproven and the failure cannot be the push side's.
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            work, approved = self._publication_sandbox(root, "fetchwork")
+            unapproved = root / "unapproved.git"
+            self._git(root, "init", "--bare", "-b", "main", str(unapproved))
+            self._git(work, "remote", "set-url", "--push", "origin", str(approved))
+            self._git(work, "config", "--add", "remote.origin.url", str(unapproved))
+            self.assertEqual(
+                2, len(self._git(work, "remote", "get-url", "--all", "origin").splitlines()),
+                "fixture did not configure a second fetch endpoint",
+            )
+            with patch.object(release_package, "ROOT", work):
+                with self.assertRaisesRegex(RuntimeError, "endpoint"):
+                    release_package.fresh_remote_repository_state(str(approved))
+
+    def test_remote_state_record_cannot_assert_a_singular_verified_endpoint(self) -> None:
+        # The evidence-integrity half, and a SEPARATE defect from the query.
+        # Both endpoints here resolve to the approved identity, so the check
+        # legitimately passes -- and the record it signs must then state what
+        # it actually proved. A scalar "push_endpoint_identity" covering two
+        # configured endpoints is a singular verified claim about a plural
+        # fact: it is not merely incomplete, it reads as complete.
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            work, approved = self._publication_sandbox(root, "recordwork")
+            same_endpoint_other_spelling = str(approved).replace("\\", "/")
+            self._git(work, "remote", "set-url", "--push", "origin", str(approved))
+            self._git(work, "remote", "set-url", "--add", "--push", "origin", same_endpoint_other_spelling)
+            self._git(work, "config", "--add", "remote.origin.url", same_endpoint_other_spelling)
+            identity = release_package._remote_identity(str(approved))
+            with patch.object(release_package, "ROOT", work):
+                state = release_package.fresh_remote_repository_state(str(approved))
+            for side in ("fetch", "push"):
+                with self.subTest(side=side):
+                    self.assertNotIn(
+                        f"{side}_endpoint_identity", state,
+                        f"the record still carries a singular verified {side} endpoint while two are configured",
+                    )
+                    self.assertEqual(
+                        [identity, identity], state[f"{side}_endpoint_identities"],
+                        f"the record does not enumerate every verified {side} endpoint",
+                    )
+
+    def test_single_endpoint_passes_and_instead_of_rewriting_still_fails_closed(self) -> None:
+        # Regression guard for two behaviours that must survive the repair.
+        # The second is correct behaviour reached incidentally -- `get-url`
+        # reports the REWRITTEN url, so the identity comparison fails closed --
+        # and nothing else protects it. It is not to be "fixed".
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            work, approved = self._publication_sandbox(root, "singlework")
+            with patch.object(release_package, "ROOT", work):
+                state = release_package.fresh_remote_repository_state(str(approved))
+            self.assertEqual("main", state["branch"])
+            identity = release_package._remote_identity(str(approved))
+            self.assertEqual([identity], state["push_endpoint_identities"])
+            self.assertEqual([identity], state["fetch_endpoint_identities"])
+            rewritten = (root / "rewritten.git").as_posix()
+            self._git(work, "config", f"url.{rewritten}.insteadOf", str(approved))
+            with patch.object(release_package, "ROOT", work):
+                with self.assertRaisesRegex(RuntimeError, "endpoint"):
+                    release_package.fresh_remote_repository_state(str(approved))
+
     def test_unknown_binary_fails_closed_and_attestation_is_distinct_from_scan(self) -> None:
         payload = b"\x89PNG\r\n\x1a\n\x00fixture"
         with self.assertRaisesRegex(ContentSecurityError, "explicit allowlist"):
@@ -93,18 +210,35 @@ class ReleasePackageTests(unittest.TestCase):
             inspect_content_set({"assets/fixture.bin": b"RIFF0000\x00payload"})
 
     def test_allowlisted_symlink_cannot_escape_release_source_root(self) -> None:
-        with TemporaryDirectory() as temporary, TemporaryDirectory() as outside:
-            root = Path(temporary); (root / "export").mkdir()
-            source = Path(outside) / "payload.md"; source.write_text("outside", encoding="utf-8")
-            link = root / "payload.md"
-            try:
-                link.symlink_to(source)
-            except OSError:
-                self.skipTest("host does not permit a symlink fixture")
-            (root / "export/EXPORT_SOURCES.json").write_text(json.dumps({"included": ["payload.md"]}), encoding="utf-8")
-            with patch.object(release_package, "ROOT", root):
-                with self.assertRaisesRegex(RuntimeError, "containment"):
-                    release_package.source_files()
+        # Ran as a permanent skip on any host without symlink privilege. See
+        # tests/test_framework.py's reparse-fixture support: the junction is an
+        # additional route to this guard, not a replacement for the symlink.
+        with TemporaryDirectory() as probe:
+            flavours = available_reparse_flavours(Path(probe))
+        if not flavours:
+            self.skipTest("host permits neither a symlink nor a junction fixture")
+        for flavour in flavours:
+            with self.subTest(reparse=flavour), TemporaryDirectory() as temporary, TemporaryDirectory() as outside:
+                root = Path(temporary); (root / "export").mkdir()
+                if flavour == "symlink":
+                    target = Path(outside) / "payload.md"; target.write_text("outside", encoding="utf-8")
+                    link = root / "payload.md"; declared = "payload.md"
+                else:
+                    # A junction points only at a directory, so the allowlisted
+                    # path crosses the reparse point instead of being it. Either
+                    # way the declared source resolves outside the release root,
+                    # which is the escape the guard exists to refuse.
+                    target = Path(outside) / "payload"; target.mkdir()
+                    (target / "payload.md").write_text("outside", encoding="utf-8")
+                    link = root / "payload"; declared = "payload/payload.md"
+                self.assertTrue(make_reparse(link, target, flavour), f"{flavour} fixture failed after probing as available")
+                try:
+                    (root / "export/EXPORT_SOURCES.json").write_text(json.dumps({"included": [declared]}), encoding="utf-8")
+                    with patch.object(release_package, "ROOT", root):
+                        with self.assertRaisesRegex(RuntimeError, "containment"):
+                            release_package.source_files()
+                finally:
+                    remove_reparse(link)
 
     def test_private_key_and_embedded_token_are_rejected(self) -> None:
         for value in (
@@ -205,7 +339,7 @@ class ReleasePackageTests(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             root=Path(temporary); (root/".dual-hat").mkdir(); manifest_bytes=release_package.canonical_json(manifest); (root/".dual-hat/export-manifest.json").write_bytes(manifest_bytes)
             marker={"schema":"dual-hat-published-state/1.0","license_expression":"Apache-2.0","source_commit":"a"*40,"tree_sha256":manifest["tree_sha256"],"manifest_sha256":sha256(manifest_bytes),"previous_export_identity":None,"canonical_branch":"main"}; (root/".dual-hat/published-state.json").write_text(json.dumps(marker),encoding="utf-8")
-            responses={("rev-parse","HEAD"):"b"*40,("status","--porcelain=v1","--","."):"",("branch","--show-current"):"main",("rev-parse","--abbrev-ref","--symbolic-full-name","@{upstream}"):"origin/main",("rev-parse","origin/main"):"b"*40,("remote","get-url","origin"):"https://token@example.invalid/approved/dual-hat.git",("remote","get-url","--push","origin"):"git@example.invalid:approved/dual-hat.git",("ls-remote","--heads","origin","refs/heads/main"):"%s\trefs/heads/main"%("b"*40),("rev-parse",("b"*40)+"^{tree}"):"c"*40}
+            responses={("rev-parse","HEAD"):"b"*40,("status","--porcelain=v1","--","."):"",("branch","--show-current"):"main",("rev-parse","--abbrev-ref","--symbolic-full-name","@{upstream}"):"origin/main",("rev-parse","origin/main"):"b"*40,("remote","get-url","--all","origin"):"https://token@example.invalid/approved/dual-hat.git",("remote","get-url","--all","--push","origin"):"git@example.invalid:approved/dual-hat.git",("ls-remote","--heads","origin","refs/heads/main"):"%s\trefs/heads/main"%("b"*40),("rev-parse",("b"*40)+"^{tree}"):"c"*40}
             committed={"commit":"b"*40,"manifest_sha256":marker["manifest_sha256"]}
             with patch.object(release_package,"ROOT",root), patch.object(release_package,"_git",side_effect=lambda *args:responses[args]), patch.object(release_package,"_is_ancestor",return_value=True), patch.object(release_package,"verify_commit_tree",return_value=committed):
                 record=release_package.release_provenance_record("https://example.invalid/approved/dual-hat.git")
@@ -216,9 +350,9 @@ class ReleasePackageTests(unittest.TestCase):
                 responses[("ls-remote","--heads","origin","refs/heads/main")]="%s\trefs/heads/main"%("d"*40)
                 with self.assertRaisesRegex(RuntimeError,"not aligned"): release_package.release_provenance_record("example.invalid/approved/dual-hat")
                 responses[("ls-remote","--heads","origin","refs/heads/main")]="%s\trefs/heads/main"%("b"*40)
-                responses[("remote","get-url","--push","origin")]="git@example.invalid:other/fork.git"
+                responses[("remote","get-url","--all","--push","origin")]="git@example.invalid:other/fork.git"
                 with self.assertRaisesRegex(RuntimeError,"endpoint"): release_package.release_provenance_record("example.invalid/approved/dual-hat")
-                responses[("remote","get-url","--push","origin")]="git@example.invalid:approved/dual-hat.git"
+                responses[("remote","get-url","--all","--push","origin")]="git@example.invalid:approved/dual-hat.git"
                 marker["canonical_branch"]="dev"; (root/".dual-hat/published-state.json").write_text(json.dumps(marker),encoding="utf-8")
                 with self.assertRaisesRegex(RuntimeError,"marker contract"): release_package.release_provenance_record("example.invalid/approved/dual-hat")
 
@@ -279,22 +413,138 @@ class ReleasePackageTests(unittest.TestCase):
         "release construction requires canonical or publication controls",
     )
     def test_release_output_reparse_point_is_rejected(self) -> None:
-        with TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            target = root / "actual"; target.mkdir()
-            link = root / "release"
-            try:
-                link.symlink_to(target, target_is_directory=True)
-            except OSError:
-                self.skipTest("host does not permit a directory symlink fixture")
-            with patch.object(release_package, "release_provenance", return_value=("a" * 40, "b" * 40)):
-                with self.assertRaisesRegex(RuntimeError, "reparse point"):
-                    release_package.build(link, production=False)
+        # Ran as a permanent skip on any host without symlink privilege. Both
+        # flavours are directory reparse points here, so the fixture bodies are
+        # identical and only the way the link is made differs.
+        with TemporaryDirectory() as probe:
+            flavours = available_reparse_flavours(Path(probe))
+        if not flavours:
+            self.skipTest("host permits neither a symlink nor a junction fixture")
+        for flavour in flavours:
+            with self.subTest(reparse=flavour), TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                target = root / "actual"; target.mkdir()
+                link = root / "release"
+                self.assertTrue(make_reparse(link, target, flavour), f"{flavour} fixture failed after probing as available")
+                try:
+                    with patch.object(release_package, "release_provenance", return_value=("a" * 40, "b" * 40)):
+                        with self.assertRaisesRegex(RuntimeError, "reparse point"):
+                            release_package.build(link, production=False)
+                finally:
+                    remove_reparse(link)
 
-    def test_version_and_notes_agree(self) -> None:
+    def test_release_maturity_agrees_with_the_major_it_derives_from(self) -> None:
+        # The invariant is that the label agrees with its own major, not that
+        # any one version is special -- so the majors are enumerated and the
+        # versions are BUILT from them. A per-version literal here would need
+        # rewriting at every major and would prove nothing about 3.0.0, which
+        # is the recurrence this exists to prevent: the 0.x-to-1.x boundary was
+        # fixed by hand, nothing kept it synchronized, and the identical
+        # contradiction returned at 1.x-to-2.x.
+        #
+        # The expectation is restated here from the major rather than read back
+        # from release_maturity(). Comparing the function against itself is the
+        # exact blindness this test exists to break.
+        for major, rest in ((0, "9.0"), (1, "18.5"), (2, "0.0"), (3, "4.1"), (10, "0.0")):
+            with self.subTest(major=major):
+                version = f"{major}.{rest}"
+                implied = f"stable_{major}_x" if major >= 1 else "functional_pre_1_0"
+                self.assertEqual(
+                    implied, release_package.release_maturity(version),
+                    f"the maturity label derived for {version} contradicts its own major",
+                )
+
+    def test_no_superseded_endpoint_query_or_stray_maturity_literal_survives(self) -> None:
+        # Rule 20's migration half, for both conventions this change supersedes.
+        modules = {
+            path.relative_to(ROOT).as_posix(): ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for path in sorted((ROOT / "tooling").glob("*.py"))
+        }
+
+        # (a) No consumer still resolves a remote endpoint with the
+        # single-endpoint query. `git remote get-url` without --all returns one
+        # url while git uses every configured one, so any surviving call site
+        # is a second, weaker answer to a question this change settled.
+        single_endpoint = [
+            f"{path}:{node.lineno}"
+            for path, tree in modules.items()
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            for arguments in ([a.value for a in node.args if isinstance(a, ast.Constant) and isinstance(a.value, str)],)
+            if "get-url" in arguments and "--all" not in arguments
+        ]
+        with self.subTest(convention="remote endpoint query"):
+            self.assertEqual(
+                [], single_endpoint,
+                "a remote endpoint is still resolved with `git remote get-url` without --all, "
+                "which reports only the first url while git uses every configured one",
+            )
+
+        # (b) No maturity literal survives outside the one derivation. A label
+        # spelled out anywhere else is a second authority for a value
+        # release_maturity() owns, and is how a hand-written boundary gets
+        # reintroduced.
+        derivation = [
+            node for tree in modules.values() for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name == "release_maturity"
+        ]
+        self.assertEqual(1, len(derivation), "maturity is derived in more than one place, or in none")
+        inside = {id(node) for node in ast.walk(derivation[0])}
+        stray = [
+            f"{path}:{node.lineno}: {node.value!r}"
+            for path, tree in modules.items()
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Constant) and isinstance(node.value, str)
+            and re.fullmatch(r"stable_[0-9]+_x|functional_pre_1_0", node.value)
+            and id(node) not in inside
+        ]
+        with self.subTest(convention="maturity label"):
+            self.assertEqual(
+                [], stray,
+                "a maturity label literal survives outside release_maturity(), the one "
+                "authority for it",
+            )
+
+    def test_release_identity_carries_notes_a_changelog_head_and_a_governed_migration(self) -> None:
+        # Replaces the weaker test_version_and_notes_agree, and is stronger on
+        # both halves that test asserted: the release-notes existence check is
+        # carried unchanged, and `version appears somewhere in the CHANGELOG`
+        # becomes `the CHANGELOG's head entry IS this version`. A version
+        # mentioned in a two-year-old entry satisfied the old form.
         version = json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))["version"]
-        self.assertIn(version, (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"))
-        self.assertTrue((ROOT / f"release/RELEASE_NOTES_v{version}.md").is_file())
+        major = version.split(".", 1)[0]
+
+        with self.subTest(half="release notes"):
+            self.assertTrue(
+                (ROOT / f"release/RELEASE_NOTES_v{version}.md").is_file(),
+                "the shipped version has no release notes of its own",
+            )
+
+        with self.subTest(half="changelog head"):
+            headings = re.findall(r"(?m)^## +(\S+)", (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"))
+            self.assertEqual(
+                version, headings[0] if headings else "",
+                "the CHANGELOG's head entry is not the version being shipped",
+            )
+
+        # release/VERSION.json's own stability string is the authority here:
+        # "breaking changes require a new major version and governed
+        # migration". A major that ships without one leaves the framework's
+        # stated stability contract unmet by its own release. Anchored on the
+        # major the shipped version carries, so 3.0.0 must bring its own
+        # section rather than inheriting this one.
+        with self.subTest(half="governed migration"):
+            migration = ROOT / "release/UPGRADING.md"
+            self.assertTrue(
+                migration.is_file(),
+                "no governed migration document exists, and VERSION.json's own stability "
+                "string requires one for a major version",
+            )
+            self.assertRegex(
+                migration.read_text(encoding="utf-8"),
+                rf"(?m)^## .*(?<![0-9]){re.escape(major)}\.0\.0(?![0-9])",
+                "the governed migration document carries no section for the shipped major",
+            )
 
 
 if __name__ == "__main__":

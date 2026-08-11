@@ -15,6 +15,8 @@ DUAL_HAT_CAPABILITY_PROOFS = {"quality_rule_discovery"}
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
+sys.path.insert(0, str(ROOT / "tests"))
+from test_framework import available_reparse_flavours, make_reparse, remove_reparse  # noqa: E402
 from quality_review import (  # noqa: E402
     baseline_hash, compare_baselines, derive_governed_baseline_state, discover_rule_files, effective_review_plan, load_rules,
     governed_state_binding_hash, review_acceptance_blockers, select_review_tier, validate_baseline,
@@ -255,16 +257,29 @@ class QualityReviewTests(unittest.TestCase):
         malformed_failures=validate_baseline(malformed); self.assertTrue(any("commit identity" in row for row in malformed_failures)); self.assertTrue(any("real ISO date" in row for row in malformed_failures)); self.assertTrue(any("platform profile" in row for row in malformed_failures))
 
     def test_discovery_rejects_nested_rule_source_link(self) -> None:
-        with TemporaryDirectory() as temporary, TemporaryDirectory() as outside:
-            root = Path(temporary); rules = root / "rules"; rules.mkdir()
-            external = Path(outside) / "private"; external.mkdir()
-            (external / "rule.json").write_text(json.dumps({"schema":"dual-hat-quality-rules/1.0","rules": []}), encoding="utf-8")
-            try: (rules / "linked").symlink_to(external, target_is_directory=True)
-            except OSError: self.skipTest("host does not permit a symlink fixture")
-            config = root / "sources.json"; config.write_text(json.dumps({"sources":[{"path":"rules","required":True}]}), encoding="utf-8")
-            inventory = discover_rule_files(root, config)
-            self.assertTrue(inventory["errors"])
-            self.assertEqual([], inventory["files"])
+        # Ran as a permanent skip on any host without symlink privilege -- absent
+        # coverage reporting as a skip rather than weak coverage. Both reparse
+        # flavours the host actually permits are exercised; see
+        # tests/test_framework.py's reparse-fixture support for why the junction
+        # is an additional route to this guard rather than a replacement.
+        with TemporaryDirectory() as probe:
+            flavours = available_reparse_flavours(Path(probe))
+        if not flavours:
+            self.skipTest("host permits neither a symlink nor a junction fixture")
+        for flavour in flavours:
+            with self.subTest(reparse=flavour), TemporaryDirectory() as temporary, TemporaryDirectory() as outside:
+                root = Path(temporary); rules = root / "rules"; rules.mkdir()
+                external = Path(outside) / "private"; external.mkdir()
+                (external / "rule.json").write_text(json.dumps({"schema":"dual-hat-quality-rules/1.0","rules": []}), encoding="utf-8")
+                link = rules / "linked"
+                self.assertTrue(make_reparse(link, external, flavour), f"{flavour} fixture failed after probing as available")
+                try:
+                    config = root / "sources.json"; config.write_text(json.dumps({"sources":[{"path":"rules","required":True}]}), encoding="utf-8")
+                    inventory = discover_rule_files(root, config)
+                    self.assertTrue(inventory["errors"])
+                    self.assertEqual([], inventory["files"])
+                finally:
+                    remove_reparse(link)
 
 
 if __name__ == "__main__":

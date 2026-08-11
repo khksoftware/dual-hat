@@ -2,6 +2,61 @@
 
 # Changelog
 
+## 2.0.0 - 2026-08-11
+
+- **Major release. See `release/UPGRADING.md`, the framework's first governed
+  migration document.** The version was raised to a new major because
+  `release/VERSION.json`'s own stability string requires that breaking changes
+  bring "a new major version and governed migration", and this release carries
+  breaking changes to a public function's required arguments, to two published
+  provenance records, to a published maturity vocabulary, to which adopter
+  platform profiles are admitted, and to where obligation text lives. The
+  migration document names each individually with the release it landed in,
+  rather than as a delta from one assumed starting point.
+- Fixed the publication endpoint verification, which proved only the first
+  configured endpoint. `tooling/release_package.py` queried
+  `git remote get-url origin` and `git remote get-url --push origin` without
+  `--all`; git returns one URL from those queries and pushes to every configured
+  `remote.origin.pushurl`, so a second, unapproved push endpoint was invisible
+  to the check. Demonstrated offline with two bare repositories and a real push:
+  the check returned a PASS record while both repositories received the identical
+  commit. Both queries now use `--all` and every returned endpoint must equal the
+  approved identity; an unparseable URL is kept as an empty identity rather than
+  filtered out, so a malformed endpoint fails the comparison instead of
+  disappearing from it. `insteadOf` rewriting was verified not to be a bypass and
+  is deliberately unchanged, with a regression test now protecting it.
+- Fixed the publication provenance records, which asserted a singular verified
+  push endpoint the check had not established. `fetch_endpoint_identity` and
+  `push_endpoint_identity` are replaced by `fetch_endpoint_identities` and
+  `push_endpoint_identities`, each enumerating every configured endpoint in
+  configured order, and `dual-hat-fresh-remote-state` and
+  `dual-hat-remote-publication-provenance` both move to schema `/2.0`. The
+  scalars are removed rather than retained, so no consumer can go on drawing the
+  singular conclusion.
+- Fixed `release_maturity()`, which stamped every major at or above 1 as
+  `stable_1_x`. The label is now derived from the major the version carries,
+  parameterised rather than enumerated per major, so `stable_2_x` here and
+  `stable_<major>_x` at every later major. No 1.x value changes. The defect
+  survived because `release/VERSION.json` carried the same value the function
+  derived, so the existing cross-check compared two sides that agreed and were
+  both wrong.
+- Added standing checks for both conventions this release supersedes: a maturity
+  label must agree with its own version, checked against the shipped release
+  evidence, against every committed record carrying both a version and a
+  maturity, and against synthetic contradictions; no module may resolve a remote
+  endpoint with the single-endpoint query again; and no maturity label literal
+  may survive outside the one derivation.
+- Strengthened the release-identity check. A release must now carry release
+  notes for its own version, a CHANGELOG head entry naming that version, and a
+  governed migration section for its own major. The previous form accepted a
+  version mentioned anywhere in the changelog.
+- Replaced four fixture strings in `tests/test_repository_hygiene.py` that
+  embedded a real machine's drive, username and directory layout, on a file the
+  export allowlist ships publicly. Each replacement is asserted, not assumed, to
+  still trip the detector its test exercises. This was a publication-disclosure
+  concern and not a rule 35 compliance defect; the lines were already exempt by
+  file shape.
+
 ## 1.18.5 - 2026-08-07
 
 - Added `GOVERNING_PRINCIPLES.md` rule 36: survey before designing -- do not

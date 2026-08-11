@@ -12,34 +12,13 @@ Before mutation, scan ownership, consumers, semantic reach, generators, validato
 
 Within a sealed approved order, Engineering may repeat `implement -> validate -> diagnose -> repair -> revalidate`. It may repair defects exposed by the work, incorrect tests, stale references, dead paths, incomplete propagation, established-contract inconsistencies, and directly analogous low-risk defects. It pauses when repair needs a new entity or consequential lifecycle state, changes identity, rights, provenance, precedence, security, promotion, public/cross-repository contract, dependency class, phase scope, or governance guarantee.
 
-Before task completion, Engineering does not stop or pause merely because of the end of a message, an estimate, a tool call, a delegated run, an intermediate result, a side question, or an unrelated informational request. A question is not an implied pause command; it pauses execution only when its answer is genuinely required for progress. An early pause is otherwise permitted only when the user explicitly orders a stop or pause, a required user decision or input is unavailable, an Architecture Office decision is required, or an explicitly specified stop gate is reached. Integrated Mode transitions directly to the Architecture hat with the execution checkpoint preserved; Split Mode emits a resumable governed handoff. All other safe in-scope work continues.
-
-Before any final response, the active role performs the framework termination preflight: reconcile every authorized outcome and delegated worker, verify that no safe in-scope action remains, and bind any early exit to one of the four permitted stop conditions. An incomplete work item with a known next action may receive a progress update but may not receive a terminal response. Milestones, questions, estimates, checkpoints, worker completion, and chat boundaries are never implicit lifecycle transitions.
-
-An explicit stakeholder instruction to continue, finish, monitor, or work until a terminal condition is represented by the platform's persistent execution goal when supported. That goal remains active across turns, compaction, milestones, and worker turnover and blocks a final response until termination preflight proves completion.
-
-Goal registration is verified at authorization, after every explicit
-continuation instruction, and whenever execution resumes after a turn or context
-compaction. If incomplete authorized work has no matching active goal, restore
-the goal before answering or making any further lifecycle transition.
-Recovery from a false terminal boundary starts with execution reactivation and
-active-goal verification; a diagnosis, apology, or governance edit is not a
-substitute for continuation.
-
-While that goal is active, a progress response and its observable continuation action are one
-governed operation. The same turn must execute, delegate, reactivate, or monitor the
-next safe step; a promise to continue is insufficient. Delegated batch completion
-requires immediate reactivation from the persisted cursor when the assigned outcome
-remains incomplete. Returning control without that coupling is a false terminal
-boundary even if the message is phrased as progress.
-
-The active work item holds an execution lease across chat-response boundaries.
-Before any user-facing response, classify it as progress or terminal. Progress is
-allowed only after the current turn has started, reactivated, or positively
-confirmed the next execution or monitoring action and must return to execution or
-monitoring after the update. A terminal response is allowed only when termination
-preflight releases the lease. Generated prose ending, a question being answered,
-an available final-response channel, or a platform turn boundary cannot release it.
+Before task completion, Engineering's obligations while an authorized task is
+still open -- the only conditions under which it may pause, and what it must
+prove before it stops -- are stated in full by
+[Dual Hat Framework](../framework/DUAL_HAT_FRAMEWORK.md). This document adds only
+what a change of hat requires: Integrated Mode moves directly to the Architecture
+hat with the execution checkpoint preserved, and Split Mode emits a resumable
+governed handoff.
 
 This applies identically to every sub-agent Engineering delegates to. A question, ambiguity, or materially consequential decision surfacing in a sub-agent's own work is never resolved by that sub-agent or by the delegating Engineering Agent acting alone. The affected task pauses at that exact point; the sub-agent relays the full relevant context to its supervisor, which relays it to the Architecture Office rather than guessing or proceeding on the sub-agent's own judgment. Execution of that specific task does not resume until Architecture provides guidance. Architecture, not Engineering or the sub-agent, decides -- based on the nature of the decision -- whether to resolve it directly or bring the user into the loop.
 

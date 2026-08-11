@@ -35,18 +35,21 @@ Do not copy or dump the whole extracted release package into the product reposit
 
 Read [Repository and Product Onboarding](process/ONBOARDING.md) for the three repository scenarios and approval boundary, [Installation and Project Binding](guides/INSTALLATION_AND_BINDING.md) for setup/update/rollback/removal, and [Troubleshooting](guides/TROUBLESHOOTING.md) when detection or binding stops safely.
 
-First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](guides/TROUBLESHOOTING.md); and [1.18.1 release notes](release/RELEASE_NOTES_v1.18.1.md).
+First-use map: [no-repository, nearly-empty, and existing-project onboarding](process/ONBOARDING.md#three-repository-scenarios); [Integrated Mode and Split Mode](guides/OPERATING_MODES.md); [external and pinned project binding](guides/INSTALLATION_AND_BINDING.md); [model tiers and runtime binding](governance/MODEL_TIER_AND_RUNTIME_BINDING.md); [third-party dependency evaluation](governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md); [update, rollback, and removal](guides/INSTALLATION_AND_BINDING.md); [troubleshooting](guides/TROUBLESHOOTING.md); and [2.0.0 release notes](release/RELEASE_NOTES_v2.0.0.md).
 
 ## Framework areas
 
 - `architecture/`: authority, reasoning, decisions, requirements, and invariants.
+- `framework/`: the framework-wide invariant contract every other area applies.
 - `governance/`: conformance, repository boundaries, profiles, lifecycle, and human-decision rules.
 - `planning/`: roadmap, reconciled backlog/history, phases, milestones, future-work triggers, and technical debt.
 - `process/`: capability/phase execution, context retrieval, publication, closure, and recovery.
+- `quality/`: the repository quality baseline and its non-regression contract.
 - `repository/`: blueprint, entrypoints, domain ownership, and completeness inventory.
+- `review/`: the default architecture review rule set applied when a product supplies none.
 - `sessions/`: active-session and current-handover maintenance.
 - `validation/`: test strategy, detached/standalone validation, parallelism, and process watchdog.
-- `prompts/`, `templates/`, `schemas/`, `tooling/`, and `examples/`: executable adoption assets.
+- `prompts/`, `templates/`, `schemas/`, `tooling/`, `examples/`, `fixtures/`, `scripts/`, `tests/`, and `export/`: executable adoption assets, test scaffolding, and distribution machinery.
 - `guides/`: cross-cutting operating guidance, troubleshooting, and command lookup material whose responsibility does not belong to one operating domain.
 - `release/`: version, release policy, release notes, packaging, and publication rules.
 

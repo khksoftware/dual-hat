@@ -3,9 +3,11 @@ from __future__ import annotations
 
 DUAL_HAT_CAPABILITY_PROOFS = {"canonical_path_containment", "network_policy_validation", "rights_readiness_validation"}
 
+import ast
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -17,6 +19,7 @@ sys.path.insert(0, str(ROOT / "tooling"))
 
 from framework_completeness import (  # noqa: E402
     FORBIDDEN_DEPENDENCY_IMPORT_PATTERNS,
+    repository_content_files,
     validate_framework,
 )
 from path_containment import is_reparse  # noqa: E402
@@ -28,7 +31,311 @@ from staged_publication import (  # noqa: E402
 from publication_ownership import standalone_owned  # noqa: E402
 
 
-class FrameworkTests(unittest.TestCase):
+# --- reparse-point fixture support -------------------------------------------
+#
+# Single home for the reparse fixtures the path-containment guards need, shared
+# by tests/test_quality_review.py and tests/test_release_package.py rather than
+# reimplemented there. The junction half started life inline in
+# test_staging_rejects_junction_without_touching_external_cache below; it is
+# lifted here unchanged in behaviour so the five guards that used to skip can
+# reach it instead of a second junction mechanism being written beside it.
+#
+# The two flavours are not interchangeable and neither replaces the other:
+#
+#   * a symlink is the stronger fixture, because it can point at a file as well
+#     as a directory; but on some hosts creating one requires a privilege the
+#     test process does not hold, which is why every guard below used to skip
+#     permanently rather than run;
+#   * a junction is directory-only and exists only on hosts that provide that
+#     kind of reparse point, but it needs no such privilege. It is a real
+#     reparse point, so it exercises the same guard by the same mechanism -- an
+#     ADDITIONAL route to the assertion, not a substitute.
+#
+# A host that permits neither still skips, honestly and for a real reason.
+
+
+def make_reparse(link: Path, target: Path, flavour: str) -> bool:
+    """Point ``link`` at ``target``; return False if the host refuses that flavour."""
+    if flavour == "symlink":
+        try:
+            link.symlink_to(target, target_is_directory=target.is_dir())
+        except OSError:
+            return False
+        return True
+    if flavour != "junction":
+        raise ValueError(f"unknown reparse flavour: {flavour}")
+    if os.name != "nt":
+        return False
+    created = subprocess.run(
+        ("cmd", "/c", "mklink", "/J", str(link), str(target)),
+        capture_output=True,
+        text=True,
+    )
+    return not created.returncode and is_reparse(link)
+
+
+def remove_reparse(link: Path) -> None:
+    if not is_reparse(link):
+        return
+    try:
+        link.rmdir()
+    except OSError:
+        link.unlink(missing_ok=True)
+
+
+def available_reparse_flavours(base: Path) -> tuple[str, ...]:
+    """Which reparse flavours this host actually permits, probed once per fixture."""
+    probe_target = base / "reparse-probe-target"
+    probe_target.mkdir(exist_ok=True)
+    flavours = []
+    for flavour in ("symlink", "junction"):
+        probe = base / f"reparse-probe-{flavour}"
+        if make_reparse(probe, probe_target, flavour):
+            flavours.append(flavour)
+            remove_reparse(probe)
+    return tuple(flavours)
+
+
+# --- README "Framework areas" completeness (ENG-00170) ------------------------
+#
+# The list is a completeness claim about this repository's own top-level
+# structure and nothing kept it synchronized: it drifted by seven of twenty-one
+# directories before a review noticed. The two assertions that use these
+# helpers check the two directions SEPARATELY, and both are required. A single
+# listed-implies-exists check would have passed silently through the whole of
+# that drift, because every directory that WAS listed did exist -- the seven the
+# list omitted are invisible to it. The converse direction is not hypothetical
+# either: a hand-maintained traversal list elsewhere in this project named a
+# guide file that does not exist and had been sending every reader after it.
+#
+# What counts as a framework area is derived rather than enumerated. A
+# leading-dot directory is tooling or repository metadata (.git, .dual-hat,
+# .pytest_cache), never a framework area; and anything the repository's own
+# ignore state excludes never reaches the comparison at all, because
+# repository_content_files() has already pruned it.
+
+FRAMEWORK_AREA_ABSENCE_EXEMPTIONS = {
+    "export": (
+        "Canonical-source-only distribution control. export/EXPORT_SOURCES.json and "
+        "export/EXPORT_READINESS.json are the release packager's own control files and "
+        "are deliberately excluded from the release set, so the directory is absent "
+        "from an unpacked package while remaining a real area of the canonical "
+        "repository. The exemption is inert wherever the canonical allowlist is "
+        "present, so it cannot excuse the directory going missing here."
+    ),
+}
+
+
+def readme_framework_areas() -> set[str]:
+    """Every top-level directory README.md's "Framework areas" section claims exists.
+
+    Every backtick-quoted trailing-slash token on a bullet is taken, not just the
+    first: one bullet legitimately names several directories.
+    """
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    heading = "## Framework areas"
+    if heading not in text:
+        return set()
+    section = text.split(heading, 1)[1].split("\n## ", 1)[0]
+    return {
+        token[:-1]
+        for line in section.splitlines()
+        if line.lstrip().startswith("- ")
+        for token in re.findall(r"`([^`]+)`", line)
+        if token.endswith("/") and "/" not in token[:-1]
+    }
+
+
+def existing_framework_areas() -> set[str]:
+    """Every real top-level directory of this tree that holds unignored content."""
+    return {
+        relative.split("/", 1)[0]
+        for path in repository_content_files(ROOT)
+        for relative in (path.relative_to(ROOT).as_posix(),)
+        if "/" in relative and not relative.startswith(".")
+    }
+
+
+# --- single-canonical-home support -------------------------------------------
+#
+# A cluster of these tests used to assert the same obligation, phrase by phrase,
+# against every file that restated it. That pins duplication in place: the words
+# cannot be consolidated to one home without the assertion going red, so the
+# tests mechanise preservation of the redundancy rather than detecting anything
+# about it.
+#
+# The failure that actually matters is not "this file no longer contains this
+# sentence". It is "a reader of this file can no longer reach this obligation".
+# The helpers below express exactly that, and nothing weaker:
+#
+#   * the canonical home is asserted to carry the obligation IN FULL and
+#     UNCONDITIONALLY -- no assertion is relaxed there; and
+#   * every other file that formerly restated it must EITHER still carry the
+#     full substance OR carry a reference that resolves to THAT SPECIFIC
+#     canonical file, which must exist.
+#
+# The chain closes end to end: secondary -> named canonical path -> that file
+# exists -> that file is separately asserted to carry the obligation. A
+# well-formed link to some other existing file does not satisfy the predicate,
+# because confirming that a pointer is syntactically valid while saying nothing
+# about where it points is the exact vacuity this rework exists to remove.
+#
+# The predicate is deliberately satisfiable in BOTH tree states: before
+# consolidation the secondary carries the substance, after consolidation it
+# carries the pointer. So there is no window in which the obligation is
+# unguarded, and no exposure if consolidation is never performed.
+#
+# Known limitation, pre-existing and neither introduced nor repaired here: a
+# secondary that keeps a working pointer while drifting its own prose passes, as
+# does -- today, before any of this -- a file that keeps the pinned phrase and
+# adds a clause contradicting it. These are `assertIn` checks on positive
+# substrings; neither form detects contradiction.
+
+MARKDOWN_LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)\s]+)")
+
+
+def _normalized(relative: str, *, lower: bool = False) -> str:
+    text = (ROOT / relative).read_text(encoding="utf-8")
+    return " ".join((text.lower() if lower else text).split())
+
+
+def _is_absent(requirement, text: str) -> bool:
+    """A requirement is a phrase, or a tuple of interchangeable alternatives."""
+    if isinstance(requirement, tuple):
+        return not any(option in text for option in requirement)
+    return requirement not in text
+
+
+def _reference_resolves(source_relative: str, canonical_relative: str) -> bool:
+    """True when source carries a reference resolving to exactly canonical.
+
+    Both a markdown link and a bare repository-relative path mention count; a
+    link to any other file does not, and a link to a path that does not exist
+    does not.
+    """
+    canonical_path = (ROOT / canonical_relative).resolve()
+    if not canonical_path.is_file():
+        return False
+    source_path = ROOT / source_relative
+    text = source_path.read_text(encoding="utf-8")
+    for target in MARKDOWN_LINK_PATTERN.findall(text):
+        target = target.split("#", 1)[0].strip()
+        if not target or "://" in target:
+            continue
+        try:
+            resolved = (source_path.parent / target).resolve()
+        except (OSError, ValueError):
+            continue
+        if resolved == canonical_path:
+            return True
+    return canonical_relative in " ".join(text.split())
+
+
+def _reference_sentences(source_relative: str, canonical_relative: str,
+                         *, lower: bool = False) -> list[str]:
+    """Sentences of `source` that carry a reference resolving to `canonical`.
+
+    Used to enforce that a pointer is a pointer. See
+    `assert_single_canonical_home` for why this is not optional.
+    """
+    source_path = ROOT / source_relative
+    canonical_path = (ROOT / canonical_relative).resolve()
+    raw = source_path.read_text(encoding="utf-8")
+    text = " ".join((raw.lower() if lower else raw).split())
+    needles = [canonical_relative.lower() if lower else canonical_relative]
+    for target in MARKDOWN_LINK_PATTERN.findall(raw):
+        cleaned = target.split("#", 1)[0].strip()
+        if not cleaned or "://" in cleaned:
+            continue
+        try:
+            resolved = (source_path.parent / cleaned).resolve()
+        except (OSError, ValueError):
+            continue
+        if resolved == canonical_path:
+            needles.append(cleaned.lower() if lower else cleaned)
+    return [sentence for sentence in re.split(r"(?<=[.!?])\s+", text)
+            if any(needle in sentence for needle in needles)]
+
+
+def _negated_near(text: str, anchor: str, targets, *, window: int = 240) -> bool:
+    """True when `anchor` is followed, within `window` characters, by a negation
+    and one of `targets`.
+
+    This exists because an unscoped `assertIn("accept", ...)` is satisfied by any
+    "acceptance" anywhere in the document -- proven inert by mutation. Scoping the
+    two halves of the obligation to one another is what makes the assertion
+    capable of failing on the edit it is meant to catch.
+    """
+    negations = ("cannot", "never", "not ", "no ")
+    start = 0
+    while True:
+        index = text.find(anchor, start)
+        if index < 0:
+            return False
+        span = text[index + len(anchor):index + len(anchor) + window]
+        if any(word in span for word in negations) and any(t in span for t in targets):
+            return True
+        start = index + 1
+
+
+class CanonicalHomeAssertions:
+    """Shared single-canonical-home predicate.
+
+    Deliberately a plain mixin rather than a `TestCase` subclass: it is imported
+    by `test_operating_modes.py`, and importing a `TestCase` into another test
+    module makes the loader collect that module's tests a second time.
+    """
+
+    def assert_single_canonical_home(self, *, canonical, canonical_substance,
+                                     secondaries, lower=False):
+        """Assert one obligation is reachable from every file that owns a stake.
+
+        `canonical_substance` is asserted unconditionally against `canonical`.
+        `secondaries` maps each other file to the substance it must carry unless
+        it defers to `canonical` by an explicit resolving reference.
+        """
+        canonical_text = _normalized(canonical, lower=lower)
+        for requirement in canonical_substance:
+            self.assertFalse(
+                _is_absent(requirement, canonical_text),
+                f"canonical home {canonical} no longer states {requirement!r}; "
+                "the obligation has no home left",
+            )
+        for secondary, substance in secondaries.items():
+            # A pointer that quotes the obligation it points at is not a
+            # pointer. It satisfies the SUBSTANCE branch of this very predicate,
+            # so the deferral passes for the wrong reason and the duplication
+            # survives while the record says it was consolidated. This defect is
+            # invisible to a check gated on `missing`, because the quoted text is
+            # exactly what stops the phrase from being missing -- so the guard
+            # runs unconditionally, before `missing` is consulted.
+            #
+            # Caught in drafting on GOV-0011 deliverable 2, in this deliverable's
+            # own work, which is why it is mechanised rather than remembered:
+            # every re-point creates a fresh opportunity to write that sentence.
+            for sentence in _reference_sentences(secondary, canonical, lower=lower):
+                for requirement in substance:
+                    self.assertTrue(
+                        _is_absent(requirement, sentence),
+                        f"{secondary} points at its canonical home {canonical} in "
+                        f"a sentence that itself restates {requirement!r}: "
+                        f"{sentence!r}. A reference must refer to the obligation, "
+                        "not reproduce it -- otherwise the deferral is satisfied "
+                        "by the duplicate it was written to remove.",
+                    )
+            text = _normalized(secondary, lower=lower)
+            missing = [item for item in substance if _is_absent(item, text)]
+            if not missing:
+                continue
+            self.assertTrue(
+                _reference_resolves(secondary, canonical),
+                f"{secondary} no longer states {missing!r} and carries no "
+                f"reference resolving to its canonical home {canonical}; a "
+                "reader of this file cannot reach the obligation",
+            )
+
+
+class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
     @staticmethod
     def _git(root: Path, *args: str) -> None:
         subprocess.run(("git", *args), cwd=root, check=True, capture_output=True, text=True)
@@ -67,6 +374,97 @@ class FrameworkTests(unittest.TestCase):
 
     def test_semantic_completeness(self):
         self.assertEqual((), validate_framework(ROOT))
+
+    def test_readme_framework_areas_names_no_directory_that_is_absent(self):
+        """Direction 1 of 2: listed implies exists.
+
+        Catches a dangling pointer -- an area named in README.md that no longer
+        exists. On its own this direction is NOT sufficient and must never be
+        the only check; see direction 2 below, which is the one the real drift
+        needed.
+        """
+        listed = readme_framework_areas()
+        self.assertTrue(listed, "README.md carries no parsable '## Framework areas' list")
+        missing = listed - existing_framework_areas()
+        if not (ROOT / "export/EXPORT_SOURCES.json").is_file():
+            missing -= set(FRAMEWORK_AREA_ABSENCE_EXEMPTIONS)
+        self.assertEqual(
+            set(),
+            missing,
+            "README.md's 'Framework areas' list names directories that do not exist "
+            f"in this tree: {sorted(missing)}. Direction checked: listed implies exists.",
+        )
+
+    def test_readme_framework_areas_omits_no_directory_that_exists(self):
+        """Direction 2 of 2: exists implies listed.
+
+        This is the direction the actual drift needed and the reason a one-way
+        check is refused: all seven of the twenty-one directories that went
+        unlisted did exist, so a listed-implies-exists check would have passed
+        throughout without a murmur.
+        """
+        unlisted = existing_framework_areas() - readme_framework_areas()
+        self.assertEqual(
+            set(),
+            unlisted,
+            "top-level framework areas exist that README.md's 'Framework areas' list "
+            f"does not name: {sorted(unlisted)}. Direction checked: exists implies listed.",
+        )
+
+    def test_completeness_walk_excludes_repository_ignored_content(self):
+        """Ignored residue is not unowned content and must not be reported as it.
+
+        Before both walks consulted the repository's ignore state, any ignored
+        artifact other than __pycache__ -- a .pytest_cache, a virtualenv, an
+        egg-info, the generated agent-skill copies -- was reported as an
+        unclassified file, under an error naming the EXPORT ALLOWLIST rather
+        than the artifact that caused it:
+
+            framework export classification mismatch;
+            unclassified=['.ruff_cache/probe.txt', 'probe.egg-info/PKG-INFO']; stale=[]
+
+        So a contributor who ran a linter or a test run inside the tree turned
+        the framework's own completeness validator red and was then sent to the
+        wrong file. The probe below is ignored by this tree's own .gitignore.
+        """
+        probe = ROOT / "framework-completeness-ignored-probe.pyc"
+        self.assertFalse(probe.exists(), "probe path is already in use")
+        probe.write_bytes(b"ignored residue")
+        try:
+            kept = {path.relative_to(ROOT).as_posix() for path in repository_content_files(ROOT)}
+            self.assertNotIn(probe.name, kept)
+            self.assertEqual((), validate_framework(ROOT))
+        finally:
+            probe.unlink(missing_ok=True)
+
+    def test_ignore_derivation_reads_ancestor_nested_and_negated_rules(self):
+        """The exclusion is derived from real ignore files, not restated as a list.
+
+        Supplementary to the assertion above: it pins the derivation's semantics
+        against a synthetic tree, including the ancestor case a Dual Hat tree
+        vendored inside a larger repository actually depends on.
+        """
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            (base / ".git").mkdir()
+            (base / ".gitignore").write_text("*.egg-info/\n", encoding="utf-8")
+            root = base / "dual-hat"
+            (root / "tooling/local").mkdir(parents=True)
+            (root / "probe.egg-info").mkdir()
+            (root / "tooling/__pycache__").mkdir()
+            (root / ".gitignore").write_text("__pycache__/\n*.pyc\n!keep.pyc\n", encoding="utf-8")
+            (root / "tooling/.gitignore").write_text("local/\n", encoding="utf-8")
+            (root / "probe.egg-info/PKG-INFO").write_text("x", encoding="utf-8")
+            (root / "tooling/__pycache__/module.pyc").write_bytes(b"x")
+            (root / "tooling/local/scratch.txt").write_text("x", encoding="utf-8")
+            (root / "tooling/module.py").write_text("x", encoding="utf-8")
+            (root / "drop.pyc").write_bytes(b"x")
+            (root / "keep.pyc").write_bytes(b"x")
+            kept = {path.relative_to(root).as_posix() for path in repository_content_files(root)}
+            self.assertEqual(
+                {".gitignore", "keep.pyc", "tooling/.gitignore", "tooling/module.py"},
+                kept,
+            )
 
     def test_repository_boundaries_dependency_direction_invariant_is_mechanically_checked(self):
         # REPOSITORY_BOUNDARIES.md's "Dual Hat never imports product,
@@ -163,88 +561,154 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("Never invent percentage completion for an opaque worker", engineering)
 
     def test_routes_by_intended_end_without_mandatory_pipeline(self):
-        operating = (ROOT / "architecture/OPERATING_MODEL.md").read_text(encoding="utf-8")
-        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (operating, framework, architecture, engineering):
-            normalized = " ".join(guidance.lower().split())
-            for route in ("discover", "decide", "deliver", "single-role"):
-                self.assertIn(route, normalized)
-            self.assertIn("not", normalized)
-            self.assertTrue("mandatory pipeline" in normalized or "mandatory stages" in normalized)
+        # Re-pointed to one canonical home. Mutation evidence (deleting the
+        # routing-lens statement from all four files) showed 14 of the original
+        # 24 assertions survived that deletion, i.e. detected nothing:
+        # `"not"` in all four files (11/32/33/39 occurrences -- it cannot fail
+        # against any English document), `"single-role"` in all four (satisfied
+        # by the unrelated self-acceptance sentence), and `deliver`/`discover`/
+        # `decide` firing on "delivery"/"discovered"/"decides". Those bare
+        # tokens are replaced here by phrases that name the obligation, so they
+        # can be falsified by the edit they exist to catch.
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="architecture/OPERATING_MODEL.md",
+            canonical_substance=(
+                "route a bounded activity by its intended end",
+                "optional routing lenses",
+                ("mandatory pipeline", "mandatory stages"),
+            ),
+            secondaries={
+                "framework/DUAL_HAT_FRAMEWORK.md": (
+                    "route an activity by its intended end",
+                    ("mandatory pipeline", "mandatory stages"),
+                ),
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": (
+                    "single-role-pass routing only when it clarifies",
+                    ("mandatory pipeline", "mandatory stages"),
+                ),
+                "prompts/ENGINEERING_AGENT_PROMPT.md": (
+                    "single-role-pass labels only when they clarify",
+                    ("mandatory pipeline", "mandatory stages"),
+                ),
+            },
+        )
 
     def test_composes_distinct_value_roster_and_diagnoses_assignment(self):
-        review = (ROOT / "governance/CODE_REVIEW_CONTRACT.md").read_text(encoding="utf-8")
-        routing = (ROOT / "governance/MODEL_TIER_AND_RUNTIME_BINDING.md").read_text(encoding="utf-8")
-        architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (review, architecture):
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("smallest", normalized)
-            self.assertIn("distinct", normalized)
-            self.assertIn("failure axes", normalized)
-        for guidance in (routing, architecture, engineering):
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("re-tier", normalized)
-            self.assertIn("re-role", normalized)
-            self.assertIn("capability", normalized)
-            self.assertTrue("ownership" in normalized or "authority" in normalized)
+        # This test carries TWO obligations over two disjoint file sets, so it
+        # gets two canonical homes. 8 of its original 18 assertions detected
+        # deletion. Dropped as proven inert: "smallest" and "distinct" (both
+        # roster files) and "capability" and ("ownership","authority") (all
+        # three assignment files) -- generic tokens satisfied elsewhere.
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="governance/CODE_REVIEW_CONTRACT.md",
+            canonical_substance=("failure axes",),
+            secondaries={"prompts/ARCHITECTURE_OFFICE_PROMPT.md": ("failure axes",)},
+        )
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="governance/MODEL_TIER_AND_RUNTIME_BINDING.md",
+            canonical_substance=("re-tier", "re-role"),
+            secondaries={
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": ("re-tier", "re-role"),
+                "prompts/ENGINEERING_AGENT_PROMPT.md": ("re-tier", "re-role"),
+            },
+        )
 
     def test_shared_artifact_lanes_are_single_writer(self):
-        validation = (ROOT / "governance/VALIDATION_AND_PARALLELISM.md").read_text(encoding="utf-8")
-        review = (ROOT / "governance/CODE_REVIEW_CONTRACT.md").read_text(encoding="utf-8")
-        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (validation, review, framework, engineering):
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("shared", normalized)
-            self.assertIn("artifact lane", normalized)
-            self.assertIn("writer", normalized)
-            self.assertIn("read-only", normalized)
-            self.assertIn("active writer at a time", normalized)
-            self.assertIn("trivial serial", normalized)
-            self.assertIn("checkpoint", normalized)
-            self.assertIn("quiescent", normalized)
+        # The strongest of the duplication-pinning cluster: 21 of its 32
+        # assertions detected deletion of the single-writer paragraph. The four
+        # retained phrases each fired in all four files. Dropped as proven inert
+        # against this obligation: "shared", "read-only", "checkpoint" (3 of 4
+        # files each) and "writer" (2 of 4) -- generic tokens recurring
+        # elsewhere in their own documents.
+        substance = ("artifact lane", "active writer at a time",
+                     "trivial serial", "quiescent")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="governance/VALIDATION_AND_PARALLELISM.md",
+            canonical_substance=substance,
+            secondaries={
+                "governance/CODE_REVIEW_CONTRACT.md": substance,
+                "framework/DUAL_HAT_FRAMEWORK.md": substance,
+                # already carries a resolving link to the canonical home today
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+            },
+        )
 
     def test_deliver_or_declare_is_only_for_governed_blockage(self):
-        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        architecture = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (framework, architecture, engineering):
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("deliver", normalized)
-            self.assertIn("declare", normalized)
-            self.assertIn("blocked boundary", normalized)
-            self.assertIn("exact obstacle", normalized)
-            self.assertIn("preserved state", normalized)
-            self.assertIn("recoverable", normalized)
+        # 8 of the original 18 assertions detected deletion of the
+        # deliver-or-declare paragraph. Retained are the two that fired in all
+        # three files. Dropped as proven inert: "deliver" and "recoverable" (all
+        # three files), "declare" and "preserved state" (two of three) -- each
+        # satisfied by unrelated prose elsewhere in the same document.
+        substance = ("blocked boundary", "exact obstacle")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="framework/DUAL_HAT_FRAMEWORK.md",
+            canonical_substance=substance,
+            secondaries={
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": substance,
+                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
+            },
+        )
 
     def test_durable_learning_avoids_per_run_ledger(self):
-        proportionality = (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
-        phase = (ROOT / "process/PHASE_RUN_PROTOCOL.md").read_text(encoding="utf-8")
-        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        for guidance in (proportionality, phase, framework):
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("accumulated framework release", normalized)
-            self.assertIn("governed phase progression", normalized)
-            self.assertIn("contradiction", normalized)
-            self.assertIn("staleness", normalized)
-            self.assertIn("per-run", normalized)
+        # 13 of the original 15 assertions detected deletion of the rule 17
+        # statement. The two that did not -- "contradiction" and "staleness" in
+        # GOVERNING_PRINCIPLES.md -- survive because that file discusses both
+        # concepts under other rules, so they are dropped from the canonical
+        # home's list while remaining load-bearing in the two secondaries.
+        secondary_substance = ("accumulated framework release",
+                               "governed phase progression",
+                               "contradiction", "staleness", "per-run")
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="governance/GOVERNING_PRINCIPLES.md",
+            canonical_substance=("accumulated framework release",
+                                 "governed phase progression", "per-run"),
+            secondaries={
+                "process/PHASE_RUN_PROTOCOL.md": secondary_substance,
+                "framework/DUAL_HAT_FRAMEWORK.md": secondary_substance,
+            },
+        )
 
     def test_role_guides_apply_turn_exit_audit(self):
-        for relative in (
-            "governance/ARCHITECTURE_OFFICE_GUIDE.md",
-            "governance/ENGINEERING_AGENT_GUIDE.md",
-        ):
-            guidance = (ROOT / relative).read_text(encoding="utf-8")
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("mandatory turn-exit audit", normalized)
-            self.assertIn("before every response boundary", normalized)
-            self.assertIn("do not emit a terminal response", normalized)
-            self.assertIn("execute it in the same turn", normalized)
-            self.assertIn("resumable next-action receipt", normalized)
-            self.assertIn("accidental turn termination", normalized)
+        # Re-pointed (GOV-0011 deliverable 2). The two role guides restated the
+        # same turn-exit audit; asserting all six phrases against both files
+        # unconditionally is what made the restatement un-removable.
+        #
+        # RELOCATED (GOV-0011 deliverable 2, Architecture ruling). The earlier
+        # canonical home was governance/ENGINEERING_AGENT_GUIDE.md, chosen when
+        # the two guides were peers -- both carried the full substance and
+        # neither linked to the other. That choice could not survive the
+        # consolidation: pointing either guide at the other hands its reader the
+        # OTHER role's item 0, i.e. an instruction to emit a label that role may
+        # never emit. The role-neutral body of the audit therefore moved to
+        # framework/DUAL_HAT_FRAMEWORK.md -- the framework-wide invariant
+        # contract, and the same home the continuity obligation was ruled into,
+        # of which this audit is part of the same termination family. Each guide
+        # retains only its own item 0 plus a pure reference. This test's earlier
+        # comment anticipated exactly this move in writing; the `canonical=`
+        # constant moved with it, as one visible reviewed line.
+        substance = (
+            "mandatory turn-exit audit",
+            "before every response boundary",
+            "do not emit a terminal response",
+            "execute it in the same turn",
+            "resumable next-action receipt",
+            "accidental turn termination",
+        )
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="framework/DUAL_HAT_FRAMEWORK.md",
+            canonical_substance=substance,
+            secondaries={
+                "governance/ENGINEERING_AGENT_GUIDE.md": substance,
+                "governance/ARCHITECTURE_OFFICE_GUIDE.md": substance,
+            },
+        )
 
     def test_role_label_check_is_item_zero_of_the_turn_exit_audit_with_named_resumption_points(self):
         # The role-label convention lived only in prompts/*_PROMPT.md with no tie-in
@@ -253,19 +717,36 @@ class FrameworkTests(unittest.TestCase):
         # as an explicit item 0 and named concrete resumption points where the full
         # audit must explicitly re-run; this guards that fix from the same
         # prose-only, untested drift it was written to prevent.
-        for relative in (
-            "governance/ARCHITECTURE_OFFICE_GUIDE.md",
-            "governance/ENGINEERING_AGENT_GUIDE.md",
-        ):
-            guidance = (ROOT / relative).read_text(encoding="utf-8")
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("0. in integrated mode, confirm this response begins with the correct role label", normalized)
-            self.assertIn("role-boundary violation, not a formatting detail", normalized)
-            self.assertIn("self-applied conventions", normalized)
-            self.assertIn("no external code-level enforcement", normalized)
-            self.assertIn("returning from a background-agent task notification", normalized)
-            self.assertIn("returning from an unrelated tangent or side investigation", normalized)
-            self.assertIn("context compaction summary is the active source of continuity", normalized)
+        # Re-pointed, then RELOCATED (GOV-0011 deliverable 2) to the same
+        # canonical home as test_role_guides_apply_turn_exit_audit above, for
+        # the same reason: this is item 0 of that audit and cannot sensibly live
+        # in a different file from the audit it is item 0 of.
+        #
+        # Why relocating this one is safe even though item 0 is the ROLE-SPECIFIC
+        # item: the two phrases below that come from item 0 are role-neutral as
+        # strings. Neither names a role. The framework states them once in a
+        # role-parameterised formulation ("the correct role label for the role
+        # currently held"), and each guide independently keeps its own concrete
+        # instance naming its own label. So the canonical home is genuinely
+        # asserted in full, and no guide is made to carry another role's label.
+        substance = (
+            "0. in integrated mode, confirm this response begins with the correct role label",
+            "role-boundary violation, not a formatting detail",
+            "self-applied conventions",
+            "no external code-level enforcement",
+            "returning from a background-agent task notification",
+            "returning from an unrelated tangent or side investigation",
+            "context compaction summary is the active source of continuity",
+        )
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="framework/DUAL_HAT_FRAMEWORK.md",
+            canonical_substance=substance,
+            secondaries={
+                "governance/ENGINEERING_AGENT_GUIDE.md": substance,
+                "governance/ARCHITECTURE_OFFICE_GUIDE.md": substance,
+            },
+        )
 
     def test_hypothesis_blind_execution_and_three_arbiter_protocol_is_pinned_and_consistent(self):
         # REASONING_AND_DECISION_REVIEW.md defines sealed hypothesis-blind
@@ -279,11 +760,22 @@ class FrameworkTests(unittest.TestCase):
         # safeguards" to match the canonical/Architecture "primary evidence,
         # mandatory safety") and this test pins the shared substance so it
         # cannot silently re-diverge.
-        canonical = (ROOT / "architecture/REASONING_AND_DECISION_REVIEW.md").read_text(encoding="utf-8")
-        architecture_prompt = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        engineering_prompt = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-
-        normalized_canonical = " ".join(canonical.split())
+        # Re-pointed. The canonical home was already declared in this test's own
+        # comment; it is now also the structural anchor.
+        #
+        # GUARD, and it is deliberate: the three assertions in the loop below --
+        # "sealed independent reviewer", "population, rule, evidence, blind
+        # spots", and the self-approval sentence -- are NOT part of the
+        # hypothesis-blind obligation. Mutation proved they survive its deletion
+        # in both prompts because they guard a DIFFERENT obligation living in the
+        # adjacent paragraph: the external-source discovery/ingestion
+        # restriction. They are mis-named, not inert. They are therefore kept
+        # UNCONDITIONAL here rather than folded into the canonical-home
+        # disjunction, because waiving them when a prompt defers on
+        # hypothesis-blind would strand a real obligation with no check at all.
+        # See PER_TEST_LEDGER.md T7 and the backlog candidate recorded there.
+        canonical = "architecture/REASONING_AND_DECISION_REVIEW.md"
+        normalized_canonical = _normalized(canonical)
         self.assertIn("convene exactly three sealed independent arbiters", normalized_canonical)
         self.assertIn("`3:0` or `2:1` decides within the authority", normalized_canonical)
         self.assertIn(
@@ -294,45 +786,37 @@ class FrameworkTests(unittest.TestCase):
         )
         self.assertIn("The proposing role cannot review its own restriction.", normalized_canonical)
 
-        for prompt in (architecture_prompt, engineering_prompt):
-            normalized = " ".join(prompt.split())
-            self.assertIn("`3:0` or `2:1`", normalized)
-            self.assertIn(
-                "[Reasoning and Decision Review](../architecture/REASONING_AND_DECISION_REVIEW.md)",
-                normalized,
-            )
-            self.assertIn(
-                "override primary evidence, mandatory safety, rights, privacy, governance, or a stop gate",
-                normalized,
-            )
+        # The three preserved-in-place assertions for the adjacent obligation.
+        for relative in ("prompts/ARCHITECTURE_OFFICE_PROMPT.md",
+                         "prompts/ENGINEERING_AGENT_PROMPT.md"):
+            normalized = _normalized(relative)
             self.assertIn("sealed independent reviewer", normalized)
             self.assertIn("population, rule, evidence, blind spots", normalized)
             self.assertIn("Neither Architecture nor Engineering may approve its own restriction.", normalized)
 
-        normalized_architecture = " ".join(architecture_prompt.split())
-        self.assertIn(
-            "For a material hypothesis choice or go/no-go question that can be tested, "
-            "preregister measures and thresholds and use sealed hypothesis-blind execution",
-            normalized_architecture,
-        )
-        self.assertIn(
-            "commission exactly three isolated arbiters who research the same neutral "
-            "question from scratch without seeing one another's work",
-            normalized_architecture,
-        )
-        self.assertIn("Treat the vote as advisory when the decision belongs to the user or another authority", normalized_architecture)
-
-        normalized_engineering = " ".join(engineering_prompt.split())
-        self.assertIn(
-            "keep the executor blind to sponsor preference, expected outcome, hypothesis "
-            "labels, and other parties' conclusions",
-            normalized_engineering,
-        )
-        self.assertIn(
-            "provide the same neutral question and primary-evidence boundary to three "
-            "isolated agents, prevent cross-agent leakage, validate one locked vote per "
-            "report, and return the `3:0` or `2:1` result to Architecture",
-            normalized_engineering,
+        self.assert_single_canonical_home(
+            canonical=canonical,
+            canonical_substance=("convene exactly three sealed independent arbiters",),
+            secondaries={
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": (
+                    "`3:0` or `2:1`",
+                    "override primary evidence, mandatory safety, rights, privacy, governance, or a stop gate",
+                    "For a material hypothesis choice or go/no-go question that can be tested, "
+                    "preregister measures and thresholds and use sealed hypothesis-blind execution",
+                    "commission exactly three isolated arbiters who research the same neutral "
+                    "question from scratch without seeing one another's work",
+                    "Treat the vote as advisory when the decision belongs to the user or another authority",
+                ),
+                "prompts/ENGINEERING_AGENT_PROMPT.md": (
+                    "`3:0` or `2:1`",
+                    "override primary evidence, mandatory safety, rights, privacy, governance, or a stop gate",
+                    "keep the executor blind to sponsor preference, expected outcome, hypothesis "
+                    "labels, and other parties' conclusions",
+                    "provide the same neutral question and primary-evidence boundary to three "
+                    "isolated agents, prevent cross-agent leakage, validate one locked vote per "
+                    "report, and return the `3:0` or `2:1` result to Architecture",
+                ),
+            },
         )
 
     def test_universal_completion_claim_rule_is_pinned_and_consistent_across_governance_and_prompts(self):
@@ -345,58 +829,51 @@ class FrameworkTests(unittest.TestCase):
         # ledger instead of inventing new reporting ceremony, so it has been
         # brought into line with Conformance/Engineering here. This test pins
         # the shared substance across all three files.
-        conformance = (ROOT / "governance/CONFORMANCE_POLICY.md").read_text(encoding="utf-8")
-        architecture_prompt = (ROOT / "prompts/ARCHITECTURE_OFFICE_PROMPT.md").read_text(encoding="utf-8")
-        engineering_prompt = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-
-        for guidance in (conformance, architecture_prompt, engineering_prompt):
-            normalized = " ".join(guidance.split())
-            self.assertIn("`complete`, `all`, `none remaining`, or", normalized)
-            self.assertIn("authoritative inventory", normalized)
-            self.assertIn("subset completion", normalized)
-            self.assertIn("parent objective", normalized)
-            self.assertIn("Reuse an existing manifest or ledger for this check", normalized)
-
-        normalized_conformance = " ".join(conformance.split())
-        self.assertIn(
-            "Completion of a sample, batch, wave, medium, or other bounded subset must be "
-            "reported as subset completion, never as completion of its parent objective.",
-            normalized_conformance,
+        # EXEMPLAR. This is the only one of the nine in which every assertion
+        # detects deletion of its own obligation -- 15 of 15, zero inert. That is
+        # not luck. It is the consequence of one design choice, and it is the
+        # rule applied when rebuilding T2 and tightening T1:
+        #
+        #   Assert LONG VERBATIM SPANS THAT NAME THE OBLIGATION, never generic
+        #   tokens that merely co-occur with it.
+        #
+        # A span like "Reuse an existing manifest or ledger for this check"
+        # cannot be satisfied by accident. A token like "accept" or "not" is
+        # satisfied by any prose anywhere in the file, which is why the other
+        # tests in this cluster carried roughly a hundred inert assertions
+        # between them. Author replacements this way.
+        shared = (
+            "`complete`, `all`, `none remaining`, or",
+            "authoritative inventory",
+            "subset completion",
+            "parent objective",
+            "Reuse an existing manifest or ledger for this check",
         )
-        self.assertIn(
-            "If the parent inventory is unknown or not yet reconciled, report the status as "
-            "partial or unknown rather than inferring completion.",
-            normalized_conformance,
-        )
-
-        normalized_architecture = " ".join(architecture_prompt.split())
-        self.assertIn(
-            "name the scope being closed and reconcile it against the authoritative "
-            "inventory by count and disposition.",
-            normalized_architecture,
-        )
-        self.assertIn(
-            "Independently distinguish a completed sample, batch, wave, medium, or other "
-            "subset as subset completion, not completion of the parent objective",
-            normalized_architecture,
-        )
-        self.assertIn(
-            "If the parent universe is unknown, say so; do not convert bounded evidence "
-            "into a universal completion claim.",
-            normalized_architecture,
-        )
-
-        normalized_engineering = " ".join(engineering_prompt.split())
-        self.assertIn("Qualify every completion claim against the declared scope and authoritative inventory.", normalized_engineering)
-        self.assertIn(
-            "Report a completed sample, batch, wave, medium, or other subset as subset "
-            "completion rather than completion of the parent objective.",
-            normalized_engineering,
-        )
-        self.assertIn(
-            "If the parent universe is unknown or has not been reconciled, report partial "
-            "or unknown status.",
-            normalized_engineering,
+        self.assert_single_canonical_home(
+            canonical="governance/CONFORMANCE_POLICY.md",
+            canonical_substance=shared + (
+                "Completion of a sample, batch, wave, medium, or other bounded subset must be "
+                "reported as subset completion, never as completion of its parent objective.",
+                "If the parent inventory is unknown or not yet reconciled, report the status as "
+                "partial or unknown rather than inferring completion.",
+            ),
+            secondaries={
+                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": shared + (
+                    "name the scope being closed and reconcile it against the authoritative "
+                    "inventory by count and disposition.",
+                    "Independently distinguish a completed sample, batch, wave, medium, or other "
+                    "subset as subset completion, not completion of the parent objective",
+                    "If the parent universe is unknown, say so; do not convert bounded evidence "
+                    "into a universal completion claim.",
+                ),
+                "prompts/ENGINEERING_AGENT_PROMPT.md": shared + (
+                    "Qualify every completion claim against the declared scope and authoritative inventory.",
+                    "Report a completed sample, batch, wave, medium, or other subset as subset "
+                    "completion rather than completion of the parent objective.",
+                    "If the parent universe is unknown or has not been reconciled, report partial "
+                    "or unknown status.",
+                ),
+            },
         )
 
     def test_version_and_plugin_ownership_boundary(self):
@@ -488,14 +965,33 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("sole authority to accept and archive", normalized)
 
     def test_single_role_pass_cannot_self_accept(self):
-        operating = (ROOT / "architecture/OPERATING_MODEL.md").read_text(encoding="utf-8")
-        framework = (ROOT / "framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
-        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (operating, framework, engineering):
-            normalized = " ".join(guidance.lower().split())
-            self.assertIn("single-role pass", normalized)
-            self.assertIn("accept", normalized)
-            self.assertTrue("architecture" in normalized or "self-acceptance" in normalized)
+        # REPLACED, not re-pointed. Mutation evidence: deleting the
+        # self-acceptance prohibition from all three files left 8 of the
+        # original 9 assertions still passing. The whole test rested on the
+        # literal string "single-role pass" surviving in one file; `"accept"`
+        # was satisfied by "acceptance"/"accepted" elsewhere in every file, and
+        # `("architecture", "self-acceptance")` by "architecture" appearing
+        # 4/11/16 times per file. A rename or style pass touching that one token
+        # would have retired the entire check silently.
+        #
+        # The obligation is core authority -- Engineering cannot accept its own
+        # work -- so the check is rebuilt rather than dropped. It is still prose
+        # matching; the property that changed is can-fail versus cannot-fail.
+        # Scoping the anchor to the negation and the acceptance term means a
+        # stray "acceptance" two hundred lines away no longer satisfies it.
+        for relative in (
+            "framework/DUAL_HAT_FRAMEWORK.md",
+            "architecture/OPERATING_MODEL.md",
+            "prompts/ENGINEERING_AGENT_PROMPT.md",
+        ):
+            normalized = _normalized(relative, lower=True)
+            self.assertTrue(
+                _negated_near(normalized, "single-role pass",
+                              ("accept", "acceptance", "archiv")),
+                f"{relative} no longer denies self-acceptance to a single-role "
+                "pass within one statement; the prohibition may have been "
+                "deleted while the words remained scattered in the file",
+            )
 
     def test_blocked_state_has_entry_and_reentry_semantics(self):
         lifecycle = (ROOT / "process/WORK_ITEM_LIFECYCLE.md").read_text(encoding="utf-8")
@@ -522,37 +1018,40 @@ class FrameworkTests(unittest.TestCase):
         )
 
     def test_plan_optimization_is_proportionate_and_retests_assumptions(self):
-        proportionality = (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
-        planning = (ROOT / "planning/PLANNING_MODEL.md").read_text(encoding="utf-8")
-        engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
-        for guidance in (proportionality, planning, engineering):
-            normalized = " ".join(guidance.lower().split())
-            for required in (
-                "brute force",
-                "value",
-                "sequence",
-                "parallelism",
-                "checkpoint",
-                "evidence reuse",
-                "cheaper equivalent control",
-                "sealed independent architecture optimization review",
-                "straightforward",
-                "bottleneck",
-                "throughput",
-                "value yield",
-                "batching",
-                "wall time",
-                "confirm",
-                "revise",
-                "retire",
-                "unchallenged",
-                "supported",
-                "consequence",
-                "uncertainty",
-            ):
-                self.assertIn(required, normalized)
-            self.assertIn("healthy work", normalized)
-            self.assertIn("ceremony", normalized)
+        # The heaviest test in the file: 23 phrases looped over 3 files = 69
+        # assertions. 49 detected deletion of the rule 18 statement; 20 did not
+        # and are dropped per file. Note the dropped set differs by file -- the
+        # same token is load-bearing in one document and inert in another,
+        # because the inert case merely has the word elsewhere. That is why the
+        # disposition is per-token-per-file and not one list applied to N files;
+        # the cheaper design is what produced the inert mass in the first place.
+        self.assert_single_canonical_home(
+            lower=True,
+            canonical="governance/GOVERNING_PRINCIPLES.md",
+            canonical_substance=(
+                "brute force", "parallelism", "cheaper equivalent control",
+                "sealed independent architecture optimization review", "straightforward",
+                "bottleneck", "throughput", "value yield", "batching", "revise",
+                "unchallenged", "consequence", "healthy work",
+            ),
+            secondaries={
+                "planning/PLANNING_MODEL.md": (
+                    "brute force", "value", "sequence", "parallelism", "checkpoint",
+                    "evidence reuse", "cheaper equivalent control",
+                    "sealed independent architecture optimization review", "straightforward",
+                    "bottleneck", "throughput", "value yield", "batching", "wall time",
+                    "revise", "unchallenged", "supported", "consequence", "uncertainty",
+                    "healthy work",
+                ),
+                "prompts/ENGINEERING_AGENT_PROMPT.md": (
+                    "brute force", "value", "sequence", "evidence reuse",
+                    "cheaper equivalent control",
+                    "sealed independent architecture optimization review", "straightforward",
+                    "bottleneck", "throughput", "value yield", "batching", "wall time",
+                    "revise", "unchallenged", "consequence", "healthy work",
+                ),
+            },
+        )
 
     def test_concurrency_controls_require_executable_adverse_timing_validation(self):
         guidance = " ".join(
@@ -812,91 +1311,88 @@ class FrameworkTests(unittest.TestCase):
             with self.assertRaisesRegex(PublicationValidationError, "unknown"):
                 stage_manifest_owned(root)
 
+    def _reparse_flavours(self) -> tuple[str, ...]:
+        """Every reparse flavour this host permits, or an honest skip if none does.
+
+        These guards used to try a symlink and skip when the host refused one.
+        On a host without symlink privilege that is not weak coverage, it is
+        ABSENT coverage reporting as a skip: the guard never executed and never
+        would. Probing both flavours converts them into tests that actually run
+        wherever either kind of reparse point can be created.
+        """
+        with tempfile.TemporaryDirectory() as probe:
+            flavours = available_reparse_flavours(Path(probe))
+        if not flavours:
+            self.skipTest("host permits neither a symlink nor a junction fixture")
+        return flavours
+
     def test_staging_rejects_directory_symlink_without_touching_external_cache(self):
-        with tempfile.TemporaryDirectory() as temp:
-            base = Path(temp)
-            root = base / "publication"
-            external = base / "external"
-            root.mkdir()
-            external.mkdir()
-            self._publication_repo(root)
-            external_cache = external / "outside.pyc"
-            external_cache.write_bytes(b"external-bytecode")
-            local_cache = root / "tooling/__pycache__"
-            local_cache.mkdir(parents=True)
-            local_artifact = local_cache / "local.pyc"
-            local_artifact.write_bytes(b"local-bytecode")
-            link = root / "linked-cache"
-            try:
-                link.symlink_to(external, target_is_directory=True)
-            except OSError:
-                self.skipTest("host does not permit a directory symlink fixture")
-            try:
-                with self.assertRaisesRegex(
-                    PublicationValidationError,
-                    "symlink or reparse entries.*linked-cache",
-                ):
-                    stage_manifest_owned(root)
-                self.assertEqual(b"external-bytecode", external_cache.read_bytes())
-                self.assertEqual(b"local-bytecode", local_artifact.read_bytes())
-                self.assertTrue(is_reparse(link))
-            finally:
-                link.unlink(missing_ok=True)
+        for flavour in self._reparse_flavours():
+            with self.subTest(reparse=flavour), tempfile.TemporaryDirectory() as temp:
+                base = Path(temp)
+                root = base / "publication"
+                external = base / "external"
+                root.mkdir()
+                external.mkdir()
+                self._publication_repo(root)
+                external_cache = external / "outside.pyc"
+                external_cache.write_bytes(b"external-bytecode")
+                local_cache = root / "tooling/__pycache__"
+                local_cache.mkdir(parents=True)
+                local_artifact = local_cache / "local.pyc"
+                local_artifact.write_bytes(b"local-bytecode")
+                link = root / "linked-cache"
+                self.assertTrue(
+                    make_reparse(link, external, flavour),
+                    f"{flavour} fixture failed after probing as available",
+                )
+                try:
+                    with self.assertRaisesRegex(
+                        PublicationValidationError,
+                        "symlink or reparse entries.*linked-cache",
+                    ):
+                        stage_manifest_owned(root)
+                    self.assertEqual(b"external-bytecode", external_cache.read_bytes())
+                    self.assertEqual(b"local-bytecode", local_artifact.read_bytes())
+                    self.assertTrue(is_reparse(link))
+                finally:
+                    remove_reparse(link)
 
     def test_staging_rejects_file_symlink_without_touching_external_cache(self):
-        with tempfile.TemporaryDirectory() as temp:
-            base = Path(temp)
-            root = base / "publication"
-            external = base / "external.pyc"
-            root.mkdir()
-            self._publication_repo(root)
-            external.write_bytes(b"external-bytecode")
-            link = root / "linked.pyc"
-            try:
-                link.symlink_to(external)
-            except OSError:
-                self.skipTest("host does not permit a file symlink fixture")
-            try:
-                with self.assertRaisesRegex(
-                    PublicationValidationError,
-                    "symlink or reparse entries.*linked.pyc",
-                ):
-                    stage_manifest_owned(root)
-                self.assertEqual(b"external-bytecode", external.read_bytes())
-                self.assertTrue(is_reparse(link))
-            finally:
-                link.unlink(missing_ok=True)
-
-    @unittest.skipUnless(os.name == "nt", "junction fixture requires compatible host")
-    def test_staging_rejects_junction_without_touching_external_cache(self):
-        with tempfile.TemporaryDirectory() as temp:
-            base = Path(temp)
-            root = base / "publication"
-            external = base / "external"
-            root.mkdir()
-            external.mkdir()
-            self._publication_repo(root)
-            external_cache = external / "outside.pyc"
-            external_cache.write_bytes(b"external-bytecode")
-            junction = root / "junction-cache"
-            created = subprocess.run(
-                ("cmd", "/c", "mklink", "/J", str(junction), str(external)),
-                capture_output=True,
-                text=True,
-            )
-            if created.returncode:
-                self.skipTest("host does not permit a junction fixture")
-            try:
-                with self.assertRaisesRegex(
-                    PublicationValidationError,
-                    "symlink or reparse entries.*junction-cache",
-                ):
-                    stage_manifest_owned(root)
-                self.assertEqual(b"external-bytecode", external_cache.read_bytes())
-                self.assertTrue(is_reparse(junction))
-            finally:
-                if is_reparse(junction):
-                    junction.rmdir()
+        for flavour in self._reparse_flavours():
+            with self.subTest(reparse=flavour), tempfile.TemporaryDirectory() as temp:
+                base = Path(temp)
+                root = base / "publication"
+                root.mkdir()
+                self._publication_repo(root)
+                if flavour == "symlink":
+                    target = base / "external.pyc"
+                    target.write_bytes(b"external-bytecode")
+                    witness = target
+                else:
+                    # A junction points only at a directory, so the reparse point
+                    # keeps its position -- a cache-named entry inside the
+                    # publication root, which is what the guard is about -- while
+                    # the bytecode it must not reach sits inside the target.
+                    target = base / "external"
+                    target.mkdir()
+                    witness = target / "outside.pyc"
+                    witness.write_bytes(b"external-bytecode")
+                link = root / "linked.pyc"
+                self.assertTrue(
+                    make_reparse(link, target, flavour),
+                    f"{flavour} fixture failed after probing as available",
+                )
+                try:
+                    with self.assertRaisesRegex(
+                        PublicationValidationError,
+                        "symlink or reparse entries.*linked.pyc",
+                    ):
+                        stage_manifest_owned(root)
+                    self.assertEqual(b"external-bytecode", witness.read_bytes())
+                    self.assertTrue(is_reparse(link))
+                finally:
+                    remove_reparse(link)
 
     def test_actual_test_runner_discovers_nonpackage_tests_from_any_cwd(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -974,6 +1470,207 @@ class FrameworkTests(unittest.TestCase):
             self._write_publication(root, credential_fixture)
             with self.assertRaisesRegex(PublicationValidationError, "possible secrets"):
                 stage_manifest_owned(root)
+
+    # --- the core version has exactly one authority ---------------------------
+    #
+    # Rule 20's second half, for the core-version convention. The instance fix
+    # -- resolving the active core version from release/VERSION.json instead of
+    # a constant -- closes the first half only. Without a standing check, a
+    # contributor who does not know the convention ever changed reintroduces a
+    # literal and nothing signals the drift; that is precisely how
+    # DUAL_HAT_CORE_VERSION sat at 1.11.0 through seven minor releases while
+    # being the sole authority admitting an adopter's platform profile.
+    #
+    # Every half below is anchored on a DIRECT read of release/VERSION.json,
+    # never on the resolver under test, so the shipped data and the resolver
+    # cannot satisfy this check by being wrong in the same direction.
+
+    @staticmethod
+    def _shipped_version() -> str:
+        return str(json.loads(
+            (ROOT / "release/VERSION.json").read_text(encoding="utf-8")
+        )["version"])
+
+    @staticmethod
+    def _declared_core_versions(payload, path, key=None):
+        """Yield every version-shaped string reachable under a core-version key."""
+        if isinstance(payload, dict):
+            for name, value in payload.items():
+                yield from FrameworkTests._declared_core_versions(value, path, str(name))
+        elif isinstance(payload, list):
+            for value in payload:
+                yield from FrameworkTests._declared_core_versions(value, path, key)
+        elif (key == "dual_hat_core_version" and isinstance(payload, str)
+                and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", payload)):
+            yield f"{path}: dual_hat_core_version = {payload!r}"
+
+    def test_no_hardcoded_core_version_survives_the_release_evidence_authority(self):
+        shipped = self._shipped_version()
+
+        # (a) Code half. Any version-shaped string literal anywhere in the
+        # tooling surface is a second authority for a value release/VERSION.json
+        # already owns. AST constants are scanned rather than source text, so
+        # the check sees an indirect binding -- a default argument, a dataclass
+        # field, a decorator argument -- exactly as it sees a plain assignment.
+        literals = [
+            f"{module.relative_to(ROOT).as_posix()}:{node.lineno}: {node.value!r}"
+            for module in sorted((ROOT / "tooling").glob("*.py"))
+            for node in ast.walk(ast.parse(module.read_text(encoding="utf-8"), filename=str(module)))
+            if isinstance(node, ast.Constant) and isinstance(node.value, str)
+            and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", node.value)
+        ]
+        with self.subTest(half="tooling literal"):
+            self.assertEqual(
+                [], literals,
+                "a hardcoded version literal was reintroduced into the tooling "
+                "surface; the active core version has exactly one authority, "
+                "release/VERSION.json, and must be resolved from it at call time",
+            )
+
+        # (b) Data half. Rule 20 names already-produced artifacts, not only code
+        # call sites: the shipped example declaring 1.11.0 is what trained
+        # adopters into the defect and concealed it for seven minor releases.
+        disagreements = [
+            row
+            for path in sorted(ROOT.rglob("*.json"))
+            if ".git" not in path.parts and "__pycache__" not in path.parts
+            for payload in (self._loaded_json(path),)
+            if payload is not None
+            for row in self._declared_core_versions(payload, path.relative_to(ROOT).as_posix())
+            if not row.endswith(f"{shipped!r}")
+        ]
+        with self.subTest(half="shipped data"):
+            self.assertEqual(
+                [], disagreements,
+                f"shipped data declares a core version other than {shipped!r}, "
+                "the version release/VERSION.json actually ships",
+            )
+
+        # (c) Test half. A test that pins the current version as a literal
+        # reintroduces the same drift one release later; the suite must read it
+        # from the same authority everything else does.
+        pinned = [
+            f"{module.relative_to(ROOT).as_posix()}:{number}"
+            for module in sorted((ROOT / "tests").glob("*.py"))
+            for number, line in enumerate(module.read_text(encoding="utf-8").splitlines(), 1)
+            if shipped in line
+        ]
+        with self.subTest(half="test literal"):
+            self.assertEqual(
+                [], pinned,
+                f"a test pins the shipped version {shipped!r} as a literal "
+                "instead of reading release/VERSION.json",
+            )
+
+    # --- a maturity label agrees with its own version -------------------------
+    #
+    # Rule 20's second half, for the maturity convention. Correcting the
+    # derivation closes the first half only. The previous boundary was written
+    # by hand for 0.x-to-1.x with nothing keeping it synchronized, and the
+    # identical contradiction returned at 1.x-to-2.x: every major from 2 upward
+    # was stamped stable_1_x and no test anywhere could notice. Without a
+    # standing check this repair is a second one-time boundary fix on the same
+    # unsynchronized convention, and 3.0.0 is the predicted third recurrence.
+    #
+    # Anchored on the major the version itself carries, NEVER on
+    # release_maturity(). A check asserting only that the declared label equals
+    # the function's output reproduces release_package.py's own cross-check and
+    # is blind in the identical way: at the first major past 1.x both sides read
+    # the 1.x label, they agree, and they are both wrong. The fixture agreeing
+    # with the defect is what let it survive, so agreement is exactly the wrong
+    # thing to assert.
+    #
+    # The version is described rather than spelled out here for a reason worth
+    # keeping: an earlier draft of this comment named it as a literal and the
+    # anti-reintroduction check below caught the line the moment that version
+    # shipped. The check is right and the comment was wrong. A prose example is
+    # still a pin -- it goes stale exactly like a code one, and it is fixed by
+    # removing the literal, never by narrowing the check to forgive comments.
+
+    MATURITY_LABEL = r"stable_[0-9]+_x|functional_pre_1_0"
+
+    @staticmethod
+    def _maturity_disagreements(record) -> tuple[str, ...]:
+        version = str(record["version"])
+        declared = str(record["maturity"])
+        major = int(version.split(".", 1)[0])
+        implied = f"stable_{major}_x" if major >= 1 else "functional_pre_1_0"
+        if declared == implied:
+            return ()
+        return (f"{version} declares maturity {declared!r}; its major implies {implied!r}",)
+
+    @classmethod
+    def _declared_maturities(cls, payload, path):
+        """Yield every (path, record) carrying both a version and a maturity."""
+        if isinstance(payload, dict):
+            if (isinstance(payload.get("version"), str) and isinstance(payload.get("maturity"), str)
+                    and re.fullmatch(cls.MATURITY_LABEL, payload["maturity"])
+                    and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", payload["version"])):
+                yield path, payload
+            for value in payload.values():
+                yield from cls._declared_maturities(value, path)
+        elif isinstance(payload, list):
+            for value in payload:
+                yield from cls._declared_maturities(value, path)
+
+    def test_declared_maturity_agrees_with_the_version_it_is_declared_for(self):
+        # (a) The shipped release evidence, read directly from the file.
+        shipped = json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))
+        with self.subTest(half="shipped record"):
+            self.assertEqual(
+                (), self._maturity_disagreements(shipped),
+                "release/VERSION.json declares a maturity its own version contradicts",
+            )
+
+        # (b) Rule 20's data half. Fixing a derivation does nothing to
+        # artifacts already written under it, so every committed record that
+        # carries both a version and a maturity is re-checked against the
+        # corrected derivation rather than assumed to have followed the code.
+        # Reported repository-relative, never absolute: this failure message is
+        # durable output and an absolute path in it discloses the machine that
+        # produced it. The relative form is already derived below for exactly
+        # this reason.
+        disagreements = [
+            f"{path_name}: {row}"
+            for path in sorted(ROOT.rglob("*.json"))
+            if ".git" not in path.parts and "__pycache__" not in path.parts
+            for payload in (self._loaded_json(path),)
+            if payload is not None
+            for path_name, record in self._declared_maturities(payload, path.relative_to(ROOT).as_posix())
+            for row in self._maturity_disagreements(record)
+        ]
+        with self.subTest(half="committed records"):
+            self.assertEqual(
+                [], disagreements,
+                "a committed record carries a maturity label its own version contradicts",
+            )
+
+        # (c) The check must FIRE on a contradiction, so that (a) and (b)
+        # passing is a fact about the data rather than about the check. Versions
+        # are built from the major so this covers 3.0.0 and beyond, which is the
+        # recurrence the standing half exists for -- not just the boundary that
+        # happens to be current.
+        for major in (1, 2, 3, 11):
+            with self.subTest(half="fires on a contradiction", major=major):
+                self.assertNotEqual(
+                    (), self._maturity_disagreements(
+                        {"version": f"{major}.0.0", "maturity": f"stable_{major - 1}_x"}),
+                    "a version carrying the previous major's label was not reported",
+                )
+
+        # (d) and must NOT fire on an agreeing pair, so (c) is not vacuous.
+        for major in (0, 1, 2, 3, 10):
+            with self.subTest(half="silent when they agree", major=major):
+                label = f"stable_{major}_x" if major >= 1 else "functional_pre_1_0"
+                self.assertEqual(
+                    (), self._maturity_disagreements({"version": f"{major}.4.1", "maturity": label}))
+
+    @staticmethod
+    def _loaded_json(path: Path):
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            return None
 
 
 if __name__ == "__main__":

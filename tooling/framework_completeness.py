@@ -6,11 +6,185 @@ SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
+from typing import NamedTuple
 
 from release_artifacts import is_release_product
 from publication_ownership import standalone_owned
+
+
+GITIGNORE_FILENAME = ".gitignore"
+REPOSITORY_METADATA_NAME = ".git"
+
+
+class _IgnoreRule(NamedTuple):
+    """One parsed ignore pattern, bound to the tree region it governs.
+
+    ``scope`` is the root-relative directory prefix the rule applies to (empty
+    for a rule that governs the whole tree). ``offset`` is prepended to the
+    root-relative path to re-express it relative to the directory the ignore
+    file itself sits in, which is how an ignore file ABOVE ``root`` -- the one
+    that ignores, say, ``*.egg-info/`` for the whole repository -- still reaches
+    content inside ``root``.
+    """
+
+    matcher: re.Pattern[str]
+    directory_only: bool
+    negated: bool
+    scope: str
+    offset: str
+
+
+def _translate(pattern: str) -> str:
+    """Translate one gitignore glob into a regular-expression fragment."""
+    index = 0
+    length = len(pattern)
+    parts: list[str] = []
+    while index < length:
+        char = pattern[index]
+        if pattern.startswith("**/", index):
+            parts.append("(?:[^/]+/)*")
+            index += 3
+        elif pattern.startswith("**", index):
+            parts.append(".*")
+            index += 2
+        elif char == "*":
+            parts.append("[^/]*")
+            index += 1
+        elif char == "?":
+            parts.append("[^/]")
+            index += 1
+        elif char == "[":
+            close = index + 1
+            if close < length and pattern[close] in "!^":
+                close += 1
+            if close < length and pattern[close] == "]":
+                close += 1
+            while close < length and pattern[close] != "]":
+                close += 1
+            if close >= length:
+                parts.append(re.escape(char))
+                index += 1
+            else:
+                body = pattern[index + 1:close]
+                parts.append("[" + ("^" + body[1:] if body.startswith("!") else body) + "]")
+                index = close + 1
+        else:
+            parts.append(re.escape(char))
+            index += 1
+    return "".join(parts)
+
+
+def _parse_ignore_file(path: Path, *, scope: str, offset: str) -> list[_IgnoreRule]:
+    rules: list[_IgnoreRule] = []
+    try:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return rules
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        if not line or line.startswith("#"):
+            continue
+        negated = line.startswith("!")
+        if negated:
+            line = line[1:]
+        if line.startswith("\\"):
+            line = line[1:]
+        directory_only = line.endswith("/")
+        if directory_only:
+            line = line[:-1]
+        if not line:
+            continue
+        anchored = "/" in line
+        if line.startswith("/"):
+            line = line[1:]
+        body = _translate(line)
+        expression = "^" + (body if anchored else "(?:[^/]+/)*" + body) + "$"
+        rules.append(_IgnoreRule(re.compile(expression), directory_only, negated, scope, offset))
+    return rules
+
+
+def _ignore_rules(root: Path) -> list[_IgnoreRule]:
+    """Every ignore rule that governs content under ``root``.
+
+    Read out of the repository's own ignore files rather than restated here, so
+    this cannot drift from what the repository actually ignores. Ancestor ignore
+    files are consulted up to and including the work-tree root, because a
+    subdirectory of a larger repository (Dual Hat vendored inside a product
+    tree) inherits that repository's ignores; a ``root`` that is itself a
+    work-tree root inherits nothing. A tree with no ignore file anywhere -- an
+    unpacked release package, for instance -- simply yields no rules.
+    """
+    rules: list[_IgnoreRule] = []
+    ancestors: list[Path] = []
+    if not (root / REPOSITORY_METADATA_NAME).exists():
+        current = root.parent
+        while True:
+            ancestors.append(current)
+            if (current / REPOSITORY_METADATA_NAME).exists() or current.parent == current:
+                break
+            current = current.parent
+        if not (ancestors and (ancestors[-1] / REPOSITORY_METADATA_NAME).exists()):
+            ancestors = []
+    for ancestor in reversed(ancestors):
+        rules.extend(_parse_ignore_file(
+            ancestor / GITIGNORE_FILENAME,
+            scope="",
+            offset=root.relative_to(ancestor).as_posix() + "/",
+        ))
+    rules.extend(_parse_ignore_file(root / GITIGNORE_FILENAME, scope="", offset=""))
+    return rules
+
+
+def _is_ignored(relative: str, directory: bool, rules: list[_IgnoreRule]) -> bool:
+    ignored = False
+    for rule in rules:
+        if rule.scope and not relative.startswith(rule.scope):
+            continue
+        if rule.directory_only and not directory:
+            continue
+        if rule.matcher.match(rule.offset + relative[len(rule.scope):]):
+            ignored = not rule.negated
+    return ignored
+
+
+def repository_content_files(root: Path) -> tuple[Path, ...]:
+    """Every file under ``root`` that the repository's own ignore state keeps.
+
+    Both walks below share this one function. They used to carry a literal
+    exclusion list each and had ALREADY drifted apart from one another -- the
+    export-classification walk excluded only ``__pycache__``, the leakage walk
+    excluded ``__pycache__`` and ``.git`` -- so any other ignored residue inside
+    the tree (a ``.pytest_cache``, a virtualenv, an egg-info, the generated
+    agent-skill copies) was reported as unowned content under an error naming
+    the export allowlist rather than the artifact that caused it. A third
+    literal list would be the same defect a third time, so the exclusion is
+    derived from the ignore files instead of restated in this module.
+
+    ``.git`` itself is skipped by name rather than by rule because it is the
+    repository's own metadata: git never reports it as either ignored or
+    content, so no ignore file mentions it.
+    """
+    root = root.resolve()
+    rules = _ignore_rules(root)
+    collected: list[Path] = []
+    for directory, names, files in os.walk(root):
+        here = Path(directory)
+        relative = here.relative_to(root).as_posix()
+        prefix = "" if relative in {"", "."} else relative + "/"
+        if prefix and (here / GITIGNORE_FILENAME).is_file():
+            rules.extend(_parse_ignore_file(here / GITIGNORE_FILENAME, scope=prefix, offset=""))
+        names[:] = sorted(
+            name for name in names
+            if name != REPOSITORY_METADATA_NAME and not _is_ignored(prefix + name, True, rules)
+        )
+        collected.extend(
+            here / name for name in sorted(files)
+            if name != REPOSITORY_METADATA_NAME and not _is_ignored(prefix + name, False, rules)
+        )
+    return tuple(collected)
 
 
 REQUIRED_DOMAIN_FIELDS = {
@@ -184,15 +358,16 @@ def validate_framework(root: Path) -> tuple[str, ...]:
         elif path.suffix.lower() in {".md", ".py"} and path.stat().st_size < 160:
             failures.append(f"declared framework owner/support is not substantive: {relative}")
 
+    content = repository_content_files(root)
+
     source_map = root / "export/EXPORT_SOURCES.json"
     if source_map.is_file():
         payload = json.loads(source_map.read_text(encoding="utf-8"))
         controls = {"export/EXPORT_READINESS.json", "export/EXPORT_SOURCES.json"}
         actual = {
             path.relative_to(root).as_posix()
-            for path in root.rglob("*")
-            if path.is_file() and "__pycache__" not in path.parts
-            and path.relative_to(root).as_posix() not in controls | RELEASE_CONTROL_PATHS
+            for path in content
+            if path.relative_to(root).as_posix() not in controls | RELEASE_CONTROL_PATHS
             and not is_release_product(path.relative_to(root).as_posix())
         }
         declared = set(payload.get("included", ()))
@@ -202,9 +377,7 @@ def validate_framework(root: Path) -> tuple[str, ...]:
                 f"unclassified={sorted(actual - declared)}; stale={sorted(declared - actual)}"
             )
 
-    for path in sorted(root.rglob("*")):
-        if not path.is_file() or any(part in {"__pycache__", ".git"} for part in path.parts):
-            continue
+    for path in content:
         relative = path.relative_to(root).as_posix()
         if is_release_product(relative):
             continue

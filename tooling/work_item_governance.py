@@ -11,7 +11,26 @@ from profile_conformance import capability_evidence_digest, validate_profile
 
 MODES = {"integrated", "split"}
 BUILTIN_TYPES = {"capability", "gov"}
-DUAL_HAT_CORE_VERSION = "1.11.0"
+# The active Dual Hat core version has exactly one authority, release/VERSION.json,
+# and it is resolved from there at call time -- never bound at import, directly or
+# indirectly. This module is imported by the sealing, classification, transition and
+# archival controls and by call sites that never touch a platform profile; binding the
+# resolution at import would turn missing, unreadable or ambiguous release evidence
+# into an ImportError for every one of them, through a channel carrying none of the
+# conformance vocabulary its callers are equipped to handle. Failure is surfaced as an
+# entry in the returned failures tuple instead, exactly as every other conformance
+# failure already is. The literal it replaces read 1.11.0 for seven minor releases
+# while being the sole authority admitting an adopter's platform profile; a standing
+# check in tests/test_framework.py fails the moment any such literal reappears.
+VERSION_EVIDENCE_SCHEMA = "dual-hat-version/1.0"
+# Closed structure: no field outside PERMITTED is tolerated and every field in REQUIRED
+# must be present as a non-empty string. "$comment" carries the SPDX marker rather than
+# release semantics, so it is permitted and not required.
+VERSION_EVIDENCE_REQUIRED_FIELDS = {"maturity", "schema", "stability", "version"}
+VERSION_EVIDENCE_PERMITTED_FIELDS = VERSION_EVIDENCE_REQUIRED_FIELDS | {"$comment"}
+# The shape schemas/platform-profile.schema.json already pins for the profile side,
+# matched rather than reinvented so the two ends of the comparison cannot diverge.
+SEMANTIC_VERSION_PATTERN = r"[0-9]+\.[0-9]+\.[0-9]+"
 BUILTIN_REGISTRY = {
     "capability": {"identity_pattern": r"^Capability [0-9]+$", "semantic_owner": "bounded product increment", "classification_rule": "product_increment true; independently bounded governance_contract_change false; tightly coupled governance may use extension_classification.coupled_governance_change", "classification": {"required_true": ["product_increment"], "required_false": ["governance_contract_change"]}, "compatible_execution_lifecycles": ["author_approved_for_execution", "engineering", "remediation_required", "engineering_complete", "architecture_review"]},
     "gov": {"identity_pattern": r"^GOV-[0-9]{4}$", "semantic_owner": "bounded governance change", "classification_rule": "governance_contract_change true and product_increment false", "classification": {"required_true": ["governance_contract_change"], "required_false": ["product_increment"]}, "compatible_execution_lifecycles": ["author_approved_for_execution", "engineering", "remediation_required", "engineering_complete", "architecture_review"]},
@@ -29,6 +48,58 @@ TRANSITIONS = {
 }
 SAFE_MODE_BOUNDARIES = {"architecture", "work_order_ready", "author_approved_for_execution", "engineering_paused", "engineering_complete", "architecture_review", "accepted", "accepted_with_follow_up", "archived"}
 EXECUTION_PHRASES = {"approve this work order and enter engineering mode", "execute the approved work order", "begin engineering execution"}
+
+def core_version_failures(record: object) -> tuple[str, ...]:
+    """Validate governed release evidence, reporting rather than raising.
+
+    Reuses release_package.release_maturity for the maturity cross-check rather
+    than deriving maturity a second time: release_package.py already enforces
+    exactly this cross-check on the release path, so sharing the one derivation
+    is what keeps the conformance path and the release gate from disagreeing.
+    The import is local to the call for the reason stated at the top of this
+    module -- release evidence must never be able to fail an import.
+    """
+    if not isinstance(record, Mapping): return ("governed release evidence is not a version record",)
+    failures: list[str] = []
+    unknown = sorted(str(field) for field in record if field not in VERSION_EVIDENCE_PERMITTED_FIELDS)
+    if unknown: failures.append(f"governed release evidence carries an unknown field: {', '.join(unknown)}")
+    missing = sorted(VERSION_EVIDENCE_REQUIRED_FIELDS - set(record))
+    if missing: failures.append(f"governed release evidence lacks a required field: {', '.join(missing)}")
+    for field in sorted(VERSION_EVIDENCE_PERMITTED_FIELDS & set(record)):
+        value = record.get(field)
+        if not isinstance(value, str) or not value.strip(): failures.append(f"governed release evidence field is not a non-empty string: {field}")
+    if record.get("schema") != VERSION_EVIDENCE_SCHEMA: failures.append("governed release evidence declares an unknown schema")
+    declared = record.get("version")
+    if not isinstance(declared, str) or not re.fullmatch(SEMANTIC_VERSION_PATTERN, declared):
+        failures.append("governed release evidence version is not a semantic version")
+    else:
+        try:
+            from release_package import release_maturity
+            expected = release_maturity(declared)
+        except Exception: failures.append("governed release maturity derivation is unavailable")
+        else:
+            if record.get("maturity") != expected: failures.append("governed release evidence maturity contradicts its semantic version")
+    return tuple(dict.fromkeys(failures))
+
+
+def active_core_version() -> tuple[str | None, tuple[str, ...]]:
+    """Resolve the active core version from governed release evidence, at call time.
+
+    Returns the version and an empty failures tuple, or None and the conformance
+    failures that stopped it being resolved. Reuses release_package.version_record,
+    the committed reader for this file, rather than opening it a second time.
+    release_package.version() is deliberately not called in addition: it is the same
+    read of the same file narrowed to one key, so calling it as well would read the
+    evidence twice and could return a value the validated record never described.
+    """
+    try:
+        from release_package import version_record
+        record = version_record()
+    except Exception: return None, ("governed release evidence is unreadable",)
+    failures = core_version_failures(record)
+    if failures: return None, failures
+    return str(record["version"]), ()
+
 
 def canonical_hash(order: Mapping[str, object]) -> str:
     payload = {k: v for k, v in order.items() if k != "work_order_hash"}
@@ -171,7 +242,11 @@ def execution_contract_failures(
     if not isinstance(platform_profile, Mapping):
         failures.append("platform-profile context is missing")
     else:
-        failures.extend(validate_profile(platform_profile, DUAL_HAT_CORE_VERSION))
+        # Resolved here, inside the one branch that needs it, so a profile-free
+        # caller never depends on release evidence being readable at all.
+        core_version, core_version_resolution = active_core_version()
+        failures.extend(core_version_resolution)
+        if core_version is not None: failures.extend(validate_profile(platform_profile, core_version))
         capabilities = platform_profile.get("mandatory_capabilities")
         if not isinstance(capabilities, Mapping) or not capabilities or any(value is not True for value in capabilities.values()): failures.append("platform profile has a mandatory capability gap")
         if not isinstance(platform_preflight, Mapping): failures.append("platform capability preflight context is missing")
@@ -181,7 +256,10 @@ def execution_contract_failures(
             expected_preflight_artifact = f"engineering/process/work-items/{order.get('work_item_id')}/PLATFORM_PREFLIGHT.json"
             verification_profile = dict(platform_profile)
             verification_profile["preflight_artifact"] = expected_preflight_artifact
-            derived_preflight = capability_preflight(verification_profile, capabilities.keys() if isinstance(capabilities, Mapping) else (), DUAL_HAT_CORE_VERSION, evidence_root, receipts if isinstance(receipts, Mapping) else None)
+            # An unresolvable core version already stands as a failure entry above, so
+            # the run is refused either way; deriving a preflight against a version the
+            # evidence never established would only fabricate a second, misleading one.
+            derived_preflight = capability_preflight(verification_profile, capabilities.keys() if isinstance(capabilities, Mapping) else (), core_version, evidence_root, receipts if isinstance(receipts, Mapping) else None) if core_version is not None else None
             supported = platform_preflight.get("supported_mandatory_requirements", ())
             if (platform_preflight.get("preflight_artifact") != expected_preflight_artifact
                     or platform_preflight.get("work_item_id") != order.get("work_item_id")
@@ -195,7 +273,7 @@ def execution_contract_failures(
             if not isinstance(supported, list) or set(supported) != set(capabilities): failures.append("platform preflight capability set is incomplete")
             if platform_preflight.get("capability_evidence_verified") is not True: failures.append("platform preflight lacks verified executable capability evidence")
             if platform_preflight.get("capability_evidence_sha256") != capability_evidence_digest(platform_profile): failures.append("platform preflight evidence binding is stale or forged")
-            for field in ("result", "execution_authorized", "hard_stop", "supported_mandatory_requirements", "verified_capability_evidence", "capability_test_receipts", "capability_evidence_verified", "runtime_profile_verified", "capability_evidence_sha256", "verified_capability_evidence_sha256", "platform_profile_sha256"):
+            for field in ("result", "execution_authorized", "hard_stop", "supported_mandatory_requirements", "verified_capability_evidence", "capability_test_receipts", "capability_evidence_verified", "runtime_profile_verified", "capability_evidence_sha256", "verified_capability_evidence_sha256", "platform_profile_sha256") if derived_preflight is not None else ():
                 if platform_preflight.get(field) != derived_preflight.get(field): failures.append("platform preflight is not reproducible from governed evidence"); break
     return tuple(dict.fromkeys(failures))
 

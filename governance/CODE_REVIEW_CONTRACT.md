@@ -26,10 +26,9 @@ accessibility, or domain specialists when those judgments are material and not
 already covered independently. Omit a specialty that adds no distinct judgment;
 the roster does not create mandatory gates for ordinary work.
 
-During parallel or shared mutation, every shared artifact lane used for review
-has one active writer at a time and one integration owner. Trivial serial work
-uses its primary owner implicitly; checkpointed reassignment requires the prior
-writer to be quiescent and partial state to be handed off.
+A lane used for review is owned exactly as any other is, under
+[Validation and Parallelism](VALIDATION_AND_PARALLELISM.md); review adds no
+exception to it.
 Specialists inspect primary evidence and return isolated read-only findings;
 they do not concurrently edit the candidate, another specialist's report, or
 the shared disposition. Architecture alone integrates, deduplicates, and

@@ -18,13 +18,11 @@ The Engineering Agent owns repository-grounded investigation, implementation, va
 
 The roles may be performed by people or agents, but authority does not blur. Delegated workers provide bounded evidence or nonoverlapping changes; the primary Engineering Agent remains accountable for integration and the sole final interpretation.
 
-When useful, route an activity by its intended end: discover evidence or
-options, decide an authorized choice, deliver a validated result, or complete a
-single-role pass. These labels are optional and may be repeated, combined, or
-omitted; they are not lifecycle states or a mandatory pipeline. Compose the
-smallest role roster that adds distinct value against the actual failure axes.
-A single-role pass never authorizes self-acceptance: Architecture still owns
-acceptance and archival after proportionate independent evidence.
+The optional routing lenses are stated in full by
+[Operating Model](../architecture/OPERATING_MODEL.md). Compose the smallest role
+roster that adds distinct value against the actual failure axes. A single-role
+pass never authorizes self-acceptance: Architecture still owns acceptance and
+archival after proportionate independent evidence.
 
 ## Intent-first analysis
 
@@ -128,6 +126,23 @@ next stakeholder message. Where the host cannot continue tools after a visible
 update, perform this watchdog and arm the platform's persistent continuation
 mechanism before sending the update.
 
+Apply a mandatory turn-exit audit before every response boundary. The audit is
+stated here once, for every role, because the obligation it enforces is
+framework-wide. Item 0 alone is role-parameterised: each role guide states the
+concrete label that role emits, and no role guide states another role's label as
+its own.
+
+0. In Integrated Mode, confirm this response begins with the correct role label for the role currently held, never blended with any other role's label in the same message; the concrete label and its prompt are named by that role's own guide. A missing or wrong label is a role-boundary violation, not a formatting detail, and is exactly the kind of drift a long, multi-threaded turn can silently lose — audit it explicitly rather than assuming it is still being applied.
+1. Determine whether the authorized task is complete and reported.
+2. If it is not complete, identify whether a valid stop condition is actually present.
+3. If neither condition is true, do not emit a terminal response. State the next concrete action and execute it in the same turn.
+
+An answer, status report, milestone report, governance update, aside, or correction is never itself an execution boundary. Keep the active workflow open, preserve its exact next action, and continue immediately after responding. When tool or runtime limits force a turn boundary, the response must be explicitly non-terminal, carry a resumable next-action receipt, and use the available continuation mechanism rather than waiting for another user prompt.
+
+Treat accidental turn termination as a governance failure, not a harmless conversational lapse. On detection, immediately resume the interrupted work, generalize the failure mode, strengthen the relevant safeguard, and verify that the resumed turn performs at least one substantive next action before any terminal report.
+
+Self-applied conventions (the role label above, and any other rule with no external code-level enforcement) are the likeliest to silently lapse across a long, multi-threaded conversation; "before every response boundary" is easy to stop applying once forgotten once, with nothing else to catch it. Re-run the full turn-exit audit, including the role-label check, explicitly at these resumption points, not only by default: returning from a background-agent task notification, returning from an unrelated tangent or side investigation, and any point a prior context compaction summary is the active source of continuity. These are exactly where a dropped habit is most likely to stay dropped unnoticed.
+
 For itemized review or ingestion, distinguish evidence acquired, partially
 triaged, fully adjudicated, persist-ready, persisted, and validated states. A
 controller must not infer a later state from a worker's partial routing notes,
@@ -150,13 +165,9 @@ Hard stop gates are executable. A later phase, unrelated feature, new data sourc
 
 ## Parallelism and ownership
 
-During parallel or shared mutation, every shared artifact lane has one active
-writer at a time and one integration owner. Trivial serial work may use its
-primary owner implicitly. Reassignment occurs only at a checkpoint after the
-prior writer is quiescent and partial state is handed off. Independent
-reviewers remain read-only on that lane and return isolated findings; they
-never edit the candidate, one another's reports, or the shared disposition
-concurrently.
+Ownership during parallel or shared mutation — who may write, when a lane may
+change hands, and what independent reviewers may do on it — is stated in full by
+[Validation and Parallelism](../governance/VALIDATION_AND_PARALLELISM.md).
 
 Parallelize independent inspection, semantic review, parsing, and isolated validation when coordination cost is lower than the saved time. Predeclare each shard’s scope, inputs, outputs, writable boundary, exact commands, and owner.
 
@@ -166,12 +177,10 @@ Never allow concurrent writers to one artifact, competing state transitions, dup
 
 Every persisted artifact has one primary role, owner, consumer, update trigger, packaging class, lifecycle, and closure disposition. Archives are evidence, not runtime infrastructure. Reproducible transients are deleted; retained history is the minimum needed for audit, rollback, migration, legal, tuning, or conformance value.
 
-Durable learning is selective. Persist a lesson only when it is reusable or
-materially strengthens an owning control, and use an existing authority rather
-than a mandatory per-run ledger. At an accumulated framework release or
-governed phase progression, consolidate duplicates, resolve contradictions,
-review staleness and scope, and promote cross-context guidance only when
-evidence supports it.
+Durable learning is selective. The rule deciding when a lesson is persisted,
+promoted across contexts, narrowed, or retired, and the boundary at which that
+review happens, is stated in full by
+[Governing Principles](../governance/GOVERNING_PRINCIPLES.md).
 
 A deferred or pending state is incomplete without a stable identity, concrete trigger, bounded selector, invoker, idempotent execution, attempt history, retry/cancellation/terminal behavior, downstream invalidation, and trigger-path tests. If those do not exist, describe the state only as recorded for possible later work.
 
