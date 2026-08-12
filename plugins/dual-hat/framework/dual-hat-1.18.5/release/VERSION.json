@@ -1,7 +1,0 @@
-{
-  "$comment": "SPDX-License-Identifier: Apache-2.0",
-  "maturity": "stable_1_x",
-  "schema": "dual-hat-version/1.0",
-  "stability": "Mandatory core contracts are stable; breaking changes require a new major version and governed migration.",
-  "version": "1.18.5"
-}
