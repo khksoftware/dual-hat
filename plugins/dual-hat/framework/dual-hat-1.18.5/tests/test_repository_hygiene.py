@@ -34,7 +34,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             self._git_init(root)
             script = root / "tooling/example_tool.py"
             script.parent.mkdir(parents=True)
-            script.write_text('DEFAULT_ROOT = Path("C:\\\\Users\\\\khkso\\\\projects\\\\dual-hat")\n', encoding="utf-8")
+            script.write_text('DEFAULT_ROOT = Path("Z:\\\\Example\\\\Operator\\\\projects\\\\dual-hat")\n', encoding="utf-8")
             subprocess.run(("git", "add", "-A"), cwd=root, check=True)
             failures = validate_no_embedded_absolute_local_paths(root)
             self.assertEqual(1, len(failures))
@@ -47,8 +47,8 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             self._git_init(root)
             doc = root / "NOTES.md"
             doc.write_text(
-                "Reviewed at `C:\\Users\\khkso\\alpha.txt`.\n"
-                "Separately, also found at `C:\\Users\\khkso\\beta.txt`.\n",
+                "Reviewed at `Z:\\Example\\Operator\\alpha.txt`.\n"
+                "Separately, also found at `Z:\\Example\\Operator\\beta.txt`.\n",
                 encoding="utf-8",
             )
             subprocess.run(("git", "add", "-A"), cwd=root, check=True)
@@ -88,7 +88,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             citation_style = root / "process/REVIEW.md"
             citation_style.parent.mkdir(parents=True, exist_ok=True)
             citation_style.write_text(
-                "Inspected `F:/Personal/Alex/Dev/dual-hat/tooling/x.py#L38)`.\n", encoding="utf-8",
+                "Inspected `Z:/example-project/tooling/x.py#L38)`.\n", encoding="utf-8",
             )
             subprocess.run(("git", "add", "-A"), cwd=root, check=True)
             self.assertEqual((), validate_no_embedded_absolute_local_paths(root))
