@@ -14,7 +14,7 @@
     "permitted_next_action": "await explicit Architecture disposition",
     "platform_profile": {
       "id": "profile",
-      "version": "1.0.0"
+      "version": "3.0.0"
     },
     "repository_and_remote_state": {},
     "sealed_work_order_hash": "sha256",

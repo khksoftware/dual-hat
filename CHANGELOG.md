@@ -2,6 +2,45 @@
 
 # Changelog
 
+## 3.0.0 - 2026-08-13
+
+Major release. Vendored plugin-bundle version currency becomes a
+publication-blocking condition rather than a detector that reports and is
+shipped past.
+
+A stale vendored bundle reached a published HEAD once while the framework's own
+detector sat red, and its own comment had described the consequence in advance.
+A red test is advisory and a human can ship past it, so the reinforcement is a
+publication-blocking condition and deliberately not a second test asserting the
+same predicate. `validate_bundle_version_currency()` is called from both
+`validate_staged()` and `verify_commit_tree()`, reading through the index or the
+committed tree rather than the worktree, so the condition is evaluated against
+the content actually being published.
+
+**Breaking, and it is first contact rather than a tightening.** No earlier
+release carried this condition in any form, so every refusal it makes is new to
+every adopter regardless of which release they are upgrading from.
+`release/UPGRADING.md` carries the migration section: the three enforcement
+sites including the one reached transitively inside a production release build,
+the conditions refused, the equality-in-both-directions rule, the two keys added
+to `validate_staged()` and `verify_commit_tree()` return shapes, the four limits
+the condition deliberately does not reach, and the ordering consequence for an
+adopter's own release process.
+
+`release/PUBLICATION.md` gains a normative section stating the rule, and
+reconciles it in one sentence with the existing statement that forward
+publication preserves standalone-owned namespaces without claiming or mutating
+them: the rule reads that content and declines to publish, never rewrites it.
+
+The framework's own bundle-currency test now calls the condition rather than
+re-asserting three of its predicates by hand, and its hardcoded vendor
+enumeration is retired.
+
+Every version declaration this distribution carries states the shipped version,
+including the example adopter profile and the shipped templates. Deployment-form
+manifests and superseded vendored snapshots are discovered by shape rather than
+enumerated, so a form or a snapshot nobody wrote down is still handled.
+
 ## 2.0.0 - 2026-08-11
 
 - **Major release. See `release/UPGRADING.md`, the framework's first governed

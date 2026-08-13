@@ -4,6 +4,7 @@ from __future__ import annotations
 DUAL_HAT_CAPABILITY_PROOFS = {"canonical_path_containment", "network_policy_validation", "rights_readiness_validation"}
 
 import ast
+import builtins
 import hashlib
 import json
 import os
@@ -24,8 +25,14 @@ from framework_completeness import (  # noqa: E402
 )
 from path_containment import is_reparse  # noqa: E402
 from staged_publication import (  # noqa: E402
+    BUNDLE_PAYLOAD,
+    BUNDLE_ROOT,
+    CORE_VERSION_KEY,
     PublicationValidationError,
+    VERSION_AUTHORITY,
+    declared_core_versions,
     stage_manifest_owned,
+    validate_bundle_version_currency,
     verify_commit_tree,
 )
 from publication_ownership import standalone_owned  # noqa: E402
@@ -919,35 +926,52 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 )
 
     def test_plugin_bundle_tracks_canonical_version(self):
-        version = json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))["version"]
+        """Currency of the LIVE shipped bundle, asserted through its one owner.
+
+        The plugin marketplace is a documented, officially supported install
+        path; a stale bundle silently ships whatever governance or continuation
+        defects the canonical framework has already fixed.
+
+        The predicates belong to `validate_bundle_version_currency`, and this
+        test calls it rather than restating them. Its distinct and still
+        necessary job is asserting over *live shipped data*, which the gate's
+        synthetic controls deliberately do not.
+
+        It previously hand-implemented three of those predicates -- including a
+        substring `framework_root` check where the gate uses equality, so the
+        two already disagreed and a `dual-hat-<v>-old` root passed here while
+        the gate refused it -- and discovered manifests through a hardcoded
+        vendor list, the approach the gate's own rationale rejects for skipping
+        whatever deployment form is added next.
+
+        The plugin manifests' own "version" field previously tracked an
+        independent packaging sequence (0.1.0, 0.2.0, ...) bumped in lockstep
+        with every framework refresh but carrying no distinct meaning of its
+        own. It now equals the framework version directly, removing that
+        redundant parallel sequence -- a semantic this rule imposes on
+        standalone-owned content, recorded in the change's classification.
+        """
         payload_path = ROOT / "plugins/dual-hat/framework-payload.json"
         if not payload_path.is_file():
             self.skipTest("no plugin bundle present in this checkout")
+        paths = {
+            path.relative_to(ROOT).as_posix()
+            for path in ROOT.rglob("*")
+            if path.is_file() and ".git" not in path.relative_to(ROOT).parts
+        }
+        result = validate_bundle_version_currency(
+            paths, lambda path: (ROOT / path).read_bytes()
+        )
+        self.assertEqual("passed", result["bundle_version_currency"])
+        self.assertEqual(
+            json.loads((ROOT / VERSION_AUTHORITY).read_text(encoding="utf-8"))["version"],
+            result["bundle_framework_version"],
+        )
+        # Not a gate predicate: the gate checks the bundled tree by repository
+        # path, while this confirms the payload's own relative reference
+        # resolves from the payload file's directory rather than the root.
         payload = json.loads(payload_path.read_text(encoding="utf-8"))
-        # The plugin marketplace is a documented, officially supported
-        # install path; a stale bundle silently ships whatever governance
-        # or continuation defects the canonical framework has already fixed.
-        self.assertEqual(version, payload["framework_version"])
-        self.assertIn(version, payload["framework_root"])
-        # framework_root is relative to the payload file's own directory
-        # (plugins/dual-hat/), not the repository root.
         self.assertTrue((payload_path.parent / payload["framework_root"]).resolve().is_dir())
-        # The plugin manifests' own "version" field previously tracked an
-        # independent packaging sequence (0.1.0, 0.2.0, ...) bumped in
-        # lockstep with every framework refresh but carrying no distinct
-        # meaning of its own -- every historical bump happened for the same
-        # reason a framework refresh happened, never for an independent
-        # packaging-only change. It now equals framework_version directly,
-        # removing that redundant, easy-to-forget parallel sequence.
-        # Built from split parts, not a contiguous literal: this file is
-        # scanned for platform-vendor name leakage, and one of the two
-        # vendor directory names, spelled out whole, trips that scanner
-        # even inside a legitimate path string.
-        second_vendor = "cod" + "ex"
-        for vendor_dir in (".claude" + "-plugin", "." + second_vendor + "-plugin"):
-            manifest_path = f"plugins/dual-hat/{vendor_dir}/plugin.json"
-            manifest = json.loads((ROOT / manifest_path).read_text(encoding="utf-8"))
-            self.assertEqual(version, manifest["version"])
 
     def test_distinguishes_reassignment_from_authority_transition(self):
         transitions = (ROOT / "governance/ROLE_TRANSITIONS.md").read_text(encoding="utf-8")
@@ -1260,6 +1284,316 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             ids,
         )
 
+    # --- the plugin bundle must be current to publish at all -----------------
+    #
+    # `test_plugin_bundle_tracks_canonical_version` already asserts the
+    # predicate and is deliberately NOT duplicated here. It detected the stale
+    # 1.18.5 bundle correctly and was red at a published HEAD, which is the
+    # whole problem: a red test is advisory and a human can ship past it. What
+    # follows exercises the *blocking* half -- that the governed publication
+    # path refuses -- and a gate never observed refusing is exactly the failure
+    # being repaired, so each stale granularity gets its own negative control
+    # alongside a positive one proving a current bundle still publishes.
+    #
+    # Versions here are synthetic and unrelated to the shipped one: the suite
+    # must never pin the live version as a literal.
+    CURRENT_FIXTURE_VERSION = "9.9.9"
+    STALE_FIXTURE_VERSION = "8.8.8"
+    AHEAD_FIXTURE_VERSION = "10.0.0"
+
+    @classmethod
+    def _bundle_fixture(
+        cls,
+        *,
+        payload_overrides: dict | None = None,
+        core_version: str | None = None,
+        manifest_version: str | None = None,
+        extra_snapshot: bool = False,
+        bundled_tree_version: str | None = None,
+        omit_bundled_tree: bool = False,
+    ) -> tuple[set[str], object]:
+        """A synthetic published tree carrying a plugin bundle.
+
+        The payload carries the REAL shipped key set rather than a reduced one.
+        That is not tidiness: the fixture previously omitted `schema`, and
+        `schema` was precisely the field whose value tripped a false refusal
+        under the original bare-digit token match. Five negative controls and a
+        positive one all passed while a current bundle was one routine schema
+        bump away from being refused, because no control ever put the real key
+        set in front of the gate. A positive control that does not represent
+        the artifact it certifies cannot certify it.
+        """
+        current = cls.CURRENT_FIXTURE_VERSION
+        snapshot = f"{BUNDLE_ROOT}/framework/dual-hat-{current}"
+        payload = {
+            "$comment": "SPDX-License-Identifier: Apache-2.0",
+            "content_manifest": f"./framework/dual-hat-{current}/.dual-hat-release/content-manifest.json",
+            "framework_root": f"./framework/dual-hat-{current}",
+            "framework_version": current,
+            "generation": (
+                f"Exact extraction of the checksum-bound Dual Hat {current} "
+                "standalone package; do not hand-edit the payload."
+            ),
+            "schema": "dual-hat-plugin-framework-payload/1.0",
+            "source_release_archive": f"dual-hat-{current}.zip",
+            "source_release_sha256": "A1" * 32,
+        }
+        payload.update(payload_overrides or {})
+        example = {"schema": "example", CORE_VERSION_KEY: core_version or current}
+        content = {
+            VERSION_AUTHORITY: {"version": current},
+            BUNDLE_PAYLOAD: payload,
+            f"{snapshot}/{VERSION_AUTHORITY}": {"version": bundled_tree_version or current},
+            f"{snapshot}/examples/platform-profile.example.json": example,
+            f"{BUNDLE_ROOT}/.example-plugin/plugin.json": {
+                "name": "dual-hat", "version": manifest_version or current,
+            },
+        }
+        if omit_bundled_tree:
+            for path in [key for key in content if key.startswith(f"{snapshot}/")]:
+                del content[path]
+        if extra_snapshot:
+            content[f"{BUNDLE_ROOT}/framework/dual-hat-{cls.STALE_FIXTURE_VERSION}/README.md"] = None
+        encoded = {
+            path: (b"stale snapshot" if body is None
+                   else json.dumps(body, sort_keys=True).encode("utf-8"))
+            for path, body in content.items()
+        }
+        return set(encoded), encoded.__getitem__
+
+    @staticmethod
+    def _refusal_rows(exception: PublicationValidationError) -> list[str]:
+        """Exactly the failure rows, recovered the way a caller would."""
+        _, separator, joined = str(exception).partition("publication refused: ")
+        return joined.split("; ") if separator else [str(exception)]
+
+    def test_publication_gate_passes_a_current_plugin_bundle(self):
+        paths, read = self._bundle_fixture()
+        result = validate_bundle_version_currency(paths, read)
+        self.assertEqual("passed", result["bundle_version_currency"])
+        self.assertEqual(self.CURRENT_FIXTURE_VERSION, result["bundle_framework_version"])
+
+    def test_publication_gate_refuses_every_stale_bundle_granularity(self):
+        """Each control names the EXACT rows its own condition produces.
+
+        The assertions were previously generic -- that the message mentioned
+        the stale and the current version -- which cannot distinguish which
+        condition fired. Control 1 was consequently over-determined and nobody
+        could see it from the output: it set three payload fields stale at
+        once, two of whose stale values also carry a framework-naming token, so
+        it still refused with granularity 1 deleted outright. Asserting the
+        exact row set is what makes a control self-isolate. Where a condition
+        genuinely produces two rows, both are named here rather than hidden
+        behind a substring match, so the redundancy is declared and a change to
+        either granularity turns this red.
+        """
+        stale = self.STALE_FIXTURE_VERSION
+        current = self.CURRENT_FIXTURE_VERSION
+        snapshot = f"{BUNDLE_ROOT}/framework/dual-hat-{current}"
+        manifest = f"{BUNDLE_ROOT}/.example-plugin/plugin.json"
+        cases = {
+            # (1) The bundled snapshot's own declared version. Only that one
+            # field is disturbed: a stale bare version carries no
+            # framework-naming token, so granularity 1 is the only thing that
+            # can produce this row and the control cannot be carried by
+            # another granularity.
+            "declared bundle version": (
+                dict(payload_overrides={"framework_version": stale}),
+                [f"{BUNDLE_PAYLOAD}: framework_version is {stale!r}, "
+                 f"not the shipped {current!r}"],
+            ),
+            # (1b) Equality, not "not behind". A bundle AHEAD of the shipped
+            # version is refused on the same terms -- legitimate during a
+            # version bump performed in the wrong order, and named in this
+            # change's adopter-visible classification.
+            "bundle ahead of the shipped version": (
+                dict(payload_overrides={"framework_version": self.AHEAD_FIXTURE_VERSION}),
+                [f"{BUNDLE_PAYLOAD}: framework_version is "
+                 f"{self.AHEAD_FIXTURE_VERSION!r}, not the shipped {current!r}"],
+            ),
+            # (1c) The tree the payload points at. Two rows by construction:
+            # the stale root value also names the framework, so granularity 3
+            # sees it too. Declared rather than concealed.
+            "framework root the payload points at": (
+                dict(payload_overrides={"framework_root": f"./framework/dual-hat-{stale}"}),
+                [f"{BUNDLE_PAYLOAD}: framework_root is "
+                 f"'./framework/dual-hat-{stale}', not './framework/dual-hat-{current}'",
+                 f"{BUNDLE_PAYLOAD}: framework_root names framework version "
+                 f"{stale!r}, which is not the shipped {current!r}"],
+            ),
+            # (1d) The archive the payload binds. Two rows for the same reason.
+            "source release archive": (
+                dict(payload_overrides={"source_release_archive": f"dual-hat-{stale}.zip"}),
+                [f"{BUNDLE_PAYLOAD}: source_release_archive is "
+                 f"'dual-hat-{stale}.zip', not the shipped version's archive",
+                 f"{BUNDLE_PAYLOAD}: source_release_archive names framework "
+                 f"version {stale!r}, which is not the shipped {current!r}"],
+            ),
+            # (1e) The bundled tree's OWN release/VERSION.json disagreeing.
+            # Enumerated by the gate, probed and working, and until now
+            # untested -- the fixture derived that file from the current
+            # version in every case, so it could never disagree.
+            "bundled tree declares another version": (
+                dict(bundled_tree_version=stale),
+                [f"{snapshot}/{VERSION_AUTHORITY}: bundled tree declares "
+                 f"{stale!r}, not the shipped {current!r}"],
+            ),
+            # (1f) No bundled tree for the shipped version at all. The second
+            # of the two enumerated conditions that had no control.
+            "bundled tree absent": (
+                dict(omit_bundled_tree=True),
+                [f"no bundled framework tree for the shipped version at "
+                 f"{snapshot}/{VERSION_AUTHORITY}"],
+            ),
+            # (2) Vendored content declaring a stale core version -- the same
+            # rule one level down, where a shipped example trained adopters
+            # onto a version the framework had already left behind.
+            "vendored declared core version": (
+                dict(core_version=stale),
+                [f"{snapshot}/examples/platform-profile.example.json: "
+                 f"{CORE_VERSION_KEY} = {stale!r} but the shipped core version "
+                 f"is {current!r}"],
+            ),
+            # (3) The generator rebinding every machine-readable field and
+            # leaving a narrative one stale. Every bound field is CORRECT; only
+            # the prose disagrees, so exactly one row and it is granularity 3's.
+            # A gate that trusted the generator's own fields would pass this.
+            "narrative generation string": (
+                dict(payload_overrides={
+                    "generation": f"Exact extraction of the checksum-bound Dual "
+                                  f"Hat {stale} standalone package.",
+                }),
+                [f"{BUNDLE_PAYLOAD}: generation names framework version "
+                 f"{stale!r}, which is not the shipped {current!r}"],
+            ),
+            # (4) The manifest adopters actually resolve the plugin through.
+            "plugin manifest version": (
+                dict(manifest_version=stale),
+                [f"{manifest}: version is {stale!r}, not the shipped {current!r}"],
+            ),
+            # (5) A superseded snapshot left beside the current one, so the
+            # install path can still resolve the old tree.
+            "superseded snapshot retained": (
+                dict(extra_snapshot=True),
+                [f"superseded framework snapshots still present alongside the "
+                 f"shipped {current!r}: ['dual-hat-{stale}']"],
+            ),
+        }
+        for label, (keywords, expected_rows) in cases.items():
+            with self.subTest(granularity=label):
+                paths, read = self._bundle_fixture(**keywords)
+                with self.assertRaises(PublicationValidationError) as refusal:
+                    validate_bundle_version_currency(paths, read)
+                message = str(refusal.exception)
+                self.assertIn("publication refused", message)
+                self.assertEqual(expected_rows, self._refusal_rows(refusal.exception))
+                # The row separator must appear exactly as many times as there
+                # are rows to separate. No row and no prefix may contain it, or
+                # a caller counting failures on it silently miscounts -- which
+                # the superseded-snapshot row and this message's own prefix
+                # both used to do.
+                self.assertEqual(len(expected_rows), len(message.split("; ")))
+
+    def test_publication_gate_refuses_a_bundle_it_has_no_authority_to_check(self):
+        """A publication carrying a bundle but no version authority is refused.
+
+        A hard obligation the gate has always enforced and the rule text did
+        not state until this correction. Stating an obligation in a governed
+        file that nothing compares against the code is how the two drift; this
+        is the comparison.
+        """
+        paths, read = self._bundle_fixture()
+        paths.discard(VERSION_AUTHORITY)
+        with self.assertRaises(PublicationValidationError) as refusal:
+            validate_bundle_version_currency(paths, read)
+        self.assertEqual(
+            f"publication carries a plugin bundle but no {VERSION_AUTHORITY} "
+            "to check it against",
+            str(refusal.exception),
+        )
+
+    def test_declared_core_versions_has_one_authority_shared_with_the_gate(self):
+        """The walker the gate owns is the walker the shipped-data check calls.
+
+        Two implementations of "what is a declared core version" would be two
+        rules free to drift, which is the defect this whole repair is about.
+
+        The behavioural half below pins the shared semantics, and on its own it
+        CANNOT see the property this test is named for. It exercises the
+        imported function directly, so reintroducing a local copy under any
+        other name and re-pointing the shipped-data check at it left every
+        assertion here green while the single authority was silently gone --
+        measured, not supposed. A name asserting a structural property its body
+        cannot detect is the same shape as a fixture that has stopped matching
+        its detector: green because it stopped testing, not because the
+        property holds.
+
+        So the structural half asserts the property instead of the symptom, in
+        the only two places it can fail: the defining module of the name this
+        suite imports, and the defining module of every callable the
+        shipped-data check actually names at its own call site.
+        """
+        document = {"a": {CORE_VERSION_KEY: "1.2.3"}, "b": [{CORE_VERSION_KEY: "4.5.6"}]}
+        self.assertEqual(
+            [f"p: {CORE_VERSION_KEY} = '1.2.3'", f"p: {CORE_VERSION_KEY} = '4.5.6'"],
+            sorted(declared_core_versions(document, "p")),
+        )
+        self.assertEqual([], list(declared_core_versions({CORE_VERSION_KEY: "not-a-version"}, "p")))
+
+        # (a) The name this suite imports is defined by the gate module itself,
+        # so a local `def declared_core_versions` shadowing the import is red.
+        gate = sys.modules[declared_core_versions.__module__]
+        self.assertEqual(
+            (ROOT / "tooling/staged_publication.py").resolve(),
+            Path(gate.__file__).resolve(),
+            "declared_core_versions is no longer defined by the publication "
+            "gate; this suite is exercising a second implementation of the rule",
+        )
+
+        # (b) And the shipped-data check calls THAT symbol rather than a copy.
+        # Its own call site is read, so the check cannot be quietly re-pointed:
+        # every plain-name call it makes must resolve to a builtin or to the
+        # gate module, which turns a reintroduced local walker red under
+        # whatever name it is given.
+        checked = "test_no_hardcoded_core_version_survives_the_release_evidence_authority"
+        body = next(
+            (
+                node
+                for node in ast.walk(ast.parse(Path(__file__).read_text(encoding="utf-8")))
+                if isinstance(node, ast.FunctionDef) and node.name == checked
+            ),
+            None,
+        )
+        # Renaming the checked function must say so, not surface as a bare
+        # StopIteration from the search that failed to find it.
+        self.assertIsNotNone(
+            body,
+            f"{checked} no longer exists under that name, so the shipped-data "
+            "check's call site cannot be located; re-point this guard at it",
+        )
+        called = sorted({
+            node.func.id for node in ast.walk(body)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        })
+        self.assertIn(
+            declared_core_versions.__name__, called,
+            f"{checked} no longer walks the shipped data through the gate's own "
+            "authority; it has been re-pointed at something else",
+        )
+        foreign = [
+            f"{name} is defined in "
+            f"{getattr(globals().get(name), '__module__', None)!r}"
+            for name in called
+            if not hasattr(builtins, name)
+            and getattr(globals().get(name), "__module__", None) != gate.__name__
+        ]
+        self.assertEqual(
+            [], foreign,
+            f"{checked} calls a walker this test module defines instead of the "
+            f"one {gate.__name__} owns; that is a second implementation of one "
+            "rule, free to drift from it",
+        )
+
     def test_manifest_owned_staging_and_committed_tree_verification(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -1491,18 +1825,11 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             (ROOT / "release/VERSION.json").read_text(encoding="utf-8")
         )["version"])
 
-    @staticmethod
-    def _declared_core_versions(payload, path, key=None):
-        """Yield every version-shaped string reachable under a core-version key."""
-        if isinstance(payload, dict):
-            for name, value in payload.items():
-                yield from FrameworkTests._declared_core_versions(value, path, str(name))
-        elif isinstance(payload, list):
-            for value in payload:
-                yield from FrameworkTests._declared_core_versions(value, path, key)
-        elif (key == "dual_hat_core_version" and isinstance(payload, str)
-                and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", payload)):
-            yield f"{path}: dual_hat_core_version = {payload!r}"
+    # `declared_core_versions` is imported from the publication gate rather
+    # than reimplemented here. This check and the gate must agree on what
+    # counts as a declared core version; two copies would be two rules free to
+    # drift, and drift between duplicated authorities is the defect this whole
+    # repair exists to close.
 
     def test_no_hardcoded_core_version_survives_the_release_evidence_authority(self):
         shipped = self._shipped_version()
@@ -1536,7 +1863,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             if ".git" not in path.parts and "__pycache__" not in path.parts
             for payload in (self._loaded_json(path),)
             if payload is not None
-            for row in self._declared_core_versions(payload, path.relative_to(ROOT).as_posix())
+            for row in declared_core_versions(payload, path.relative_to(ROOT).as_posix())
             if not row.endswith(f"{shipped!r}")
         ]
         with self.subTest(half="shipped data"):
