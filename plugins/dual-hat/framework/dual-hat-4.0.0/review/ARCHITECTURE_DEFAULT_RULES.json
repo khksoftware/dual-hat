@@ -1,0 +1,197 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "rules": [
+    {
+      "action": {
+        "type": "prohibit"
+      },
+      "conflict_behavior": "fail_closed",
+      "created_date": "2026-07-20",
+      "lifecycle_state": "active",
+      "modified_date": "2026-07-20",
+      "owner": "Architecture Office",
+      "precedence": "non_waivable",
+      "provenance": "GOV-9006",
+      "rationale": "These boundaries are non-waivable without separately governed framework change.",
+      "review_tiers": [
+        "light",
+        "standard",
+        "deep"
+      ],
+      "revision": 1,
+      "rule_id": "REVIEW-NW-001",
+      "scope": {},
+      "source": "Dual Hat core",
+      "status": "enabled",
+      "title": "Authorization, rights, privacy, secrets, security boundaries, repository integrity, and mandatory core controls fail closed"
+    },
+    {
+      "action": {
+        "type": "require"
+      },
+      "conflict_behavior": "surface",
+      "created_date": "2026-07-20",
+      "lifecycle_state": "active",
+      "modified_date": "2026-07-20",
+      "owner": "Architecture Office",
+      "precedence": "architecture_default",
+      "provenance": "GOV-9006",
+      "rationale": "Passing tests alone cannot establish correctness.",
+      "review_tiers": [
+        "light",
+        "standard",
+        "deep"
+      ],
+      "revision": 1,
+      "rule_id": "REVIEW-CORRECT-001",
+      "scope": {
+        "review_categories": [
+          "correctness"
+        ]
+      },
+      "source": "Architecture default",
+      "status": "enabled",
+      "title": "Verify semantics, invariants, edge cases, and actionable failures"
+    },
+    {
+      "action": {
+        "type": "require"
+      },
+      "conflict_behavior": "surface",
+      "created_date": "2026-07-20",
+      "lifecycle_state": "active",
+      "modified_date": "2026-07-20",
+      "owner": "Architecture Office",
+      "precedence": "architecture_default",
+      "provenance": "GOV-9006",
+      "rationale": "New behavior must fit the governed architecture.",
+      "review_tiers": [
+        "light",
+        "standard",
+        "deep"
+      ],
+      "revision": 1,
+      "rule_id": "REVIEW-ARCH-001",
+      "scope": {
+        "review_categories": [
+          "architecture"
+        ]
+      },
+      "source": "Architecture default",
+      "status": "enabled",
+      "title": "Verify owning layer, proportional abstraction, compatibility, and lifecycle"
+    },
+    {
+      "action": {
+        "type": "recommend"
+      },
+      "conflict_behavior": "surface",
+      "created_date": "2026-07-20",
+      "lifecycle_state": "active",
+      "modified_date": "2026-07-20",
+      "owner": "Architecture Office",
+      "precedence": "architecture_default",
+      "provenance": "GOV-9006",
+      "rationale": "Maintainable code reduces recurrence and operational risk.",
+      "review_tiers": [
+        "light",
+        "standard",
+        "deep"
+      ],
+      "revision": 1,
+      "rule_id": "REVIEW-MAINT-001",
+      "scope": {
+        "review_categories": [
+          "maintainability"
+        ]
+      },
+      "source": "Architecture default",
+      "status": "enabled",
+      "title": "Review clarity, complexity, duplication, dead code, and responsibility boundaries"
+    },
+    {
+      "action": {
+        "type": "require_evidence"
+      },
+      "conflict_behavior": "surface",
+      "created_date": "2026-07-20",
+      "lifecycle_state": "active",
+      "modified_date": "2026-07-20",
+      "owner": "Architecture Office",
+      "precedence": "architecture_default",
+      "provenance": "GOV-9006",
+      "rationale": "Tests must exercise the risk rather than mask it.",
+      "review_tiers": [
+        "light",
+        "standard",
+        "deep"
+      ],
+      "revision": 1,
+      "rule_id": "REVIEW-TEST-001",
+      "scope": {
+        "review_categories": [
+          "testing"
+        ]
+      },
+      "source": "Architecture default",
+      "status": "enabled",
+      "title": "Review relevant semantic, negative, failure, cleanup, direct-execution, and detached tests"
+    },
+    {
+      "action": {
+        "type": "require_manual_review"
+      },
+      "conflict_behavior": "surface",
+      "created_date": "2026-07-20",
+      "lifecycle_state": "active",
+      "modified_date": "2026-07-20",
+      "owner": "Architecture Office",
+      "precedence": "architecture_default",
+      "provenance": "GOV-9006",
+      "rationale": "Security review requires representative control inspection, not keyword-only claims.",
+      "review_tiers": [
+        "standard",
+        "deep"
+      ],
+      "revision": 1,
+      "rule_id": "REVIEW-SEC-001",
+      "scope": {
+        "review_categories": [
+          "security"
+        ]
+      },
+      "source": "Architecture default",
+      "status": "enabled",
+      "title": "Inspect inputs, paths, commands, dependencies, temporary state, permissions, and failure boundaries"
+    },
+    {
+      "action": {
+        "type": "require_evidence"
+      },
+      "conflict_behavior": "surface",
+      "created_date": "2026-07-20",
+      "lifecycle_state": "active",
+      "modified_date": "2026-07-20",
+      "owner": "Architecture Office",
+      "precedence": "repository_architecture",
+      "provenance": "GOV-9006",
+      "rationale": "Boundary conformance is independent of functional success.",
+      "review_tiers": [
+        "light",
+        "standard",
+        "deep"
+      ],
+      "revision": 1,
+      "rule_id": "REVIEW-BOUNDARY-001",
+      "scope": {
+        "review_categories": [
+          "boundary_conformance"
+        ]
+      },
+      "source": "Architecture default",
+      "status": "enabled",
+      "title": "Compare sealed authority with repository, local, remote, lifecycle, and cleanup evidence"
+    }
+  ],
+  "schema": "dual-hat-quality-rules/1.0"
+}

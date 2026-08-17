@@ -1,0 +1,31 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "architecture_disposition_required": true,
+  "exact_unmet_requirement": "mandatory requirement identifier and text",
+  "gap_kind": "unsupported_capability",
+  "handoff": {
+    "active_role": "engineering",
+    "completed_steps": [],
+    "containment_actions": [],
+    "dirty_worktree_state": {},
+    "operating_mode": "integrated",
+    "partial_outputs": [],
+    "pending_steps": [],
+    "permitted_next_action": "await explicit Architecture disposition",
+    "platform_profile": {
+      "id": "profile",
+      "version": "3.0.0"
+    },
+    "repository_and_remote_state": {},
+    "sealed_work_order_hash": "sha256",
+    "temporary_and_ignored_state": [],
+    "work_item_id": "GOV-9001"
+  },
+  "mutation_blocked": true,
+  "notifications": {
+    "architecture_office": "required",
+    "user": "required"
+  },
+  "platform_or_profile_limitation": "exact limitation",
+  "status": "hard_stop"
+}
