@@ -455,7 +455,7 @@ class ReleasePackageTests(unittest.TestCase):
                 )
 
     def test_no_superseded_endpoint_query_or_stray_maturity_literal_survives(self) -> None:
-        # Rule 20's migration half, for both conventions this change supersedes.
+        # Principle 15's migration half, for both conventions this change supersedes.
         modules = {
             path.relative_to(ROOT).as_posix(): ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             for path in sorted((ROOT / "tooling").glob("*.py"))

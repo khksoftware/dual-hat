@@ -15,11 +15,27 @@ repeated approval prompts without weakening evaluation or expanding authority.
 Execution authorization also does not settle consequential design details that the existing decision record leaves open. Before an implementation-ready specification fixes a material product, user-experience, workflow, commercial, privacy, or architectural choice, Architecture uses the lightest useful discussion artifact to expose and resolve the meaningful options. This is a decision-quality control, not a mandatory separate capability or ceremony.
 
 Once the design or plan is ready and before execution, run the proportionate
-optimization pass, and the reevaluation that long-running execution receives,
-stated in full by rule 18 of
-[Governing Principles](../governance/GOVERNING_PRINCIPLES.md). Planning binds
-one thing that rule does not state: an optimization must preserve the authorized
-scope, not only authority, acceptance, safety, and recovery.
+optimization pass, and the reevaluation that long-running execution receives.
+[Governing Principles](../governance/GOVERNING_PRINCIPLES.md) principle 1 binds
+the pass itself -- consider whether the same authorized outcome can be reached
+more cheaply, apply only improvements that preserve authority, acceptance,
+safety and recovery, and do not turn the pass into a reviewed artifact of its
+own. **This document is the owning authority for what the pass covers**, which
+principle 1 deliberately does not enumerate: better sequencing, earlier value,
+better dependency ordering, better allocation of parallelism and resources,
+incremental execution with useful checkpoints, better evidence reuse, and a
+cheaper equivalent control. For ongoing long-running or materially
+resource-consuming execution, reevaluate proportionately at meaningful
+checkpoints when duration, scale, or observed change warrants it -- changed
+bottlenecks, throughput, failures, value yield, allocation, batching, cost and
+wall time -- and apply only bounded improvements whose expected benefit exceeds
+disruption and revalidation cost. Retest material assumptions embedded in the
+current design or plan against current evidence and explicitly confirm, revise,
+or retire them; an unchallenged assumption is not a supported one. Scale
+experimentation to the assumption's consequence and uncertainty. Do not pause
+healthy work merely to inspect it. Planning binds one thing principle 1 does not
+state: an optimization must preserve the authorized scope, not only authority,
+acceptance, safety, and recovery.
 
 ## Required lifecycle
 

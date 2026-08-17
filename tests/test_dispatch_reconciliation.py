@@ -25,7 +25,7 @@ from dispatch_reconciliation import (
     dispatch_inventory,
 )
 
-EVIDENCE = {"architecture_directed": True, "next_stream": "governance", "source": "sealed GOV-0014 closeout direction"}
+EVIDENCE = {"architecture_directed": True, "next_stream": "governance", "source": "sealed GOV-9014 closeout direction"}
 AUDIT = reconciliation_audit(
     reviewer_role="independent", engineering_self_report_only=False,
     items=[{"source": "sealed_scope", "description": "make delegated-dispatch accounting executable", "status": "done", "evidence": "commit abc1234"}],
@@ -36,7 +36,7 @@ def worker(**overrides: object) -> dict[str, object]:
     """A fully and correctly registered, discharged worker; overrides introduce one defect at a time."""
     base: dict[str, object] = {
         "handle": "worker-7f2a", "assigned_outcome": "draft the reconciler", "owner": "architecture",
-        "durable_cursor": "engineering/process/work-items/GOV-0014/EVIDENCE.md", "heartbeat_interval_seconds": 300,
+        "durable_cursor": "process/work-items/GOV-9014/EVIDENCE.md", "heartbeat_interval_seconds": 300,
         "last_probe_age_seconds": 12, "state": "finished", "outcome_complete": True,
         "terminal_evidence": "final report received and consumed at commit abc1234",
     }
@@ -149,6 +149,92 @@ class DispatchClosureGateTests(unittest.TestCase):
             dispatch_inventory(workers=[worker(handle="dup"), worker(handle="dup")])
         self.assertIn("same handle twice", str(duplicated.exception))
 
+    def test_worker_registration_shape_is_closed(self):
+        with self.assertRaisesRegex(ValueError, "unknown registration fields"):
+            dispatch_inventory(workers=[worker(unsealed_claim="accepted")])
+
+    def test_outcome_complete_requires_an_exact_boolean(self):
+        with self.assertRaisesRegex(ValueError, "outcome_complete must be boolean"):
+            dispatch_inventory(workers=[worker(outcome_complete="false")])
+
+    def test_worker_scalar_fields_reject_coercible_non_strings(self):
+        cases = (
+            ("handle", "real platform handle"),
+            ("assigned_outcome", "assigned_outcome must be string"),
+            ("owner", "owner must be string"),
+            ("durable_cursor", "durable_cursor must be string"),
+            ("terminal_evidence", "terminal_evidence must be string"),
+            ("successor_handle", "successor_handle must be string or null"),
+        )
+        for field, message in cases:
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, message):
+                dispatch_inventory(workers=[worker(**{field: 7})])
+
+    def test_heartbeat_and_probe_values_must_be_finite(self):
+        with self.assertRaisesRegex(ValueError, "non-finite last_probe_age_seconds"):
+            dispatch_inventory(workers=[worker(last_probe_age_seconds=float("nan"))])
+
+    def test_finished_worker_with_incomplete_outcome_is_refused(self):
+        inventory = dispatch_inventory(workers=[worker(handle="worker-finished-incomplete", outcome_complete=False)])
+        self.assertFalse(inventory["closure_authorized"])
+        self.assertTrue(any("worker-finished-incomplete" in row and "finished" in row and "incomplete" in row for row in inventory["blocking_workers"]))
+
+    def test_successor_must_be_registered(self):
+        nonexistent = dispatch_inventory(workers=[worker(handle="worker-dead-missing", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-not-registered")])
+        self.assertFalse(nonexistent["closure_authorized"])
+        self.assertTrue(any("worker-dead-missing" in row and "worker-not-registered" in row and "not registered" in row for row in nonexistent["blocking_workers"]))
+
+    def test_successor_must_be_distinct_from_the_failed_worker(self):
+        self_successor = dispatch_inventory(workers=[worker(handle="worker-dead-self", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-dead-self")])
+        self.assertFalse(self_successor["closure_authorized"])
+        self.assertTrue(any("worker-dead-self" in row and "itself" in row for row in self_successor["blocking_workers"]))
+
+    def test_successor_must_own_the_same_assigned_outcome(self):
+        inventory = dispatch_inventory(workers=[
+            worker(handle="worker-dead-mismatch", assigned_outcome="finish the primary assigned outcome", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-other-outcome"),
+            worker(handle="worker-other-outcome", assigned_outcome="unrelated cleanup"),
+        ])
+        self.assertFalse(inventory["closure_authorized"])
+        self.assertTrue(any("worker-dead-mismatch" in row and "worker-other-outcome" in row and "different assigned outcome" in row for row in inventory["blocking_workers"]))
+
+    def test_successor_chain_may_reach_completion_through_multiple_registered_hops(self):
+        inventory = dispatch_inventory(workers=[
+            worker(handle="worker-chain-a", assigned_outcome="complete the assigned review", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-chain-b"),
+            worker(handle="worker-chain-b", assigned_outcome="complete the assigned review", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-chain-c"),
+            worker(handle="worker-chain-c", assigned_outcome="complete the assigned review"),
+        ])
+        self.assertTrue(inventory["closure_authorized"])
+        self.assertEqual([],inventory["blocking_workers"])
+
+    def test_two_worker_successor_cycle_is_refused_and_named(self):
+        inventory = dispatch_inventory(workers=[
+            worker(handle="worker-cycle-a", assigned_outcome="complete the assigned review", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-cycle-b"),
+            worker(handle="worker-cycle-b", assigned_outcome="complete the assigned review", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-cycle-a"),
+        ])
+        blocking=" | ".join(inventory["blocking_workers"])
+        self.assertFalse(inventory["closure_authorized"])
+        self.assertIn("cycle",blocking)
+        self.assertIn("worker-cycle-a",blocking)
+        self.assertIn("worker-cycle-b",blocking)
+
+    def test_successor_tail_entering_a_cycle_is_refused_and_named(self):
+        inventory = dispatch_inventory(workers=[
+            worker(handle="worker-tail", assigned_outcome="complete the assigned review", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-loop-a"),
+            worker(handle="worker-loop-a", assigned_outcome="complete the assigned review", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-loop-b"),
+            worker(handle="worker-loop-b", assigned_outcome="complete the assigned review", state="dead", outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-loop-a"),
+        ])
+        blocking=" | ".join(inventory["blocking_workers"])
+        self.assertFalse(inventory["closure_authorized"])
+        self.assertIn("worker-tail",blocking)
+        self.assertIn("worker-loop-a",blocking)
+        self.assertIn("worker-loop-b",blocking)
+        self.assertIn("cycle",blocking)
+
+    def test_json_valid_huge_integer_never_leaks_overflow(self):
+        inventory = dispatch_inventory(workers=[worker(handle="worker-huge-probe", state="running", outcome_complete=False, terminal_evidence="", last_probe_age_seconds=10**10000)])
+        self.assertFalse(inventory["closure_authorized"])
+        self.assertTrue(any("worker-huge-probe" in row and "heartbeat interval" in row for row in inventory["blocking_workers"]))
+
     def test_the_gate_refuses_a_malformed_inventory_rather_than_passing_it_through(self):
         with self.assertRaises(ValueError) as refusal:
             close({"schema": "dual-hat-dispatch-inventory/1.0", "workers": []})
@@ -180,6 +266,12 @@ class DispatchClosureGateTests(unittest.TestCase):
         for registered in inventory["workers"]:
             self.assertEqual(set(), set(registered) - set(item["properties"]))
             self.assertEqual(set(), set(item["required"]) - set(registered))
+            for field in ("handle", "assigned_outcome", "owner", "durable_cursor", "state", "terminal_evidence"):
+                self.assertIsInstance(registered[field],str,field)
+            self.assertTrue(registered["successor_handle"] is None or isinstance(registered["successor_handle"],str))
+            self.assertIs(type(registered["outcome_complete"]),bool)
+            for field in ("heartbeat_interval_seconds", "last_probe_age_seconds"):
+                self.assertIsInstance(registered[field],(int,float),field); self.assertIsNot(type(registered[field]),bool)
         # The state vocabulary must not drift between the code and the schema.
         self.assertEqual(sorted(WORKER_STATES), sorted(item["properties"]["state"]["enum"]))
         # The residual is declared as a constant in the schema, not merely emitted.

@@ -3,7 +3,7 @@
 SPDX-License-Identifier: Apache-2.0
 """
 from __future__ import annotations
-import copy, hashlib, json, os, subprocess, sys, unittest
+import copy, hashlib, inspect, json, os, subprocess, sys, unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,7 +50,7 @@ def receipts(profile, root):
 
 def order(kind="gov"):
     revision_hash="A"*64
-    value = {"schema":"dual-hat-sealed-work-order/1.1", "work_item_id":"GOV-0001" if kind=="gov" else "Capability 1", "work_item_type":kind, "title":"Bounded item", "operating_mode":"integrated", "active_role":"architecture", "lifecycle_state":"author_approved_for_execution", "approved_scope":["bounded"], "explicit_exclusions":[], "stop_gates":["new architecture"], "authorized_repositories":["repository"], "authorized_paths":["tracked source"], "authorized_mutation":"bounded", "destructive_permissions":["owned temporary cleanup"], "required_validation":["tests"], "publication_authority":{"push":False,"force_push":False,"tag":False,"github_release":False}, "dependency_permissions":{"existing":True,"new_external":False}, "external_service_permissions":{"push":False,"hosted_release":False}, "approval_state":"author_approved_for_execution", "approval_timestamp":"2030-01-01T00:00:00Z", "source_revisions":[{"revision":1,"sha256":revision_hash}], "revision_hash_set_sha256":hashlib.sha256((revision_hash+"\n").encode()).hexdigest().upper(), "revision_hash_set_encoding":"uppercase SHA-256 values in revision order, LF-terminated", "current_revision":1, "sealed_state":"immutable_approved_contract", "material_revision_rule":"revise, reapprove, and reseal", "product_increment":kind=="capability", "governance_contract_change":kind=="gov"}
+    value = {"schema":"dual-hat-sealed-work-order/1.1", "work_item_id":"GOV-9001" if kind=="gov" else "Capability 9001", "work_item_type":kind, "title":"Bounded item", "operating_mode":"integrated", "active_role":"architecture", "lifecycle_state":"author_approved_for_execution", "approved_scope":["bounded"], "explicit_exclusions":[], "stop_gates":["new architecture"], "authorized_repositories":["repository"], "authorized_paths":["tracked source"], "authorized_mutation":"bounded", "destructive_permissions":["owned temporary cleanup"], "required_validation":["tests"], "publication_authority":{"push":False,"force_push":False,"tag":False,"github_release":False}, "dependency_permissions":{"existing":True,"new_external":False}, "external_service_permissions":{"push":False,"hosted_release":False}, "approval_state":"author_approved_for_execution", "approval_timestamp":"2030-01-01T00:00:00Z", "source_revisions":[{"revision":1,"sha256":revision_hash}], "revision_hash_set_sha256":hashlib.sha256((revision_hash+"\n").encode()).hexdigest().upper(), "revision_hash_set_encoding":"uppercase SHA-256 values in revision order, LF-terminated", "current_revision":1, "sealed_state":"immutable_approved_contract", "material_revision_rule":"revise, reapprove, and reseal", "product_increment":kind=="capability", "governance_contract_change":kind=="gov"}
     return seal(value)
 
 def contexts(value):
@@ -61,6 +61,24 @@ def contexts(value):
     preflight=capability_preflight(execution_profile,profile["mandatory_capabilities"],core_version(),ROOT,receipts(execution_profile,ROOT))
     preflight.update({"preflight_artifact":expected,"work_item_id":value["work_item_id"],"work_order_revision":value["current_revision"],"work_order_hash":value["work_order_hash"],"platform_profile_id":profile["profile_id"],"platform_profile_version":profile["profile_version"]})
     return handover, profile, preflight
+
+def termination_context(value):
+    process={"process_id":"owned-build-1","state":"terminal","terminal_evidence":"process authority reports exit 0"}
+    worker={"handle":"worker-1","assigned_outcome":"review the bounded result","owner":"engineering","durable_cursor":"review cursor 1","heartbeat_interval_seconds":300,"last_probe_age_seconds":0,"state":"finished","outcome_complete":True,"terminal_evidence":"final result received and consumed"}
+    receipt={"schema":"dual-hat-termination-preflight-receipt/1.0","governing_identity":{"work_item_id":value["work_item_id"],"work_order_hash":value["work_order_hash"]},"terminal_condition":"planned_scope_completion","planned_item_dispositions":[{"scope_item":"bounded","disposition":"complete","evidence":"bounded work completed"}],"required_results":[{"scope_item":"bounded","evidence":"result received and consumed"}],"processes":[process],"workers":[worker]}
+    authority={"schema":"dual-hat-platform-authority-snapshot/1.0","work_item_id":value["work_item_id"],"work_order_hash":value["work_order_hash"],"processes":[process],"workers":[worker]}
+    return receipt, authority
+
+def hard_stop_receipt(receipt, *, abort=False):
+    result=copy.deepcopy(receipt); result["terminal_condition"]="hard_stop"; result["planned_item_dispositions"][0]["disposition"]="blocked"; result["hard_stop"]={"gate":"new architecture","evidence":"gate is active","preserved_state":"cursor 1","affected_work":"bounded","resumption_condition":"author resolves new architecture"}
+    if abort: result["hard_stop"].update({"abort_authority":"new architecture","terminal_disposition":"author-authorized abort recorded"})
+    return result
+
+def termination_transition_allowed(current, target, value, receipt, authority):
+    parameters=inspect.signature(transition_allowed).parameters
+    if "sealed_order" not in parameters:
+        return transition_allowed(current,target)
+    return transition_allowed(current,target,sealed_order=value,termination_receipt=receipt,platform_authority_snapshot=authority)
 
 class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
     def test_public_work_item_schema_and_example_cover_the_executable_contract(self):
@@ -81,10 +99,121 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         invalid=order("gov"); invalid["extension_classification"]={"coupled_governance_change":True}; invalid=seal(invalid); self.assertTrue(classification_failures(invalid))
     def test_integrated_and_split_lifecycle(self):
         path=["architecture","work_order_ready","author_approved_for_execution","engineering","engineering_complete","architecture_review","accepted","archived"]
-        self.assertTrue(all(transition_allowed(a,b) for a,b in zip(path,path[1:]))); self.assertFalse(transition_allowed("engineering_complete","accepted"))
+        approved=order(); receipt,authority=termination_context(approved)
+        self.assertTrue(all(termination_transition_allowed(a,b,approved,receipt,authority) for a,b in zip(path,path[1:]))); self.assertFalse(transition_allowed("engineering_complete","accepted"))
         self.assertTrue(transition_allowed("architecture_review","remediation_required")); self.assertTrue(transition_allowed("remediation_required","engineering"))
+
+    def test_termination_preflight_requires_exact_approved_scope_dispositions(self):
+        approved=order(); receipt,authority=termination_context(approved)
+        cases={"absent_receipt":None,"missing_scope":copy.deepcopy(receipt),"extra_scope":copy.deepcopy(receipt)}
+        cases["missing_scope"]["planned_item_dispositions"]=[]
+        cases["extra_scope"]["planned_item_dispositions"].append({"scope_item":"invented","disposition":"complete","evidence":"not sealed"})
+        for label,candidate in cases.items():
+            with self.subTest(case=label): self.assertFalse(termination_transition_allowed("engineering","engineering_complete",approved,candidate,authority))
+
+    def test_termination_preflight_requires_nonempty_evidence_for_every_required_result(self):
+        approved=order(); receipt,authority=termination_context(approved)
+        absent=copy.deepcopy(receipt); del absent["required_results"]
+        empty=copy.deepcopy(receipt); empty["required_results"][0]["evidence"]=""
+        missing_scope=copy.deepcopy(receipt); missing_scope["required_results"]=[]
+        for label,candidate in (("absent",absent),("empty_evidence",empty),("missing_scope",missing_scope)):
+            with self.subTest(case=label): self.assertFalse(termination_transition_allowed("engineering","engineering_complete",approved,candidate,authority))
+
+    def test_termination_preflight_requires_a_named_sealed_hard_stop(self):
+        approved=order(); receipt,authority=termination_context(approved); hard_stop=hard_stop_receipt(receipt)
+        self.assertTrue(termination_transition_allowed("engineering","engineering_blocked",approved,hard_stop,authority))
+        unknown_gate=copy.deepcopy(hard_stop); unknown_gate["hard_stop"]["gate"]="arbitrary pause"
+        self.assertFalse(termination_transition_allowed("engineering","engineering_blocked",approved,unknown_gate,authority))
+
+    def test_termination_preflight_abort_requires_sealed_authority_and_terminal_disposition(self):
+        approved=order(); receipt,authority=termination_context(approved); abort=hard_stop_receipt(receipt,abort=True)
+        for current in ("engineering","engineering_paused","engineering_blocked"):
+            with self.subTest(valid_edge=current): self.assertTrue(termination_transition_allowed(current,"engineering_aborted",approved,abort,authority))
+        no_authority=copy.deepcopy(abort); no_authority["hard_stop"]["abort_authority"]=""
+        no_disposition=copy.deepcopy(abort); no_disposition["hard_stop"]["terminal_disposition"]=""
+        for label,candidate in (("authority",no_authority),("terminal_disposition",no_disposition)):
+            with self.subTest(missing=label): self.assertFalse(termination_transition_allowed("engineering","engineering_aborted",approved,candidate,authority))
+
+    def test_termination_preflight_requires_owned_process_terminality(self):
+        approved=order(); receipt,authority=termination_context(approved)
+        running_process=copy.deepcopy(receipt); running_process["processes"][0]["state"]="running"; running_authority=copy.deepcopy(authority); running_authority["processes"]=copy.deepcopy(running_process["processes"])
+        self.assertFalse(termination_transition_allowed("engineering","engineering_complete",approved,running_process,running_authority))
+
+    def test_termination_preflight_binds_receipt_to_sealed_work_order_hash(self):
+        approved=order(); receipt,authority=termination_context(approved)
+        wrong_receipt=copy.deepcopy(receipt); wrong_receipt["governing_identity"]["work_order_hash"]="F"*64
+        wrong_authority=copy.deepcopy(authority); wrong_authority["work_order_hash"]="F"*64
+        for label,candidate,snapshot in (("receipt",wrong_receipt,authority),("authority",receipt,wrong_authority)):
+            with self.subTest(binding=label): self.assertFalse(termination_transition_allowed("engineering","engineering_complete",approved,candidate,snapshot))
+    def test_termination_preflight_reuses_dispatch_reconciliation(self):
+        approved=order(); receipt,authority=termination_context(approved)
+        running=copy.deepcopy(receipt); running["workers"][0].update({"handle":"worker-stale-1","state":"running","outcome_complete":False,"terminal_evidence":"","last_probe_age_seconds":301}); running_authority=copy.deepcopy(authority); running_authority["workers"]=copy.deepcopy(running["workers"])
+        calls=[]; canonical=work_item_governance.dispatch_inventory
+        def spy(*,workers):
+            calls.append(workers)
+            return canonical(workers=workers)
+        work_item_governance.dispatch_inventory=spy
+        try:
+            failures=termination_preflight_failures("engineering","engineering_complete",sealed_order=approved,termination_receipt=running,platform_authority_snapshot=running_authority)
+        finally:
+            work_item_governance.dispatch_inventory=canonical
+        self.assertEqual([running["workers"]],calls)
+        self.assertTrue(any("worker-stale-1 is registered nonterminal" in row for row in failures))
+        self.assertTrue(any("worker-stale-1 was last probed 301s ago" in row for row in failures))
+        incomplete=copy.deepcopy(receipt); del incomplete["workers"][0]["owner"]; incomplete_authority=copy.deepcopy(authority); incomplete_authority["workers"]=copy.deepcopy(incomplete["workers"])
+        failures=termination_preflight_failures("engineering","engineering_complete",sealed_order=approved,termination_receipt=incomplete,platform_authority_snapshot=incomplete_authority)
+        self.assertTrue(any("missing required registration fields: ['owner']" in row for row in failures))
+        base=copy.deepcopy(receipt["workers"][0])
+        cases=[]
+        finished_false=copy.deepcopy(base); finished_false.update({"handle":"worker-finished-false","outcome_complete":False}); cases.append(("finished_false",[finished_false],"incomplete assigned outcome"))
+        string_false=copy.deepcopy(base); string_false.update({"handle":"worker-string-false","outcome_complete":"false"}); cases.append(("string_false",[string_false],"outcome_complete must be boolean"))
+        unknown=copy.deepcopy(base); unknown.update({"handle":"worker-unknown-field","unsealed_claim":"accepted"}); cases.append(("unknown_field",[unknown],"unknown registration fields"))
+        nonfinite=copy.deepcopy(base); nonfinite.update({"handle":"worker-nan","last_probe_age_seconds":float("nan")}); cases.append(("nan_probe",[nonfinite],"non-finite last_probe_age_seconds"))
+        nonexistent=copy.deepcopy(base); nonexistent.update({"handle":"worker-missing-successor","state":"dead","outcome_complete":False,"terminal_evidence":"process absence","successor_handle":"worker-not-registered"}); cases.append(("nonexistent_successor",[nonexistent],"is not registered"))
+        self_successor=copy.deepcopy(base); self_successor.update({"handle":"worker-self-successor","state":"dead","outcome_complete":False,"terminal_evidence":"process absence","successor_handle":"worker-self-successor"}); cases.append(("self_successor",[self_successor],"itself as successor"))
+        mismatch=copy.deepcopy(base); mismatch.update({"handle":"worker-mismatch","assigned_outcome":"finish the primary assigned outcome","state":"dead","outcome_complete":False,"terminal_evidence":"process absence","successor_handle":"worker-other"}); other=copy.deepcopy(base); other.update({"handle":"worker-other","assigned_outcome":"unrelated cleanup"}); cases.append(("successor_outcome_mismatch",[mismatch,other],"different assigned outcome"))
+        for label,workers,expected in cases:
+            candidate=copy.deepcopy(receipt); candidate["workers"]=workers; snapshot=copy.deepcopy(authority); snapshot["workers"]=copy.deepcopy(workers)
+            with self.subTest(adversarial_worker=label):
+                failures=termination_preflight_failures("engineering","engineering_complete",sealed_order=approved,termination_receipt=candidate,platform_authority_snapshot=snapshot)
+                self.assertTrue(any(expected in row for row in failures),failures)
+    def test_termination_preflight_refuses_non_schema_scalar_worker_fields(self):
+        approved=order(); receipt,authority=termination_context(approved); base=copy.deepcopy(receipt["workers"][0])
+        cases=(("handle","real platform handle"),("assigned_outcome","assigned_outcome must be string"),("owner","owner must be string"),("durable_cursor","durable_cursor must be string"),("terminal_evidence","terminal_evidence must be string"),("successor_handle","successor_handle must be string or null"))
+        for field,expected in cases:
+            invalid=copy.deepcopy(base); invalid[field]=7; candidate=copy.deepcopy(receipt); candidate["workers"]=[invalid]; snapshot=copy.deepcopy(authority); snapshot["workers"]=copy.deepcopy(candidate["workers"])
+            with self.subTest(field=field):
+                failures=termination_preflight_failures("engineering","engineering_complete",sealed_order=approved,termination_receipt=candidate,platform_authority_snapshot=snapshot)
+                self.assertTrue(any(expected in row for row in failures),failures)
+                self.assertFalse(termination_transition_allowed("engineering","engineering_complete",approved,candidate,snapshot))
+    def test_termination_preflight_accepts_a_multihop_successor_chain_ending_complete(self):
+        approved=order(); receipt,authority=termination_context(approved); base=copy.deepcopy(receipt["workers"][0]); outcome="complete the assigned review"
+        completed=copy.deepcopy(base); completed.update({"handle":"worker-chain-c","assigned_outcome":outcome})
+        middle=copy.deepcopy(base); middle.update({"handle":"worker-chain-b","assigned_outcome":outcome,"state":"dead","outcome_complete":False,"terminal_evidence":"process absence","successor_handle":"worker-chain-c"})
+        first=copy.deepcopy(base); first.update({"handle":"worker-chain-a","assigned_outcome":outcome,"state":"dead","outcome_complete":False,"terminal_evidence":"process absence","successor_handle":"worker-chain-b"})
+        valid=copy.deepcopy(receipt); valid["workers"]=[first,middle,completed]; valid_snapshot=copy.deepcopy(authority); valid_snapshot["workers"]=copy.deepcopy(valid["workers"])
+        self.assertTrue(termination_transition_allowed("engineering","engineering_complete",approved,valid,valid_snapshot))
+    def test_termination_preflight_refuses_a_two_worker_successor_cycle(self):
+        approved=order(); receipt,authority=termination_context(approved); base=copy.deepcopy(receipt["workers"][0]); outcome="complete the assigned review"
+        first=copy.deepcopy(base); first.update({"assigned_outcome":outcome,"state":"dead","outcome_complete":False,"terminal_evidence":"process absence"})
+        cycle_a=copy.deepcopy(first); cycle_a.update({"handle":"worker-cycle-a","successor_handle":"worker-cycle-b"}); cycle_b=copy.deepcopy(first); cycle_b.update({"handle":"worker-cycle-b","successor_handle":"worker-cycle-a"})
+        cycle=copy.deepcopy(receipt); cycle["workers"]=[cycle_a,cycle_b]; cycle_snapshot=copy.deepcopy(authority); cycle_snapshot["workers"]=copy.deepcopy(cycle["workers"])
+        cycle_failures=termination_preflight_failures("engineering","engineering_complete",sealed_order=approved,termination_receipt=cycle,platform_authority_snapshot=cycle_snapshot)
+        self.assertTrue(any("worker-cycle-a" in row and "worker-cycle-b" in row and "cycle" in row for row in cycle_failures),cycle_failures)
+    def test_termination_preflight_refuses_a_successor_tail_entering_a_cycle(self):
+        approved=order(); receipt,authority=termination_context(approved); base=copy.deepcopy(receipt["workers"][0]); outcome="complete the assigned review"
+        first=copy.deepcopy(base); first.update({"assigned_outcome":outcome,"state":"dead","outcome_complete":False,"terminal_evidence":"process absence"})
+        cycle_a=copy.deepcopy(first); cycle_a.update({"handle":"worker-cycle-a","successor_handle":"worker-cycle-b"}); cycle_b=copy.deepcopy(first); cycle_b.update({"handle":"worker-cycle-b","successor_handle":"worker-cycle-a"})
+        tail=copy.deepcopy(first); tail.update({"handle":"worker-tail","successor_handle":"worker-cycle-a"}); tailed=copy.deepcopy(receipt); tailed["workers"]=[tail,cycle_a,cycle_b]; tailed_snapshot=copy.deepcopy(authority); tailed_snapshot["workers"]=copy.deepcopy(tailed["workers"])
+        tail_failures=termination_preflight_failures("engineering","engineering_complete",sealed_order=approved,termination_receipt=tailed,platform_authority_snapshot=tailed_snapshot)
+        self.assertTrue(any("worker-tail" in row and "worker-cycle-a" in row and "worker-cycle-b" in row and "cycle" in row for row in tail_failures),tail_failures)
+    def test_termination_preflight_never_leaks_overflow_for_a_huge_integer(self):
+        approved=order(); receipt,authority=termination_context(approved); base=copy.deepcopy(receipt["workers"][0])
+        huge=copy.deepcopy(base); huge.update({"handle":"worker-huge-probe","state":"running","outcome_complete":False,"terminal_evidence":"","last_probe_age_seconds":10**10000}); huge_receipt=copy.deepcopy(receipt); huge_receipt["workers"]=[huge]; huge_snapshot=copy.deepcopy(authority); huge_snapshot["workers"]=copy.deepcopy(huge_receipt["workers"])
+        huge_failures=termination_preflight_failures("engineering","engineering_complete",sealed_order=approved,termination_receipt=huge_receipt,platform_authority_snapshot=huge_snapshot)
+        self.assertIsInstance(huge_failures,tuple); self.assertTrue(huge_failures); self.assertFalse(termination_transition_allowed("engineering","engineering_complete",approved,huge_receipt,huge_snapshot))
     def test_integrated_mode_requires_visible_single_hat_labels(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # governance/ROLE_TRANSITIONS.md, which governs role and mode
         # transitions; guides/OPERATING_MODES.md restates the label rule for a
         # reader. The two prompt assertions are file-specific -- each names its
@@ -229,7 +358,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         failures=boundary_review_failures(violated); self.assertIn("acceptance is blocked by unresolved material boundary violation",failures); self.assertIn("boundary violation lacks specific remediation",failures); self.assertIn("boundary violation lacks systemic control strengthening",failures)
         self.assertTrue(boundary_review_failures({**review,"engineering_self_report_only":True})); self.assertTrue(boundary_review_failures({**review,"tests_only":True}))
     def test_architecture_proposes_next_work_after_acceptance_without_authorizing_it(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # governance/ARCHITECTURE_OFFICE_GUIDE.md. The original expressed the
         # prompt's alternate wording with an inline .replace(); that is carried
         # over exactly as an interchangeable-alternatives tuple, which the
@@ -249,7 +378,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         self.assertEqual("^[a-z][a-z0-9_]*$",schema["properties"]["active_work_item"]["properties"]["work_item_type"]["pattern"])
 
     def test_third_party_dependency_evaluation_is_mandatory_in_both_hats(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # governance/THIRD_PARTY_DEPENDENCY_EVALUATION.md -- the contract that
         # defines the evaluation. Its two contract-only requirements ("safety"
         # and the fuller "pros/cons comparison") stay unconditional; only the
@@ -269,7 +398,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         )
 
     def test_long_running_work_prefers_subagent_offload_without_false_parallelism(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # governance/VALIDATION_AND_PARALLELISM.md, which owns delegation.
         substance=("on standby to orchestrate and remain immediately available for user interaction",
                    "capability or governance work item, regardless of how many streams it is divided into, delegate execution to sub-agents by default",
@@ -292,7 +421,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         # lengthy response addressing the new thread satisfied the letter of
         # the rule without the reconciliation happening. This test guards the
         # explicit failure-mode wording added to close that gap.
-        # Re-pointed (GOV-0011 deliverable 2) on the three failure-mode phrases
+        # Re-pointed (the re-pointing pass) on the three failure-mode phrases
         # only. Canonical home governance/VALIDATION_AND_PARALLELISM.md, which
         # owns delegation and reconciliation. Every file-specific assertion
         # below stays unconditional.
@@ -327,7 +456,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         self.assertIn("persistent watcher",contract)
 
     def test_numeric_progress_binds_exact_population_identity(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # governance/VALIDATION_AND_PARALLELISM.md. The two original loops are
         # merged into one substance list -- they ran over the same two files, so
         # splitting them was incidental, not semantic. The inline
@@ -348,7 +477,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         self.assertIn("proxy row count",contract)
 
     def test_active_task_continuity_has_only_governed_early_stops(self):
-        # Re-pointed (GOV-0011 deliverable 2). This test was RED at HEAD -- the
+        # Re-pointed (the re-pointing pass). This test was RED at HEAD -- the
         # known B-1 -- because it required "no safe in-scope action remains" in
         # ENGINEERING_AGENT_PROMPT.md, where that string no longer lives. It is
         # resolved by re-pointing onto the canonical-home contract, NOT by
@@ -387,7 +516,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         )
 
     def test_active_goal_interlocks_response_with_continuation_action(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # framework/DUAL_HAT_FRAMEWORK.md, which carries all eleven phrases in
         # full; so do all three secondaries today, so the pre-consolidation
         # branch holds unchanged and nothing is unguarded in the interim.
@@ -411,7 +540,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         )
 
     def test_active_goal_has_response_end_watchdog(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # framework/DUAL_HAT_FRAMEWORK.md: the response-end watchdog is stated
         # there as a framework-wide invariant and restated by both prompts.
         substance=("response-end watchdog","poll","reactivate","worker",
@@ -428,7 +557,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         )
 
     def test_persistent_goal_is_checked_and_restored_at_response_boundaries(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # framework/DUAL_HAT_FRAMEWORK.md. "checked execution invariant" is
         # framework-only and stays unconditional.
         framework=(ROOT/"framework/DUAL_HAT_FRAMEWORK.md").read_text(encoding="utf-8")
@@ -447,7 +576,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         )
 
     def test_itemized_review_cannot_skip_from_partial_triage_to_persistence(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # framework/DUAL_HAT_FRAMEWORK.md.
         substance=("evidence acquired","partially triaged","fully adjudicated",
                    "persist-ready","completion predicate","no omissions or duplicates",
@@ -465,7 +594,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
             self.assertIn(required,closure)
 
     def test_validation_gate_cannot_share_compound_command_with_mutation(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # governance/ENGINEERING_AGENT_GUIDE.md -- measured, not preferred:
         # validation/VALIDATION_PROTOCOL.md would be the topical owner but does
         # not carry either phrase today, and a canonical home must be asserted
@@ -478,7 +607,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         )
 
     def test_gates_distinguish_committed_inputs_from_runtime_state(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # validation/VALIDATION_PROTOCOL.md, which owns gate semantics; the
         # guide and the prompt restate it. The protocol-only assertion stays
         # unconditional.
@@ -496,7 +625,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         self.assertIn("must not require such state to be Git tracked"," ".join(protocol.split()))
 
     def test_transition_gates_distinguish_prestate_from_replay(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # validation/VALIDATION_PROTOCOL.md; protocol-only assertion stays
         # unconditional.
         protocol=(ROOT/"validation/VALIDATION_PROTOCOL.md").read_text(encoding="utf-8")
@@ -513,7 +642,7 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         self.assertIn("later maintenance commits must not invalidate historical evidence"," ".join(protocol.split()))
 
     def test_zero_test_execution_is_not_passing_evidence(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
+        # Re-pointed (the re-pointing pass). Canonical home
         # validation/VALIDATION_PROTOCOL.md.
         substance=("nonzero","zero","validation failure")
         self.assert_single_canonical_home(
@@ -530,23 +659,5 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
             self.assertIn(required,closure)
         self.assertIn("Capability chronology must not remain mixed into current product output",phase)
         self.assertIn("active/output locations limited to current operational artifacts",prompt)
-
-    def test_current_capability_limits_require_documentation_and_runtime_probe(self):
-        # Re-pointed (GOV-0011 deliverable 2). Canonical home
-        # governance/GOVERNING_PRINCIPLES.md, which states the rule; both
-        # prompts restate it. The logged-out disjunction was an assertTrue with
-        # an inline `or`; it becomes an alternatives tuple, which is the same
-        # predicate expressed in the shared helper's vocabulary.
-        substance=("current authoritative documentation","installed surface","authentication",
-                   "unconfigured",("logged out","logged-out"),"entitlement","environment")
-        self.assert_single_canonical_home(
-            lower=True,
-            canonical="governance/GOVERNING_PRINCIPLES.md",
-            canonical_substance=substance,
-            secondaries={
-                "prompts/ARCHITECTURE_OFFICE_PROMPT.md": substance,
-                "prompts/ENGINEERING_AGENT_PROMPT.md": substance,
-            },
-        )
 
 if __name__ == "__main__": unittest.main()

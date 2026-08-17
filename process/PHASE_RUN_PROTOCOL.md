@@ -23,8 +23,15 @@ Before announcing or opening the next phase or governed subphase, Architecture d
 Groom the affected forward-looking portfolio against the outcomes and environment that now exist. This includes roadmap and backlog entries, debt, future-work triggers, deferred decisions, risk/mitigation registers, migration or upgrade plans, and comparable project-profile authorities. Advance satisfied items; record completed outcomes; retire obsolete and duplicate items with an explicit replacement or reason; and refresh stale assumptions, conditions, owners, mappings, review events, and status. Map every still-live item to planned work or label it trigger-only/deferred with its next evaluation event. Planning advancement informs authorization and never grants it by itself.
 
 Durable learning held by the affected authorities is reviewed at this same
-boundary, under rule 17 of
-[Governing Principles](../governance/GOVERNING_PRINCIPLES.md).
+boundary. [Governing Principles](../governance/GOVERNING_PRINCIPLES.md)
+principle 1 states the standing half -- persist a lesson only when it is
+reusable beyond the immediate correction or materially improves a governing
+control, record it in the existing owning authority rather than a per-run
+lesson ledger, and retire or narrow stale guidance instead of preserving it as
+folklore. **This document is the owning authority for what happens at the
+boundary**: consolidate duplicates, resolve contradictions, review staleness and
+scope, and promote a lesson across contexts only when evidence supports the
+broader claim.
 
 For the concrete future-work registry, evaluate every trigger individually. A satisfied trigger advances to its decision- or implementation-ready state or receives an explicit terminal disposition; obsolete and duplicate triggers retire with successor/reason; stale conditions, owners, mappings, review events, and status are updated; and every live trigger maps to a planned phase/work item or an explicit trigger-only next review point. This concrete contract takes precedence over the general portfolio fallback above.
 

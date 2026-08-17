@@ -34,17 +34,20 @@ gate cannot drift away from it, and a hand-assembled inventory cannot authorize
 a closure this module would refuse.
 
 Blocking is reported per detected condition rather than per independent cause.
-Three conditions block independently -- a registered nonterminal worker, a
-terminal claim with no recorded terminal evidence, and a stalled or dead worker
-with an incomplete outcome and no registered successor. The stale-heartbeat
-message is deliberately additive rather than independent: it is emitted only for
-a worker already blocked as nonterminal, because a terminal state carrying
-recorded terminal evidence is discharged and its probe age no longer governs.
+A registered nonterminal worker, a terminal claim without terminal evidence, a
+finished worker with incomplete work, and a stalled or dead worker whose chain
+of distinct registered same-outcome successors never reaches completion each
+block. The stale-heartbeat message is deliberately additive rather than
+independent: it is emitted only for a worker already blocked as nonterminal.
+Structurally invalid registration -- including unknown fields, a non-boolean
+outcome flag, or a non-finite heartbeat value -- raises instead of becoming
+authorizing evidence.
 
 SPDX-License-Identifier: Apache-2.0
 """
 from __future__ import annotations
 
+import math
 from typing import Mapping, Sequence
 
 
@@ -57,6 +60,14 @@ WORKER_REQUIRED_FIELDS = frozenset({
     "handle", "assigned_outcome", "owner", "durable_cursor",
     "heartbeat_interval_seconds", "last_probe_age_seconds", "state", "outcome_complete",
 })
+WORKER_PERMITTED_FIELDS = WORKER_REQUIRED_FIELDS | {"terminal_evidence", "successor_handle"}
+
+
+def _numeric_evidence(value: int | float) -> str:
+    """Render numeric evidence without converting an unbounded integer to decimal."""
+    if isinstance(value, int) and value.bit_length() > 256:
+        return f"<{value.bit_length()}-bit integer>"
+    return str(value)
 
 
 def dispatch_inventory(*, workers: Sequence[Mapping[str, object]]) -> dict[str, object]:
@@ -75,9 +86,15 @@ def dispatch_inventory(*, workers: Sequence[Mapping[str, object]]) -> dict[str, 
         missing = WORKER_REQUIRED_FIELDS - set(worker)
         if missing:
             raise ValueError(f"dispatch inventory worker is missing required registration fields: {sorted(missing)}")
-        handle = str(worker["handle"] or "").strip()
+        raw_handle = worker["handle"]
+        if not isinstance(raw_handle, str):
+            raise ValueError("dispatch inventory requires each worker's real platform handle to be a string")
+        handle = raw_handle.strip()
         if not handle:
             raise ValueError("dispatch inventory requires each worker's real platform handle, not a narrative name")
+        unknown = set(worker) - WORKER_PERMITTED_FIELDS
+        if unknown:
+            raise ValueError(f"worker {handle} carries unknown registration fields: {sorted(str(field) for field in unknown)}")
         if handle in seen:
             raise ValueError(f"dispatch inventory registers the same handle twice: {handle}")
         seen.add(handle)
@@ -85,21 +102,33 @@ def dispatch_inventory(*, workers: Sequence[Mapping[str, object]]) -> dict[str, 
         if state not in WORKER_STATES:
             raise ValueError(f"unknown worker state for {handle}: {state!r}")
         for field in ("assigned_outcome", "owner", "durable_cursor"):
-            if not str(worker[field] or "").strip():
+            if not isinstance(worker[field], str):
+                raise ValueError(f"worker {handle} {field} must be string")
+            if not worker[field].strip():
                 raise ValueError(f"worker {handle} is registered without {field}")
         interval = worker["heartbeat_interval_seconds"]
         probe_age = worker["last_probe_age_seconds"]
         for label, value in (("heartbeat_interval_seconds", interval), ("last_probe_age_seconds", probe_age)):
             if isinstance(value, bool) or not isinstance(value, (int, float)):
                 raise ValueError(f"worker {handle} declares a non-numeric {label}")
+            if isinstance(value, float) and not math.isfinite(value):
+                raise ValueError(f"worker {handle} declares a non-finite {label}")
         if interval <= 0:
             raise ValueError(f"worker {handle} has no heartbeat contract bound before launch")
         if probe_age < 0:
             raise ValueError(f"worker {handle} declares a negative last_probe_age_seconds")
+        if type(worker["outcome_complete"]) is not bool:
+            raise ValueError(f"worker {handle} outcome_complete must be boolean")
 
-        terminal_evidence = str(worker.get("terminal_evidence") or "").strip()
-        successor = str(worker.get("successor_handle") or "").strip()
-        outcome_complete = bool(worker["outcome_complete"])
+        raw_terminal_evidence = worker.get("terminal_evidence", "")
+        if "terminal_evidence" in worker and not isinstance(raw_terminal_evidence, str):
+            raise ValueError(f"worker {handle} terminal_evidence must be string when present")
+        raw_successor = worker.get("successor_handle")
+        if raw_successor is not None and not isinstance(raw_successor, str):
+            raise ValueError(f"worker {handle} successor_handle must be string or null")
+        terminal_evidence = raw_terminal_evidence.strip()
+        successor = (raw_successor or "").strip()
+        outcome_complete = worker["outcome_complete"]
 
         if state in TERMINAL_WORKER_STATES:
             terminal += 1
@@ -110,13 +139,54 @@ def dispatch_inventory(*, workers: Sequence[Mapping[str, object]]) -> dict[str, 
             blocking.append(f"{handle} is registered nonterminal ('{state}') and was never discharged")
             if probe_age > interval:
                 blocking.append(
-                    f"{handle} was last probed {probe_age}s ago, beyond its declared {interval}s heartbeat interval"
+                    f"{handle} was last probed {_numeric_evidence(probe_age)}s ago, "
+                    f"beyond its declared {_numeric_evidence(interval)}s heartbeat interval"
                 )
         if state in SUCCESSOR_REQUIRING_STATES and not outcome_complete and not successor:
             blocking.append(
                 f"{handle} is '{state}' with an incomplete assigned outcome and no registered successor"
             )
+        if state == "finished" and not outcome_complete:
+            blocking.append(f"{handle} claims finished state with an incomplete assigned outcome")
         normalized.append({"terminal_evidence": "", "successor_handle": None, **dict(worker), "handle": handle})
+
+    registered = {str(worker["handle"]): worker for worker in normalized}
+    for worker in normalized:
+        handle = str(worker["handle"])
+        if worker["state"] not in SUCCESSOR_REQUIRING_STATES or worker["outcome_complete"] is True:
+            continue
+        successor = str(worker.get("successor_handle") or "").strip()
+        if not successor:
+            continue
+        if successor == handle:
+            blocking.append(f"{handle} names itself as successor for an incomplete assigned outcome")
+        elif successor not in registered:
+            blocking.append(f"{handle}'s successor {successor} is not registered")
+        elif registered[successor]["assigned_outcome"] != worker["assigned_outcome"]:
+            blocking.append(f"{handle}'s registered successor {successor} owns a different assigned outcome")
+
+    for worker in normalized:
+        if worker["state"] not in SUCCESSOR_REQUIRING_STATES or worker["outcome_complete"] is True:
+            continue
+        start = str(worker["handle"])
+        current = worker
+        chain: list[str] = []
+        positions: dict[str, int] = {}
+        while current["outcome_complete"] is not True:
+            handle = str(current["handle"])
+            if handle in positions:
+                cycle = [*chain[positions[handle]:], handle]
+                blocking.append(f"{start}'s successor chain enters cycle: {' -> '.join(cycle)}")
+                break
+            positions[handle] = len(chain)
+            chain.append(handle)
+            if current["state"] not in SUCCESSOR_REQUIRING_STATES:
+                break
+            successor = str(current.get("successor_handle") or "").strip()
+            if (not successor or successor == handle or successor not in registered
+                    or registered[successor]["assigned_outcome"] != current["assigned_outcome"]):
+                break
+            current = registered[successor]
 
     return {
         "schema": DISPATCH_INVENTORY_SCHEMA,

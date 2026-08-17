@@ -1,6 +1,6 @@
 """Repository-hygiene checks for the standalone Dual Hat framework that are
 not specific to framework-content leakage (see framework_completeness.py for
-that concern) -- currently just GOVERNING_PRINCIPLES.md rule 35's standing
+that concern) -- currently just GOVERNING_PRINCIPLES.md principle 14's standing
 check.
 
 SPDX-License-Identifier: Apache-2.0
@@ -44,9 +44,9 @@ def _active_tracked_files(root: Path) -> tuple[Path, ...]:
     )
 
 
-# GOVERNING_PRINCIPLES.md rule 35: a durable file must never embed an
+# GOVERNING_PRINCIPLES.md principle 14: a durable file must never embed an
 # absolute local filesystem path used as a live structural pointer or
-# self-reference. Scoped to the two concrete shapes rule 35's own incident
+# self-reference. Scoped to the two concrete shapes principle 14's own incident
 # names -- a drive-letter-rooted path and a Unix/WSL home-directory path --
 # not every string that merely looks like a path. See a consuming product's
 # own repository-hygiene tooling (typically the primary place this
@@ -116,7 +116,7 @@ def validate_no_embedded_absolute_local_paths(
 ) -> tuple[str, ...]:
     """Fail if active, non-archived tracked content embeds an absolute local
     filesystem path used as a live structural pointer or self-reference
-    (GOVERNING_PRINCIPLES.md rule 35), rather than legitimate illustrative/
+    (GOVERNING_PRINCIPLES.md principle 14), rather than legitimate illustrative/
     historical citation or a factual provenance record.
 
     A real match either (a) sits in a structurally recognized non-live-
@@ -170,6 +170,6 @@ def validate_no_embedded_absolute_local_paths(
                     continue
                 failures.append(
                     f"{relative}:{line_number}: embeds an absolute local filesystem path "
-                    f"outside rule 35's citation/provenance exemption: {matched!r}"
+                    f"outside principle 14's citation/provenance exemption: {matched!r}"
                 )
     return tuple(dict.fromkeys(failures))

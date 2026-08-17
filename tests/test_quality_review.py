@@ -43,7 +43,7 @@ def bind_baseline(baseline: dict, *, disposition: str | None = None) -> dict:
         "repository_commit":baseline["repository_commit"], "dual_hat_commit":baseline["dual_hat_commit"],
         "dual_hat_version":baseline["dual_hat_version"], "active_platform_profile":baseline["active_platform_profile"],
         "rule_set_hash":baseline["rule_set_hash"], "effective_plan_hash":baseline["effective_plan_hash"],
-        "work_item_id":"GOV-0001", "work_order_revision":1, "sealed_work_order_hash":"D"*64,
+        "work_item_id":"GOV-9001", "work_order_revision":1, "sealed_work_order_hash":"D"*64,
         "lifecycle_state":"engineering", "architecture_disposition_state":disposition or baseline["architecture_disposition_state"],
         "source_paths":{"resolver_config":"quality/state.json"},
     }

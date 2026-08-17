@@ -103,7 +103,7 @@ def available_reparse_flavours(base: Path) -> tuple[str, ...]:
     return tuple(flavours)
 
 
-# --- README "Framework areas" completeness (ENG-00170) ------------------------
+# --- README "Framework areas" completeness (README completeness) ------------------------
 #
 # The list is a completeness claim about this repository's own top-level
 # structure and nothing kept it synchronized: it drifted by seven of twenty-one
@@ -317,7 +317,7 @@ class CanonicalHomeAssertions:
             # exactly what stops the phrase from being missing -- so the guard
             # runs unconditionally, before `missing` is consulted.
             #
-            # Caught in drafting on GOV-0011 deliverable 2, in this deliverable's
+            # Caught in drafting on the re-pointing pass, in that pass's
             # own work, which is why it is mechanised rather than remembered:
             # every re-point creates a fresh opportunity to write that sentence.
             for sentence in _reference_sentences(secondary, canonical, lower=lower):
@@ -553,12 +553,6 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
         self.assertTrue(all((ROOT / path).is_file() for path in expected))
         self.assertFalse((ROOT / "docs").exists())
 
-    def test_research_iterations_do_not_require_capability_churn(self):
-        proportionality = (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
-        lifecycle = (ROOT / "process/CAPABILITY_LIFECYCLE.md").read_text(encoding="utf-8")
-        self.assertIn("prefer explicit iterations within the same capability", proportionality)
-        self.assertIn("does not require a separate capability identity", lifecycle)
-
     def test_specialist_review_and_long_run_reporting_contracts(self):
         review = (ROOT / "governance/CODE_REVIEW_CONTRACT.md").read_text(encoding="utf-8")
         engineering = (ROOT / "prompts/ENGINEERING_AGENT_PROMPT.md").read_text(encoding="utf-8")
@@ -661,32 +655,12 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             },
         )
 
-    def test_durable_learning_avoids_per_run_ledger(self):
-        # 13 of the original 15 assertions detected deletion of the rule 17
-        # statement. The two that did not -- "contradiction" and "staleness" in
-        # GOVERNING_PRINCIPLES.md -- survive because that file discusses both
-        # concepts under other rules, so they are dropped from the canonical
-        # home's list while remaining load-bearing in the two secondaries.
-        secondary_substance = ("accumulated framework release",
-                               "governed phase progression",
-                               "contradiction", "staleness", "per-run")
-        self.assert_single_canonical_home(
-            lower=True,
-            canonical="governance/GOVERNING_PRINCIPLES.md",
-            canonical_substance=("accumulated framework release",
-                                 "governed phase progression", "per-run"),
-            secondaries={
-                "process/PHASE_RUN_PROTOCOL.md": secondary_substance,
-                "framework/DUAL_HAT_FRAMEWORK.md": secondary_substance,
-            },
-        )
-
     def test_role_guides_apply_turn_exit_audit(self):
-        # Re-pointed (GOV-0011 deliverable 2). The two role guides restated the
+        # Re-pointed (the re-pointing pass). The two role guides restated the
         # same turn-exit audit; asserting all six phrases against both files
         # unconditionally is what made the restatement un-removable.
         #
-        # RELOCATED (GOV-0011 deliverable 2, Architecture ruling). The earlier
+        # RELOCATED (the re-pointing pass, Architecture ruling). The earlier
         # canonical home was governance/ENGINEERING_AGENT_GUIDE.md, chosen when
         # the two guides were peers -- both carried the full substance and
         # neither linked to the other. That choice could not survive the
@@ -724,7 +698,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
         # as an explicit item 0 and named concrete resumption points where the full
         # audit must explicitly re-run; this guards that fix from the same
         # prose-only, untested drift it was written to prevent.
-        # Re-pointed, then RELOCATED (GOV-0011 deliverable 2) to the same
+        # Re-pointed, then RELOCATED (the re-pointing pass) to the same
         # canonical home as test_role_guides_apply_turn_exit_audit above, for
         # the same reason: this is item 0 of that audit and cannot sensibly live
         # in a different file from the audit it is item 0 of.
@@ -1041,42 +1015,6 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             domains["planning"]["responsibilities"],
         )
 
-    def test_plan_optimization_is_proportionate_and_retests_assumptions(self):
-        # The heaviest test in the file: 23 phrases looped over 3 files = 69
-        # assertions. 49 detected deletion of the rule 18 statement; 20 did not
-        # and are dropped per file. Note the dropped set differs by file -- the
-        # same token is load-bearing in one document and inert in another,
-        # because the inert case merely has the word elsewhere. That is why the
-        # disposition is per-token-per-file and not one list applied to N files;
-        # the cheaper design is what produced the inert mass in the first place.
-        self.assert_single_canonical_home(
-            lower=True,
-            canonical="governance/GOVERNING_PRINCIPLES.md",
-            canonical_substance=(
-                "brute force", "parallelism", "cheaper equivalent control",
-                "sealed independent architecture optimization review", "straightforward",
-                "bottleneck", "throughput", "value yield", "batching", "revise",
-                "unchallenged", "consequence", "healthy work",
-            ),
-            secondaries={
-                "planning/PLANNING_MODEL.md": (
-                    "brute force", "value", "sequence", "parallelism", "checkpoint",
-                    "evidence reuse", "cheaper equivalent control",
-                    "sealed independent architecture optimization review", "straightforward",
-                    "bottleneck", "throughput", "value yield", "batching", "wall time",
-                    "revise", "unchallenged", "supported", "consequence", "uncertainty",
-                    "healthy work",
-                ),
-                "prompts/ENGINEERING_AGENT_PROMPT.md": (
-                    "brute force", "value", "sequence", "evidence reuse",
-                    "cheaper equivalent control",
-                    "sealed independent architecture optimization review", "straightforward",
-                    "bottleneck", "throughput", "value yield", "batching", "wall time",
-                    "revise", "unchallenged", "consequence", "healthy work",
-                ),
-            },
-        )
-
     def test_concurrency_controls_require_executable_adverse_timing_validation(self):
         guidance = " ".join(
             (
@@ -1123,100 +1061,6 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             "never validate a mutable worktree input by hashing",
         ):
             self.assertIn(required, validation)
-
-    def test_defect_closure_repairs_and_independently_reviews_the_failed_defense(self):
-        proportionality = " ".join(
-            (
-                ROOT / "governance/GOVERNING_PRINCIPLES.md"
-            ).read_text(encoding="utf-8").lower().split()
-        )
-        review = " ".join(
-            (
-                ROOT / "governance/CODE_REVIEW_CONTRACT.md"
-            ).read_text(encoding="utf-8").lower().split()
-        )
-        for required in (
-            "concrete behavior",
-            "owning root cause",
-            "failed or missing prevention/detection defense",
-            "reason it let the defect escape",
-            "proportional executable regression evidence",
-            "fail against the defective state",
-            "directly analogous instances",
-            "narrowest appropriate authority",
-            "independent adversarial review",
-            "attempts falsification",
-            "new failure modes",
-            "disproportionate runtime or maintenance cost",
-            "independence is mandatory",
-        ):
-            self.assertIn(required, proportionality)
-        self.assertIn("cannot approve its own prevention or detection repair", review)
-
-    def test_systemic_mechanism_gap_recognition_is_pinned_and_cross_referenced_with_defect_closure(self):
-        # Capability 234's closure surfaced two real defects that each looked
-        # like an isolated slip but were not: a handover artifact went 11
-        # commits stale because nothing mechanically checked its freshness,
-        # and three consecutive phase closures in a row each failed to update
-        # the same navigation pointers and archive the same superseded
-        # document, because no documented closure step and no mechanical
-        # check ever required it. Neither was fixed by correcting the one
-        # instance in front of the agent; both required recognizing that the
-        # apparent one-off was actually caused by one missing systemic
-        # mechanism (an undocumented process step, or a synchronization check
-        # that was never made mechanical) and repairing that mechanism. This
-        # test pins the generalized rule (GOVERNING_PRINCIPLES.md rule 19)
-        # and its cross-reference back to rule 15's correction-to-control
-        # loop, so the two related rules stay linked rather than existing as
-        # disconnected prose.
-        proportionality = " ".join(
-            (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8").split()
-        )
-        for required in (
-            "a missing systemic mechanism",
-            "a process step that was never documented as mandatory",
-            "a check that was never made mechanical, so correctness depended only on an agent remembering to do it",
-            'a pointer, cross-reference, or "current state" marker that must track changing state but has no enforcement keeping it synchronized',
-            "evidence of one shared systemic cause, not as independent bad luck",
-            "do not close the investigation after explaining away each occurrence separately",
-            "document the missing step, or add the missing mechanical enforcement",
-            "the defect class becomes structurally hard to ship",
-            "an instance-only fix leaves the same defect free to recur at the next occasion the pattern applies",
-            "This complements rule 15's correction-to-control loop",
-            "a precondition for generalizing that root cause correctly, not a substitute for it",
-            "See rule 19 when the failure to prevent or detect this defect is itself evidence of a missing systemic mechanism",
-        ):
-            self.assertIn(required, proportionality)
-
-    def test_convention_migration_requires_zero_stale_references_and_a_standing_literal_check(self):
-        # A path-scoping convention changed once, and two of its consumer
-        # scripts kept a hardcoded reference to the retired convention instead
-        # of moving with it. Neither broke loudly -- each kept silently
-        # resolving the superseded location -- and the drift was found only by
-        # accident, months later, during an unrelated investigation. That is
-        # exactly rule 19's "pointer or convention that must track changing
-        # state but has no enforcement keeping it synchronized" shape, and it
-        # is common enough across path schemes, identity/naming models, and
-        # schema versions to warrant its own standing rule rather than relying
-        # on rule 19's general recognition step to be applied fresh each time.
-        # This test pins rule 20 and its cross-reference back to rule 19, so
-        # the general gap-recognition rule and this specific standing defense
-        # stay linked rather than existing as disconnected prose.
-        proportionality = " ".join(
-            (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8").split()
-        )
-        for required in (
-            "a path scheme, an identity or naming model, a schema version, or any other shared contract",
-            "the change is not complete merely because its owning module or record was updated and its own tests pass",
-            "prove with a mechanical check, not manual review, that every consumer moved with the convention",
-            "a closure-blocking failure of the migration itself, not a follow-up item",
-            "add a standing mechanical check that catches any new hardcoded reference to the superseded convention",
-            "cannot silently reintroduce it later",
-            "the standing defense for one especially common shape of rule 19's systemic mechanism gap",
-            "applied specifically to convention migrations",
-            "nothing to signal the drift until an unrelated investigation finds it by accident",
-        ):
-            self.assertIn(required, proportionality)
 
     def test_chat_switchover_uses_fresh_state_without_stopping_healthy_work(self):
         protocol = " ".join(
@@ -1758,7 +1602,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 text=True,
                 env=environment,
             )
-            eos_path = subprocess.run(
+            framework_path = subprocess.run(
                 (
                     sys.executable,
                     str(ROOT / "tooling/run_tests.py"),
@@ -1772,7 +1616,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 env=environment,
             )
             self.assertIn("OK", documented.stderr)
-            self.assertIn("OK", eos_path.stderr)
+            self.assertIn("OK", framework_path.stderr)
             self.assertFalse(any(fixture.rglob("*.pyc")))
             self.assertFalse(
                 any(path.name == "__pycache__" for path in fixture.rglob("*"))
@@ -1807,7 +1651,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
 
     # --- the core version has exactly one authority ---------------------------
     #
-    # Rule 20's second half, for the core-version convention. The instance fix
+    # Principle 15's second half, for the core-version convention. The instance fix
     # -- resolving the active core version from release/VERSION.json instead of
     # a constant -- closes the first half only. Without a standing check, a
     # contributor who does not know the convention ever changed reintroduces a
@@ -1854,7 +1698,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 "release/VERSION.json, and must be resolved from it at call time",
             )
 
-        # (b) Data half. Rule 20 names already-produced artifacts, not only code
+        # (b) Data half. Principle 15 names already-produced artifacts, not only code
         # call sites: the shipped example declaring 1.11.0 is what trained
         # adopters into the defect and concealed it for seven minor releases.
         disagreements = [
@@ -1891,7 +1735,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
 
     # --- a maturity label agrees with its own version -------------------------
     #
-    # Rule 20's second half, for the maturity convention. Correcting the
+    # Principle 15's second half, for the maturity convention. Correcting the
     # derivation closes the first half only. The previous boundary was written
     # by hand for 0.x-to-1.x with nothing keeping it synchronized, and the
     # identical contradiction returned at 1.x-to-2.x: every major from 2 upward
@@ -1949,7 +1793,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 "release/VERSION.json declares a maturity its own version contradicts",
             )
 
-        # (b) Rule 20's data half. Fixing a derivation does nothing to
+        # (b) Principle 15's data half. Fixing a derivation does nothing to
         # artifacts already written under it, so every committed record that
         # carries both a version and a maturity is re-checked against the
         # corrected derivation rather than assumed to have followed the code.

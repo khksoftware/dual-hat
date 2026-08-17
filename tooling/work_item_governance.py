@@ -7,6 +7,7 @@ import hashlib, json, re
 from pathlib import Path
 from typing import Mapping
 
+from dispatch_reconciliation import dispatch_inventory
 from profile_conformance import capability_evidence_digest, validate_profile
 
 MODES = {"integrated", "split"}
@@ -46,6 +47,15 @@ TRANSITIONS = {
     "remediation_required": {"engineering"}, "rejected": {"remediation_required"},
     "accepted": {"archived"}, "accepted_with_follow_up": {"archived"}, "archived": set(),
 }
+TERMINATION_TRANSITION_CONDITIONS = {
+    ("engineering", "engineering_complete"): ("planned_scope_completion", False),
+    ("engineering", "engineering_blocked"): ("hard_stop", False),
+    ("engineering", "engineering_aborted"): ("hard_stop", True),
+    ("engineering_paused", "engineering_aborted"): ("hard_stop", True),
+    ("engineering_blocked", "engineering_aborted"): ("hard_stop", True),
+}
+TERMINATION_RECEIPT_SCHEMA = "dual-hat-termination-preflight-receipt/1.0"
+PLATFORM_AUTHORITY_SNAPSHOT_SCHEMA = "dual-hat-platform-authority-snapshot/1.0"
 SAFE_MODE_BOUNDARIES = {"architecture", "work_order_ready", "author_approved_for_execution", "engineering_paused", "engineering_complete", "architecture_review", "accepted", "accepted_with_follow_up", "archived"}
 EXECUTION_PHRASES = {"approve this work order and enter engineering mode", "execute the approved work order", "begin engineering execution"}
 
@@ -302,7 +312,200 @@ def classification_failures(order: Mapping[str, object], *, type_registry: Mappi
         failures.append(f"{kind} lifecycle is incompatible with registered execution semantics")
     return tuple(failures)
 
-def transition_allowed(current: str, target: str) -> bool: return target in TRANSITIONS.get(current, set())
+def _exact_nonempty_string(value: object) -> bool:
+    return isinstance(value, str) and bool(value) and value == value.strip()
+
+
+def termination_preflight_failures(
+    current: str,
+    target: str,
+    *,
+    sealed_order: Mapping[str, object] | None,
+    termination_receipt: Mapping[str, object] | None,
+    platform_authority_snapshot: Mapping[str, object] | None,
+    type_registry: Mapping[str, Mapping[str, object]] | None = None,
+) -> tuple[str, ...]:
+    """Validate Clause A evidence for a terminal engineering transition.
+
+    The platform authority snapshot is caller-supplied trust-boundary evidence. The
+    receipt must reproduce its complete process and worker inventories exactly. Worker
+    semantics are deliberately not implemented here: ``dispatch_inventory`` remains the
+    sole authority for registration, state, heartbeat, successor, consumed-result, and
+    named-worker refusals.
+    """
+    condition = TERMINATION_TRANSITION_CONDITIONS.get((current, target))
+    if condition is None:
+        return ()
+    expected_terminal_condition, abort_authority_required = condition
+    failures: list[str] = []
+
+    if not isinstance(sealed_order, Mapping):
+        return ("termination preflight lacks a sealed work order",)
+    registered_types = frozenset(type_registry) if type_registry is not None else frozenset(BUILTIN_TYPES)
+    sealed_failures = validate_sealed(sealed_order, registered_types=registered_types, type_registry=type_registry)
+    if sealed_failures:
+        failures.append("termination preflight sealed work order is invalid: " + "; ".join(sealed_failures))
+    approved_scope = sealed_order.get("approved_scope")
+    stop_gates = sealed_order.get("stop_gates")
+    if not isinstance(approved_scope, list) or not all(_exact_nonempty_string(row) for row in approved_scope):
+        failures.append("termination preflight sealed approved scope is invalid")
+        approved_scope = []
+    if not isinstance(stop_gates, list) or not all(_exact_nonempty_string(row) for row in stop_gates):
+        failures.append("termination preflight sealed stop gates are invalid")
+        stop_gates = []
+
+    if not isinstance(termination_receipt, Mapping):
+        return tuple(dict.fromkeys([*failures, "terminal transition requires a termination-preflight receipt"]))
+    receipt_fields = {
+        "schema", "governing_identity", "terminal_condition", "planned_item_dispositions",
+        "required_results", "processes", "workers",
+    }
+    if expected_terminal_condition == "hard_stop":
+        receipt_fields.add("hard_stop")
+    if set(termination_receipt) != receipt_fields:
+        failures.append("termination-preflight receipt fields are incomplete or unknown")
+    if termination_receipt.get("schema") != TERMINATION_RECEIPT_SCHEMA:
+        failures.append("termination-preflight receipt schema is invalid")
+    if termination_receipt.get("terminal_condition") != expected_terminal_condition:
+        failures.append("termination-preflight receipt names the wrong terminal condition")
+
+    identity = termination_receipt.get("governing_identity")
+    if not isinstance(identity, Mapping) or set(identity) != {"work_item_id", "work_order_hash"}:
+        failures.append("termination-preflight governing identity is incomplete or unknown")
+    elif (identity.get("work_item_id") != sealed_order.get("work_item_id")
+          or identity.get("work_order_hash") != sealed_order.get("work_order_hash")):
+        failures.append("termination-preflight receipt is not bound to the sealed work order")
+
+    dispositions = termination_receipt.get("planned_item_dispositions")
+    disposition_scope: list[str] = []
+    if not isinstance(dispositions, list):
+        failures.append("planned-item dispositions are invalid")
+    else:
+        for row in dispositions:
+            if not isinstance(row, Mapping) or set(row) != {"scope_item", "disposition", "evidence"}:
+                failures.append("planned-item disposition fields are incomplete or unknown")
+                continue
+            scope_item = row.get("scope_item")
+            disposition = row.get("disposition")
+            if not _exact_nonempty_string(scope_item):
+                failures.append("planned-item disposition lacks an exact scope identity")
+            else:
+                disposition_scope.append(scope_item)
+            if not _exact_nonempty_string(disposition):
+                failures.append("planned-item disposition is invalid")
+            if not _exact_nonempty_string(row.get("evidence")):
+                failures.append("planned-item disposition lacks evidence")
+        if set(disposition_scope) != set(approved_scope) or len(disposition_scope) != len(set(disposition_scope)):
+            failures.append("planned-item dispositions do not exactly cover sealed approved scope")
+        if expected_terminal_condition == "planned_scope_completion" and any(
+            isinstance(row, Mapping) and row.get("disposition") != "complete" for row in dispositions
+        ):
+            failures.append("planned-scope completion carries a non-complete disposition")
+
+    results = termination_receipt.get("required_results")
+    result_scope: list[str] = []
+    if not isinstance(results, list):
+        failures.append("required results are invalid")
+    else:
+        for row in results:
+            if not isinstance(row, Mapping) or set(row) != {"scope_item", "evidence"}:
+                failures.append("required-result fields are incomplete or unknown")
+                continue
+            scope_item = row.get("scope_item")
+            if not _exact_nonempty_string(scope_item):
+                failures.append("required result lacks an exact scope identity")
+            else:
+                result_scope.append(scope_item)
+            if not _exact_nonempty_string(row.get("evidence")):
+                failures.append("required result lacks non-empty evidence")
+        if set(result_scope) != set(approved_scope) or len(result_scope) != len(set(result_scope)):
+            failures.append("required results do not exactly cover sealed approved scope")
+
+    processes = termination_receipt.get("processes")
+    process_ids: list[str] = []
+    if not isinstance(processes, list):
+        failures.append("owned-process inventory is invalid")
+    else:
+        for process in processes:
+            if not isinstance(process, Mapping) or set(process) != {"process_id", "state", "terminal_evidence"}:
+                failures.append("owned-process fields are incomplete or unknown")
+                continue
+            process_id = process.get("process_id")
+            if not _exact_nonempty_string(process_id):
+                failures.append("owned process lacks an exact process identity")
+            else:
+                process_ids.append(process_id)
+            if process.get("state") != "terminal":
+                failures.append(f"owned process {process_id!r} is nonterminal")
+            if not _exact_nonempty_string(process.get("terminal_evidence")):
+                failures.append(f"owned process {process_id!r} lacks terminal evidence")
+        if len(process_ids) != len(set(process_ids)):
+            failures.append("owned-process inventory repeats a process identity")
+
+    workers = termination_receipt.get("workers")
+    if not isinstance(workers, list):
+        failures.append("delegated-worker inventory is invalid")
+    else:
+        try:
+            reconciled_workers = dispatch_inventory(workers=workers)
+        except (TypeError, ValueError) as exc:
+            failures.append(f"delegated-worker inventory is invalid: {exc}")
+        else:
+            failures.extend(f"delegated-worker reconciliation blocks closure: {row}" for row in reconciled_workers["blocking_workers"])
+
+    snapshot = platform_authority_snapshot
+    snapshot_fields = {"schema", "work_item_id", "work_order_hash", "processes", "workers"}
+    if not isinstance(snapshot, Mapping):
+        failures.append("termination preflight lacks a platform-authority snapshot")
+    else:
+        if set(snapshot) != snapshot_fields:
+            failures.append("platform-authority snapshot fields are incomplete or unknown")
+        if snapshot.get("schema") != PLATFORM_AUTHORITY_SNAPSHOT_SCHEMA:
+            failures.append("platform-authority snapshot schema is invalid")
+        if (snapshot.get("work_item_id") != sealed_order.get("work_item_id")
+                or snapshot.get("work_order_hash") != sealed_order.get("work_order_hash")):
+            failures.append("platform-authority snapshot is not bound to the sealed work order")
+        if snapshot.get("processes") != processes or snapshot.get("workers") != workers:
+            failures.append("termination-preflight inventories do not exactly reconcile platform authority")
+
+    hard_stop = termination_receipt.get("hard_stop")
+    if expected_terminal_condition == "hard_stop":
+        hard_stop_fields = {"gate", "evidence", "preserved_state", "affected_work", "resumption_condition"}
+        if abort_authority_required:
+            hard_stop_fields.update({"abort_authority", "terminal_disposition"})
+        if not isinstance(hard_stop, Mapping) or set(hard_stop) != hard_stop_fields:
+            failures.append("hard-stop evidence fields are incomplete or unknown")
+        else:
+            for field in hard_stop_fields:
+                if not _exact_nonempty_string(hard_stop.get(field)):
+                    failures.append(f"hard-stop evidence lacks {field}")
+            if hard_stop.get("gate") not in stop_gates:
+                failures.append("hard-stop gate is not named in sealed stop_gates")
+            if abort_authority_required and hard_stop.get("abort_authority") not in stop_gates:
+                failures.append("abort authority is not named in sealed stop_gates")
+
+    return tuple(dict.fromkeys(failures))
+
+
+def transition_allowed(
+    current: str,
+    target: str,
+    *,
+    sealed_order: Mapping[str, object] | None = None,
+    termination_receipt: Mapping[str, object] | None = None,
+    platform_authority_snapshot: Mapping[str, object] | None = None,
+    type_registry: Mapping[str, Mapping[str, object]] | None = None,
+) -> bool:
+    if target not in TRANSITIONS.get(current, set()):
+        return False
+    return not termination_preflight_failures(
+        current,
+        target,
+        sealed_order=sealed_order,
+        termination_receipt=termination_receipt,
+        platform_authority_snapshot=platform_authority_snapshot,
+        type_registry=type_registry,
+    )
 
 def mode_switch_failures(package: Mapping[str, object]) -> tuple[str, ...]:
     failures: list[str] = []

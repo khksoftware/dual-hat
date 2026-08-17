@@ -12,7 +12,7 @@
     ]
   },
   "schema": "dual-hat-work-item-type-registry/1.0",
-  "see_also": "A consuming or adopting project may maintain its own project-specific Definition-of-Done registry, outside Dual Hat's portable source, that carries each of this registry's types' closure-time Definition of Done per GOVERNING_PRINCIPLES.md rule 31, and that may also cover governed types intentionally out of this registry's scope (never opened via a sealed work order); such a project-specific registry documents its own relationship to this file for the boundary.",
+  "see_also": "A consuming or adopting project may maintain its own project-specific Definition-of-Done registry, outside Dual Hat's portable source, that carries each of this registry's types' closure-time Definition of Done per GOVERNING_PRINCIPLES.md principle 10, and that may also cover governed types intentionally out of this registry's scope (never opened via a sealed work order); such a project-specific registry documents its own relationship to this file for the boundary.",
   "types": {
     "capability": {
       "classification": {

@@ -15,7 +15,7 @@ DUAL_HAT_CAPABILITY_PROOFS = {"closure_reconciliation_audit"}
 
 
 class ContinuityCloseoutTests(unittest.TestCase):
-    EVIDENCE = {"architecture_directed":True,"next_stream":"governance","source":"sealed GOV-0007 closeout direction"}
+    EVIDENCE = {"architecture_directed":True,"next_stream":"governance","source":"sealed GOV-9007 closeout direction"}
     AUDIT = reconciliation_audit(
         reviewer_role="independent", engineering_self_report_only=False,
         items=[{"source": "sealed_scope", "description": "implement the sealed feature", "status": "done", "evidence": "commit abc1234"}],
@@ -48,8 +48,8 @@ class ContinuityCloseoutTests(unittest.TestCase):
         with self.assertRaises(ValueError): work_estimate(low_hours=5,high_hours=8,segments=["x"],included=[],uncertainties=[],expansion_conditions=[],revision=2)
 
     def test_deferred_publication_inventory_is_not_a_release(self):
-        value = deferred_publication_inventory(canonical_commit="abc",retained_changes=["GOV-0006"],current_changes=["GOV-0007"],expected_version="1.2.0",compatibility="additive",release_notes=["onboarding"],dependencies=[])
-        self.assertFalse(value["published"]); self.assertEqual(["GOV-0006"], value["retained_prior_changes"])
+        value = deferred_publication_inventory(canonical_commit="abc",retained_changes=["GOV-9006"],current_changes=["GOV-9007"],expected_version="1.2.0",compatibility="additive",release_notes=["onboarding"],dependencies=[])
+        self.assertFalse(value["published"]); self.assertEqual(["GOV-9006"], value["retained_prior_changes"])
 
     def test_reconciliation_audit_requires_independent_reviewer_not_self_report(self):
         with self.assertRaises(ValueError) as engineering_role:

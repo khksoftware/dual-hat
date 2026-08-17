@@ -2,6 +2,53 @@
 
 # Changelog
 
+## 4.0.0 - 2026-08-17
+
+Replaces the 36-rule set and its four unnumbered obligations with 15 numbered
+principles, and makes arming the governing property of the document: every
+principle now ends with either an `Armed by` line naming the executable
+mechanism that refuses and that mechanism's declared residual, or an `Advice`
+line stating plainly that nothing enforces it. Eight are armed and seven are
+advice, counted mechanically from the file.
+
+The head matter states the constraint that produced this — a control that is not
+armed on the day it is authored is not authored — and forbids both an obligation
+added without an arming line and an arming line naming a mechanism nobody
+invokes.
+
+The four highest-consequence obligations that previously sat outside the
+numbering become principles 7, 8 and 9: the execution lease with its two
+terminal conditions and its termination-preflight receipt, the dispatch
+monitor-set obligation, and the evidence-defined worker-state vocabulary. They
+were the only obligations no citation could reach, and they are the ones with
+real gates behind them.
+
+Every collapse is lossless on intent. The retired rules' intents carry to named
+principles, two obligations are recorded as deliberate non-carries with their
+reasons, and three rules whose disposition was outright deletion are relocated
+to the documents that own their step, because each had a live consumer that
+deletion would have orphaned.
+
+Also in this release: the new-chat bootstrap obligation binds to a declared role
+rather than to a filename, so a repository that folds its handover content into
+its active-session record is conformant rather than in violation; and Clause A
+of the conformance policy becomes executable at every guarded terminal
+engineering edge, where five transitions now fail closed without a sealed,
+reconciled termination-preflight receipt.
+
+BREAKING. Every citation into the rule set is invalidated: 36 numbered rules
+become 15 numbered principles with no arithmetic relationship, so published
+citable surface changed meaning without changing shape. A contract is removed
+and a gate is replaced. Two section headings consumers resolve against no longer
+exist. A shipped tooling message moves from naming rule 35 to naming principle
+14. `release/UPGRADING.md` carries the governed 3.x to 4.0.0 migration and
+resolves every retired rule number an older citation still names.
+
+No executable gate's predicate changes. `transition_allowed`,
+`termination_preflight_failures`, `dispatch_inventory`, `validate_sealed` and
+`validate_no_embedded_absolute_local_paths` all refuse exactly what they refused
+before.
+
 ## 3.0.0 - 2026-08-13
 
 Major release. Vendored plugin-bundle version currency becomes a

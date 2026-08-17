@@ -368,3 +368,228 @@ Stated so none of it is inferred from the fact that a major version shipped.
 - It makes **no** stability, security, portability, durability or comparative
   claim of any kind. A new major version is a statement about compatibility and
   nothing else.
+
+## 3.x -> 4.0.0
+
+**The rule set is replaced.** `governance/GOVERNING_PRINCIPLES.md` retires 36
+numbered rules and four unnumbered obligations, and ships 15 numbered
+principles in their place. This is the largest single break in the framework's
+history and almost all of the migration work it creates is mechanical.
+
+**Read group 1 first.** If you cite the rule set by number anywhere — in your
+own profile documents, your process protocols, your agent prompts, your tooling
+docstrings, or your commit messages — every one of those citations resolves to
+a different obligation now, and none of them will fail loudly.
+
+### 1. Every rule number changes, and the complete mapping is here
+
+The mapping is stated in full rather than as a rule of thumb, because there is
+no arithmetic relationship between the two numberings. **Nothing in the
+framework detects a stale citation**: a document reading "rule 31" still reads
+as a sentence, and principle 31 does not exist, so the reference silently means
+nothing.
+
+| retired rule | subject | where its obligation now lives |
+|---:|---|---|
+| 1 | one short authoritative record | principle 1 |
+| 2 | reuse still-valid evidence | principle 1 |
+| 3 | combine adjacent checks and handoffs | principle 1 |
+| 4 | escalate depth only for demonstrated risk | principle 1 |
+| 5 | no new protocol, schema, ledger or approval surface when a field suffices | principle 1 |
+| 6 | proportionate omission rationale | principle 1 |
+| 7 | wall time, operator attention and maintenance are engineering costs | principle 1 |
+| 8 | preserve human decisions for material judgment | principle 11 |
+| 9 | schedule a lifecycle step at the latest safe point | principle 1 |
+| 10 | assess the delta before a full rerun | principle 1 |
+| 11 | repair the owning layer for a recurrable failure class | principle 3 |
+| 12 | iterations within one work item, not a sequence of work items | principle 1 |
+| 13 | content-addressed, invalidation-driven preflight reuse | principle 1 |
+| 14 | standing authorization for a bounded candidate class | principle 11 |
+| 15 | the correction-to-control loop | principle 3, final paragraphs |
+| 16 | verify a capability claim against current documentation and the installed surface | principle 6 |
+| 17 | consolidate durable learning at a release or progression point | principle 1 (the standing half) **and `process/PHASE_RUN_PROTOCOL.md`** (the boundary half) |
+| 18 | the pre-mutation optimization pass and long-run reevaluation | principle 1 (the pass) **and `planning/PLANNING_MODEL.md`** (what it covers) |
+| 19 | diagnose systemic mechanism gap versus one-off | principle 3 |
+| 20 | convention migration: sweep plus standing check | principle 15 |
+| 21 | a mid-session codification binds already-running workers | principle 11 |
+| 22 | exactly one canonical implementation per governed process | principle 2 |
+| 23 | stale-belief and delegated-status re-verification | principle 6 |
+| 24 | state the mechanism behind a completeness claim | principle 5 |
+| 25 | literal and abstract sibling search | principle 3 |
+| 26 | Red-Green-Refactor | principle 4, with a stated-exception valve added |
+| 27 | cross-instance sameness check | principle 3 |
+| 28 | ledger-backed projection reproducibility | **retired. Deliberate non-carry** — see group 3 |
+| 29 | the original task survives the work it spawns | principle 13 |
+| 30 | a change and its tracking record are verified together | principle 10, final paragraph |
+| 31 | Definition of Done per governed work-item type | principle 10 |
+| 32 | rule changes require an independent Architect review | **replaced** by principle 11's stakeholder go-ahead — see group 4 |
+| 33 | the stakeholder channel and the role label | principle 12 |
+| 34 | a confirmed red is never an accepted state | principle 4 |
+| 35 | no absolute local path in a durable file | principle 14 |
+| 36 | survey before designing | principle 2 |
+
+**The four obligations that were never numbered are now numbered**, which is
+itself a compatibility change for anyone who resolved them by section heading:
+
+| retired location | subject | now |
+|---|---|---|
+| "Non-abandonment and monitor-set invariant", ¶1 clause 1 | planned-scope completion | principle 7, condition 1 |
+| "Non-abandonment and monitor-set invariant", ¶1 clause 2 | hard stop | principle 7, condition 2 |
+| "Non-abandonment and monitor-set invariant", ¶2 | the termination-preflight receipt | principle 7 |
+| "Non-abandonment and monitor-set invariant", ¶3 | the dispatch monitor-set obligation | principle 8 |
+| "Non-abandonment and monitor-set invariant", ¶4 | the worker-state vocabulary | principle 9 |
+| "Cardinal rules" (heading) | — | heading removed; principles are a flat numbered list |
+| "Common application areas" (heading) | — | "Application areas", explicitly marked advice |
+
+**What to do.** Search your own tree for `rule <n>` near `GOVERNING_PRINCIPLES`
+and rewrite each against the table above. Then add a standing check for the
+retired form, which is what principle 15 requires of any convention migration
+and what this framework's own tree did for its internal citations.
+
+### 2. Every principle now states whether anything enforces it
+
+This is the change with no mechanical break and the largest practical
+consequence. Each of the 15 principles ends with one of two lines:
+
+- **Armed by** — names the executable mechanism that refuses, and states the
+  mechanism's known residual where it has one.
+- **Advice** — states that nothing enforces the principle.
+
+Nine principles are armed; six are advice. **If you built process on the
+assumption that a rule being written down meant something would catch its
+violation, six of these principles will tell you otherwise in their own text**,
+including the completeness-claim rule (principle 5) and the
+original-task-survives rule (principle 13).
+
+The constraint that produced this is stated at the head of the document and
+binds every future addition: *a control that is not armed on the day it is
+authored is not authored.* An adopter proposing a new principle to this
+framework must supply its detector or its admission of advice in the same
+change.
+
+**No obligation was removed by this**, and nothing in it changes a mechanism.
+The arming lines describe controls that already existed in exactly the state
+they describe.
+
+### 3. Two obligations are retired outright
+
+Named individually, because a retirement inferred from a table is a retirement
+nobody read.
+
+**Rule 28, ledger-backed projection reproducibility.** The requirement to
+replay an append-only ledger and diff the result against its live projection is
+gone. It is retired rather than relocated because the framework ships no
+ledger-backed projection of its own and no replay mechanism, so it obligated an
+adopter to build a check the framework could not describe concretely. **If you
+maintain such a projection, this obligation is now yours to state and arm**; it
+is a good check and its retirement here is about ownership, not merit.
+
+**Rule 15's independence release for governance text.** Independent adversarial
+review of a countermeasure remains **mandatory** wherever the defect could
+reach a consumer of the product, and no agent may review its own prevention or
+detection repair. It is **no longer required for a change confined to
+governance text**. That release is written into principle 3 explicitly rather
+than left as a shortened rule an adopter would have to infer from.
+
+### 4. Rule 32's independent-review gate is replaced by a human go-ahead
+
+Rule 32 required an independent Architect to review any change to the rule set
+before that change counted as adopted, and the document opened with a notice
+saying so. **Both are gone.** Principle 11 replaces them:
+
+> No change to this framework's governed source, to this document, or to any
+> gate's predicate lands without the stakeholder's explicit go-ahead in the
+> session that makes it.
+
+**This is not a relaxation and it is not a tightening; it is a different
+control.** The reviewer requirement was satisfiable by one agent reviewing
+another agent's text, and what it failed to prevent was the framework growing
+without its stakeholder noticing. A human gate on framework growth cannot be
+satisfied by an agent writing a receipt about itself, which is the property
+every mechanical substitute for it lacked.
+
+**What to do.** If your process routes rule changes to an independent reviewer,
+that route is now yours to keep or drop; the framework no longer requires it.
+If your process had no human go-ahead step for framework changes, **you now
+need one**, and it is the only step principle 11 requires.
+
+### 5. One shipped tooling message changed
+
+`tooling/repository_hygiene.py`'s absolute-local-path failure message changed
+from `outside rule 35's citation/provenance exemption: <match>` to
+`outside principle 14's citation/provenance exemption: <match>`.
+
+Anything matching that string breaks. The function name, signature, return
+shape, registry file names and registry schemas are all unchanged; only the
+message text moved with the renumbering. The framework's own test that pinned
+the old substring moved in the same change.
+
+### 6. Seven tests were removed from the shipped suite
+
+The framework suite goes from 200 collected tests to 193. All seven asserted
+that specific sentences still appeared in `GOVERNING_PRINCIPLES.md`.
+
+They are deleted rather than rewritten against the new text, deliberately: a
+test that checks a governance sentence still appears in a governance file
+detects an edit to the file, not the behaviour the rule governs, and a rule set
+pinned that way cannot be edited without rewriting its own tests first. The
+compensating control is that 15 principles are short enough to read in full.
+
+**If you extended the framework suite with prose pins of your own**, they are
+the same class and this release is the moment to drop them.
+
+### 7. Your platform profile's declared core version
+
+As at every release, and for the reason recorded in the 2.0.0 section's group
+4: profile conformance compares `dual_hat_core_version` by exact string
+equality on the full version triple, so set your profile's
+`dual_hat_core_version` to `4.0.0`. That contract is unchanged by this release
+and the open policy question about it is still open.
+
+The maturity vocabulary is derived from the major (2.0.0 section, group 3), so
+`release/VERSION.json`'s `maturity` becomes `stable_4_x` at this release. This
+is the recurrence that group 3's standing check exists to catch.
+
+### Why 4.0.0, derived rather than chosen
+
+`release/VERSION.json`'s own stability string is the authority: *mandatory core
+contracts are stable; breaking changes require a new major version and governed
+migration.* The level follows from the combined compatibility impact and is not
+a judgement about how significant the change feels.
+
+Four independent breaks each force a major on their own:
+
+1. **Every citation into the rule set is invalidated** (group 1). Published,
+   citable surface changed meaning without changing shape.
+2. **Two obligations are retired** (group 3) and **one gate is replaced by a
+   different control** (group 4). A removed contract cannot ship as additive.
+3. **Two section headings that consumers resolve against no longer exist**
+   (group 1's second table).
+4. **A shipped tooling message changed** (group 5), which is an observable
+   behaviour change in exported code rather than in documentation.
+
+No part of this is expressible as a minor release, which is additive and
+backward compatible, or as a patch, which fixes a defect within the documented
+minor-line contract. `3.0.0` therefore goes to **`4.0.0`**, and this section is
+the governed migration that `VERSION.json` requires a major to bring.
+
+### What this release does NOT do
+
+Stated so none of it is inferred from the fact that a major version shipped.
+
+- It does **not** change any executable gate's predicate. `transition_allowed`,
+  `termination_preflight_failures`, `dispatch_inventory`, `validate_sealed` and
+  `validate_no_embedded_absolute_local_paths` all refuse exactly what they
+  refused at 3.0.0.
+- It does **not** add an obligation that nothing enforces. Every principle
+  states which of the two it is.
+- It does **not** weaken independent review where a defect could reach a
+  consumer of the product; that independence is still mandatory (group 3).
+- It does **not** change the release, publication, export, packaging or
+  provenance contracts in any respect.
+- It does **not** claim the surviving principles are enforced. Six of the 15
+  say in their own text that nothing enforces them, and that admission is the
+  point of the release rather than a caveat on it.
+- It makes **no** stability, security, portability, durability or comparative
+  claim of any kind. A new major version is a statement about compatibility and
+  nothing else.

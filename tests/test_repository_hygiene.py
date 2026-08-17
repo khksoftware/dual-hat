@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
-"""GOVERNING_PRINCIPLES.md rule 35's standing check: a durable file must
+"""GOVERNING_PRINCIPLES.md principle 14's standing check: a durable file must
 never embed an absolute local filesystem path used as a live structural
-pointer or self-reference. Red-green-refactor coverage (rule 26): one test
-reproduces the exact defect class rule 35 was written for and confirms it is
+pointer or self-reference. Red-green-refactor coverage (principle 4): one test
+reproduces the exact defect class principle 14 was written for and confirms it is
 caught; the rest confirm every declared exemption genre -- test fixture,
 schema example, markdown evidence citation, regex pattern source, an
 explicit human-reviewed citation, and a deferred-scope prefix -- is spared,
@@ -36,7 +36,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
     # This module ships publicly through the export allowlist, so a fixture
     # spelling out a real machine's drive, username or directory layout
     # discloses it to every adopter. That is a publication-disclosure concern
-    # and NOT a rule 35 compliance defect: the lines are already exempt by file
+    # and NOT a principle 14 compliance defect: the lines are already exempt by file
     # shape and the check is not failing on them.
     #
     # The binding constraint on every replacement is that it must still trip
@@ -65,7 +65,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             failures = validate_no_embedded_absolute_local_paths(root)
             self.assertEqual(1, len(failures))
             self.assertIn("tooling/example_tool.py:1", failures[0])
-            self.assertIn("rule 35", failures[0])
+            self.assertIn("principle 14", failures[0])
 
     def test_scan_spares_a_registered_citation_but_still_catches_an_unregistered_one(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -121,7 +121,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             # Synthetic by construction. This file ships publicly through the
             # export allowlist, so a fixture spelling out a real machine's
             # directory layout discloses that layout to every adopter -- a
-            # publication-disclosure concern, not a rule 35 compliance defect:
+            # publication-disclosure concern, not a principle 14 compliance defect:
             # the line is already exempt by file shape and the check is not
             # failing on it.
             #
