@@ -449,7 +449,7 @@ and what this framework's own tree did for its internal citations.
 ### 2. Every principle now states whether anything enforces it
 
 This is the change with no mechanical break and the largest practical
-consequence. Each of the 15 principles ends with one of two lines:
+consequence. Each principle ends with one of two lines:
 
 - **Armed by** — names the executable mechanism that refuses, and states the
   mechanism's known residual where it has one.
@@ -533,7 +533,7 @@ They are deleted rather than rewritten against the new text, deliberately: a
 test that checks a governance sentence still appears in a governance file
 detects an edit to the file, not the behaviour the rule governs, and a rule set
 pinned that way cannot be edited without rewriting its own tests first. The
-compensating control is that 15 principles are short enough to read in full.
+compensating control is that this set is short enough to read in full.
 
 **If you extended the framework suite with prose pins of your own**, they are
 the same class and this release is the moment to drop them.

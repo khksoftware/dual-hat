@@ -69,6 +69,37 @@
       "type": "object"
     },
     "known_environment_limitations": {
+      "items": {
+        "properties": {
+          "how_it_presents": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "how_to_detect": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "remedy": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "safe_alternative": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "what_breaks": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "what_breaks",
+          "how_it_presents",
+          "how_to_detect",
+          "safe_alternative"
+        ],
+        "type": "object"
+      },
       "type": "array"
     },
     "limitations": {

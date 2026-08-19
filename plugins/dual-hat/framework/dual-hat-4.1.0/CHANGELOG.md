@@ -2,6 +2,20 @@
 
 # Changelog
 
+## 4.1.0 - 2026-08-19
+
+Eight accumulated changes to canonical governance and tooling, published together as one minor release.
+
+**Governance.** Principle 3 gains a fourth systemic-gap shape: a numeric bound whose value was set at or near an observed instance's own size rather than derived from what the bounded thing legitimately needs. Such a bound is evidence about the instance that produced it, not a constraint on the thing it is meant to bound, and it passes cleanly on the exact violation it exists to catch. Principle 12's residual is sharpened: even an armed session-stop hook's coverage stops at the session it is attached to, because a delegated or sub-agent's own turn is a separate execution context no parent hook can introspect by construction. Principle 16 is added: governing content is platform-neutral, and a platform's own auto-loaded instructions file is a pointer to it, never a second home for it. Purely additive -- no principle is renumbered, retired or reworded, so every existing citation still resolves. All three governance changes are advice; the two amendments inherit their principle's existing label, and the new principle states plainly why no detector can enumerate every present and future agent platform's own auto-loaded filename.
+
+**Tooling.** A scoped sibling-import context manager (`tooling/sibling_import_context.py`) is added, and the product-bootstrap script's permanent, unscoped `sys.path` insertion -- the exact defect class the new module exists to prevent -- is repaired in the same change, rather than shipping a fix beside an unrepaired instance of the problem it solves. `known_environment_limitations` in the platform-profile schema gains a per-entry object contract (four required fields naming what breaks, how it presents, how to detect it, and the safe alternative, plus an optional remedy), genuinely armed by the profile-conformance validator rather than left as an unenforced specification.
+
+**Documentation.** A new guide documents the composable pre-commit gate-dispatch pattern: a no-logic shim over independently-armed, per-gate marker files, for an adopter who needs more than one write-time gate behind git's single hook slot, together with the lesson that such a gate must read a commit's actual staged content rather than the working tree. Stated as advice, since the detectors it dispatches to are necessarily project-specific.
+
+**Also in this release**, two smaller carried-over repairs: four test-rationale comments that pinned a version literal instead of naming the condition they meant, which had silently disarmed a real release-evidence check across releases; and a stale retired rule-number citation in a tooling docstring, corrected to its successor principle's number.
+
+Compatibility impact MINOR: an adopter gains new advisory guidance and one newly-enforced (previously unenforced) schema constraint; nothing existing is renamed, relocated or removed, and every prior citation still resolves.
+
 ## 4.0.0 - 2026-08-17
 
 Replaces the 36-rule set and its four unnumbered obligations with 15 numbered

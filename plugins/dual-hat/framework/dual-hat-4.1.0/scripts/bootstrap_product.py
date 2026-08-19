@@ -10,8 +10,23 @@ sys.dont_write_bytecode = True
 
 
 FRAMEWORK_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(FRAMEWORK_ROOT / "tooling"))
-from path_containment import ContainmentError, contained_roots  # noqa: E402
+
+# Scoped, not permanent: this script lives outside the tooling package it
+# needs, so the tooling directory must go on sys.path to reach it -- but
+# only for the statements that need it, removed again immediately after,
+# and removed only if this import is what inserted it. Same primitive as
+# tooling/sibling_import_context.py's sibling_directory_on_path, inlined
+# here because reaching that helper would itself require the same
+# unscoped insert this replaces.
+_TOOLING_ROOT = str(FRAMEWORK_ROOT / "tooling")
+_tooling_root_inserted = _TOOLING_ROOT not in sys.path
+if _tooling_root_inserted:
+    sys.path.insert(0, _TOOLING_ROOT)
+try:
+    from path_containment import ContainmentError, contained_roots  # noqa: E402
+finally:
+    if _tooling_root_inserted:
+        sys.path.remove(_TOOLING_ROOT)
 
 
 def _text(name: str) -> str:

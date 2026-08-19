@@ -18,7 +18,7 @@ def _active_tracked_files(root: Path) -> tuple[Path, ...]:
     """Git-tracked and untracked-but-present files, excluding archive/ trees.
 
     Mirrors the equivalent helper a consuming product's own repository-
-    hygiene tooling may define, so a consuming product's own rule-35
+    hygiene tooling may define, so a consuming product's own principle-14
     standing check and this framework's own check agree on what "active
     surface" means.
     """

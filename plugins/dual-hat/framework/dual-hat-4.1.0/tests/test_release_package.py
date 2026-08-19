@@ -437,8 +437,8 @@ class ReleasePackageTests(unittest.TestCase):
         # The invariant is that the label agrees with its own major, not that
         # any one version is special -- so the majors are enumerated and the
         # versions are BUILT from them. A per-version literal here would need
-        # rewriting at every major and would prove nothing about 3.0.0, which
-        # is the recurrence this exists to prevent: the 0.x-to-1.x boundary was
+        # rewriting at every major and would prove nothing about the NEXT one,
+        # which is the recurrence this exists to prevent: the 0.x-to-1.x boundary was
         # fixed by hand, nothing kept it synchronized, and the identical
         # contradiction returned at 1.x-to-2.x.
         #
@@ -531,8 +531,8 @@ class ReleasePackageTests(unittest.TestCase):
         # "breaking changes require a new major version and governed
         # migration". A major that ships without one leaves the framework's
         # stated stability contract unmet by its own release. Anchored on the
-        # major the shipped version carries, so 3.0.0 must bring its own
-        # section rather than inheriting this one.
+        # major the shipped version carries, so EACH new major must bring its
+        # own section rather than inheriting an earlier one.
         with self.subTest(half="governed migration"):
             migration = ROOT / "release/UPGRADING.md"
             self.assertTrue(
