@@ -19,6 +19,28 @@ GUARANTEES = {"monitoring_not_weakened", "recovery_not_weakened", "security_not_
 GAP_KINDS = {"unsupported_capability", "unavailable_capability", "misconfigured_capability", "temporarily_degraded_capability", "permission_or_access_failure", "security_or_rights_restriction", "tool_defect", "profile_defect", "core_contract_ambiguity"}
 CORE_MANDATORY_CAPABILITIES = {"sealed_work_order", "repository_state_preservation", "explicit_user_and_architecture_reporting", "resumable_handoff", "detached_validation", "governed_publication", "quality_rule_discovery", "independent_deep_review", "canonical_path_containment", "network_policy_validation", "rights_readiness_validation", "binary_secret_gate", "committed_tree_release_binding", "transactional_writes", "post_run_residue_inspection"}
 CAPABILITY_PROOF_MARKER = "DUAL_HAT_CAPABILITY_PROOFS"
+KNOWN_ENVIRONMENT_LIMITATION_REQUIRED_FIELDS = {"what_breaks", "how_it_presents", "how_to_detect", "safe_alternative"}
+
+def known_environment_limitation_failures(entries: object) -> tuple[str, ...]:
+    """Enforce the per-entry contract schemas/platform-profile.schema.json declares
+    for known_environment_limitations: an object naming what breaks, how it
+    presents, how to detect it, and the safe alternative, plus an optional
+    remedy. A bare string, or an object missing one of the four, carries none
+    of what the next reader needs to act on the trap without re-discovering it
+    themselves."""
+    if not isinstance(entries, list): return ("known_environment_limitations is not a list",)
+    failures: list[str] = []
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, Mapping):
+            failures.append(f"known_environment_limitations[{index}] is not an object"); continue
+        missing = KNOWN_ENVIRONMENT_LIMITATION_REQUIRED_FIELDS - set(entry)
+        if missing: failures.append(f"known_environment_limitations[{index}] is missing required field(s): {sorted(missing)}")
+        for field in KNOWN_ENVIRONMENT_LIMITATION_REQUIRED_FIELDS & set(entry):
+            if not isinstance(entry[field], str) or not entry[field].strip():
+                failures.append(f"known_environment_limitations[{index}].{field} must be a non-empty string")
+        if "remedy" in entry and (not isinstance(entry["remedy"], str) or not entry["remedy"].strip()):
+            failures.append(f"known_environment_limitations[{index}].remedy must be a non-empty string when present")
+    return tuple(failures)
 
 def capability_evidence_digest(profile: Mapping[str, object]) -> str:
     payload = profile.get("capability_evidence", {})
@@ -109,6 +131,7 @@ def validate_profile(profile: Mapping[str, object], core_version: str) -> tuple[
     if (not isinstance(rationale, Mapping) or not isinstance(capabilities, Mapping) or set(rationale) != set(capabilities)
             or any(not isinstance(value, str) or not value.strip() for value in rationale.values())):
         failures.append("platform capability evidence lacks explicit semantic ownership rationale")
+    failures.extend(known_environment_limitation_failures(profile.get("known_environment_limitations", [])))
     return tuple(failures)
 
 

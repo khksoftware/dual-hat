@@ -1741,7 +1741,11 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
     # identical contradiction returned at 1.x-to-2.x: every major from 2 upward
     # was stamped stable_1_x and no test anywhere could notice. Without a
     # standing check this repair is a second one-time boundary fix on the same
-    # unsynchronized convention, and 3.0.0 is the predicted third recurrence.
+    # unsynchronized convention, and the NEXT major is the predicted third
+    # recurrence. Named as a condition rather than as a version literal: a
+    # literal here is true of one release and stale at the following one, and
+    # the detector below cannot tell a comment discussing a version from a test
+    # pinning one, so a literal in this comment disarms it.
     #
     # Anchored on the major the version itself carries, NEVER on
     # release_maturity(). A check asserting only that the declared label equals
@@ -1818,7 +1822,7 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
 
         # (c) The check must FIRE on a contradiction, so that (a) and (b)
         # passing is a fact about the data rather than about the check. Versions
-        # are built from the major so this covers 3.0.0 and beyond, which is the
+        # are built from the major so this covers every major, which is the
         # recurrence the standing half exists for -- not just the boundary that
         # happens to be current.
         for major in (1, 2, 3, 11):

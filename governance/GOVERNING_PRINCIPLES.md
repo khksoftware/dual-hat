@@ -164,10 +164,13 @@ owning layer** that prevents recurrence, while still correcting the current inst
 turn an isolated defect into a broad redesign without demonstrated recurrence risk.
 
 **First decide whether the symptom is one instance of a missing systemic mechanism.** A
-systemic gap takes one of three shapes: a process step never documented as mandatory; a check
-never made mechanical, so correctness depended on an agent remembering; or a pointer,
+systemic gap takes one of four shapes: a process step never documented as mandatory; a check
+never made mechanical, so correctness depended on an agent remembering; a pointer,
 cross-reference, or current-state marker that must track changing state with nothing keeping it
-synchronized. Treat a run of superficially distinct misses that share one of these shapes as
+synchronized; or a numeric bound whose value was set at or near an observed instance's own size
+rather than derived from what the bounded thing legitimately needs — such a bound is evidence
+about the instance, not a constraint on it, and passes cleanly on the exact violation it exists
+to catch. Treat a run of superficially distinct misses that share one of these shapes as
 one shared cause, not independent bad luck. When the cause is systemic, repair the mechanism —
 document the missing step, or add the missing mechanical enforcement — rather than only the
 instance in front of you.
@@ -594,7 +597,14 @@ The mechanism lives in the adopting platform's own configuration, outside the fr
 governed source, so it is invisible to the framework's tests, absent by default in a fresh
 installation, and — measured once — capable of drifting from its tracked source with nothing
 detecting the drift. An adopter that arms this arms it *and* pins the installed artifact
-against its tracked source, or the control is indistinguishable from its own absence. Nothing
+against its tracked source, or the control is indistinguishable from its own absence.
+**Even where armed, the hook's coverage stops at the session it is attached to.** A delegated
+or sub-agent's own turn is a separate execution context the parent's hook cannot introspect, by
+construction, on any supervisor/worker agent architecture whose hook model looks like this one
+— this is not a fact about any one platform, it is a fact about what a turn-boundary hook can
+see from where it is attached. So the obligation this principle places on every message a role
+*or delegated worker* produces has, for the delegated half, no possible automated arming at
+all: only the dispatching brief can carry it. Nothing
 enforces the channel rule itself; a delegated agent's refusal to trust a relayed claim is that
 half's whole enforcement.
 
@@ -695,6 +705,48 @@ arming to the general case.** Where an adopting project builds such a registry a
 over it, the check becomes real for the conventions someone registered and stays silent for
 every convention they did not — which is a fact about that project's mechanism, not about this
 document's.
+
+---
+
+## 16. Governing content is platform-neutral; a platform's own file is a pointer to it
+
+Every agent platform auto-loads some file of its own — a differently named instructions file
+per harness, discovered by that harness and by no other. **Writing governing content into one
+of those files makes it invisible to every other platform**, and the loss is silent: an agent
+on the second platform does not fail, it simply operates without a rule it was never shown, and
+nothing anywhere reports the absence.
+
+**So the durable home for any content that binds work is a platform-neutral file, and the
+platform's auto-loaded file is a pointer to it.** This holds for operating rules, environment
+traps, boundaries, routing, and any statement an agent is expected to have read before choosing
+an approach. It applies to the *first* time such content is written, not only to a later
+migration: content written into a platform file and moved out afterwards was still unreachable
+in between, and a project rarely notices that window while it is open.
+
+**The narrow exception, and it must be genuinely narrow: content that is only true of that one
+platform.** A harness's own invocation syntax, its own tool names, its own hook mechanics. The
+test is not whether the content was *discovered* on one platform but whether it is *false or
+meaningless* on another. Content that merely happens to have been written while working on one
+platform is not platform-specific, and that misreading is how these files accumulate.
+
+**Creating a new platform-specific artifact at all is a decision for the human**, per principle
+11, and not one an agent takes because a platform's convention invites it. The invitation is
+strong and it is the mechanism of the drift: a harness documents its own auto-loaded filename,
+an agent writes there because that is what gets read, and the content is single-platform from
+its first line without anyone deciding it should be.
+
+**This principle is the same shape as principle 3's owning layer, applied to reach rather than
+to code.** Content placed where only one reader can find it has been repaired in the wrong
+layer, and the second reader's absence is not detectable from inside the first one.
+
+**Advice.** Nothing in this framework's shipped source enforces this, and no mechanism can:
+what counts as a platform's auto-loaded file is defined by that platform, changes when the
+platform changes, and is unknowable to a framework that must not enumerate harnesses it does
+not ship. A detector could at best match filenames a maintainer remembered to list, which would
+report clean for every platform added after it was written — the precise shape principle 5
+forbids claiming as coverage. **It holds because a reasonable agent reads it and complies, and
+because the human whose permission principle 11 requires is the one who notices when it has
+not.**
 
 ---
 

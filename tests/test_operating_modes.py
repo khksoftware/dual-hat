@@ -246,6 +246,24 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         weak=copy.deepcopy(profile); weak["guarantees"]["security_not_weakened"]=False; self.assertTrue(validate_profile(weak,core_version()))
         unexplained=copy.deepcopy(profile); unexplained["capability_evidence_rationale"].pop("independent_deep_review"); self.assertTrue(validate_profile(unexplained,core_version()))
         mismatch=copy.deepcopy(profile); mismatch["supported_configuration"]["operating_system"]="definitely-not-this-host"; self.assertTrue(runtime_profile_failures(mismatch)); self.assertTrue(capability_preflight(mismatch,["sealed_work_order"],core_version(),ROOT,receipts(mismatch,ROOT))["hard_stop"])
+    def test_known_environment_limitations_entries_are_schema_shaped(self):
+        """Every known_environment_limitations entry is an object naming what
+        breaks, how it presents, how to detect it and the safe alternative, with
+        an optional remedy -- not a bare string, which is useless to the next
+        reader because it carries none of what they need to act on the trap
+        without re-discovering it themselves."""
+        profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
+        complete={"what_breaks":"x","how_it_presents":"y","how_to_detect":"z","safe_alternative":"w"}
+        good=copy.deepcopy(profile); good["known_environment_limitations"]=[complete,{**complete,"remedy":"r"}]
+        self.assertEqual((),validate_profile(good,core_version()))
+        bare_string=copy.deepcopy(profile); bare_string["known_environment_limitations"]=["watch out for X"]
+        self.assertTrue(validate_profile(bare_string,core_version()))
+        missing_field=copy.deepcopy(profile); missing_field["known_environment_limitations"]=[{k:v for k,v in complete.items() if k!="safe_alternative"}]
+        self.assertTrue(validate_profile(missing_field,core_version()))
+        blank_field=copy.deepcopy(profile); blank_field["known_environment_limitations"]=[{**complete,"how_to_detect":"   "}]
+        self.assertTrue(validate_profile(blank_field,core_version()))
+        blank_remedy=copy.deepcopy(profile); blank_remedy["known_environment_limitations"]=[{**complete,"remedy":""}]
+        self.assertTrue(validate_profile(blank_remedy,core_version()))
     def test_admission_gate_applies_the_version_from_governed_release_evidence(self):
         """The core version the gate applies is the one release evidence declares.
 
