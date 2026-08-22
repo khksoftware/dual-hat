@@ -71,11 +71,19 @@
     "known_environment_limitations": {
       "items": {
         "properties": {
-          "how_it_presents": {
+          "detect": {
             "minLength": 1,
             "type": "string"
           },
-          "how_to_detect": {
+          "established": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "presents_as": {
             "minLength": 1,
             "type": "string"
           },
@@ -87,16 +95,18 @@
             "minLength": 1,
             "type": "string"
           },
-          "what_breaks": {
+          "trap": {
             "minLength": 1,
             "type": "string"
           }
         },
         "required": [
-          "what_breaks",
-          "how_it_presents",
-          "how_to_detect",
-          "safe_alternative"
+          "id",
+          "trap",
+          "presents_as",
+          "detect",
+          "safe_alternative",
+          "established"
         ],
         "type": "object"
       },

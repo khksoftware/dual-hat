@@ -2,6 +2,16 @@
 
 # Changelog
 
+## 4.2.0 - 2026-08-22
+
+Five accumulated changes to canonical governance, schemas and tooling, published together as one minor release.
+
+**Governance.** Principle 3's systemic-gap catalogue gains three shapes and loses its hardcoded count. Added: a binding carried by prose that a mechanism matches literally, severed by a paraphrase that preserves the meaning -- the rule is not weakened, argued away or overridden, it is reworded, usually into something shorter and clearer, and enforcement silently stops applying while the text still reads as binding to every human who passes it; a remedy that closes the appearance of the defect rather than the property, which is worse than an absent mechanism rather than better, because it occupies the place a real one would go, so the class reads as closed and its presence becomes the argument against looking again; and a detector that answers a cheaper question when it cannot answer the real one, where the substitution is frequently correct engineering and the defect is it going unstated at the point the result is read, so a clean answer to the narrow question is taken for a clean answer to the broad one. The introducing sentence deliberately no longer states how many shapes there are: a number written into prose beside a list it does not derive is itself the third shape already in the catalogue, and it goes stale the first time the list grows. The catalogue also moves from a semicolon run to a list, which is what its content already was.
+
+**Schemas.** `authorized_scope` is declared in the work-item schema, so a field the governed flow already depended on stops being an undeclared convention. The platform-profile schema and the conformance validator are reconciled with the per-entry field vocabulary that profiles in the field actually use, so the framework declares the contract its own validator enforces rather than leaving two descriptions of one contract free to disagree. The closeout-decision schema carries the reconciled dispatch inventory.
+
+**Tooling.** `continuity_closeout` echoes the reconciled dispatch inventory in the closeout decision, so a closure can show which inventory it closed over instead of asserting that reconciliation happened. `governed_repository_digest` distinguishes *not a git repository* from *git failed*: it decides which by walking for a `.git` entry structurally rather than by matching git's error text, which is localized and therefore not a predicate. Outside a repository it returns the digest of an empty inventory; inside one, any git failure raises rather than silently substituting an empty result, the substitution being the defect, because an empty digest is indistinguishable from a genuinely empty inventory.
+
 ## 4.1.0 - 2026-08-19
 
 Eight accumulated changes to canonical governance and tooling, published together as one minor release.

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -87,6 +88,58 @@ class ContinuityCloseoutTests(unittest.TestCase):
         self.assertEqual((), tuple(deferred["blocking_items"]))
         authorized = select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=deferred, dispatch_inventory=self.DISPATCH)
         self.assertEqual("lightweight_continuity", authorized["selection"])
+
+    def test_reconciliation_audit_re_derives_rather_than_trusting_the_caller(self):
+        """`reconciliation_audit` carried the identical trust-the-caller property that
+        was already closed for `dispatch_inventory` --
+        select_closeout() believed the caller's own `closure_authorized`/`blocking_items`
+        fields instead of re-deriving them from `items`, the way it re-derives the dispatch
+        disposition from `workers`. A hand-forged audit that claims authorization despite a
+        real blocking item must be refused, naming the contradiction."""
+        forged = {
+            "schema": "dual-hat-reconciliation-audit/1.0", "reviewer_role": "independent",
+            "engineering_self_report_only": False,
+            "items": [{"source": "interim_finding", "description": "bug found in validation", "status": "not_done", "evidence": "test_x::test_y still failing"}],
+            "blocking_items": [], "closure_authorized": True,
+        }
+        with self.assertRaises(ValueError) as forged_authorization:
+            select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=forged, dispatch_inventory=self.DISPATCH)
+        self.assertIn("blocked by unresolved reconciliation findings", str(forged_authorization.exception))
+        self.assertIn("bug found in validation", str(forged_authorization.exception))
+
+        # A second forgery that would slip past the blocking-items check above but still
+        # disagrees with the re-derivation: the caller's own summary fields must match
+        # what re-deriving from `items` actually produces, not merely agree on the
+        # authorized/blocked verdict.
+        contradicted = {
+            "schema": "dual-hat-reconciliation-audit/1.0", "reviewer_role": "independent",
+            "engineering_self_report_only": False,
+            "items": [{"source": "sealed_scope", "description": "core feature", "status": "done", "evidence": "commit abc1234"}],
+            "blocking_items": ["a finding the caller invented"], "closure_authorized": True,
+        }
+        with self.assertRaises(ValueError) as contradicted_summary:
+            select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=contradicted, dispatch_inventory=self.DISPATCH)
+        self.assertIn("contradicts its own reconciled items", str(contradicted_summary.exception))
+
+    def test_closeout_decision_carries_the_dispatch_inventory_it_reconciled(self):
+        """select_closeout() validated the dispatch inventory it was handed but
+        echoed nothing of it in the returned decision -- the inventory's only
+        trace was a literal string in a hardcoded evidence list, identical
+        whether the inventory held twenty discharged workers or none. Hand-rolled
+        against the schema document in this framework's established idiom
+        (see test_dispatch_reconciliation.py), because the framework takes no
+        external validation dependency."""
+        decision = select_closeout(same_stream_next=True, triggers=[], continuity_count=0, continuity_evidence=self.EVIDENCE, reconciliation_audit=self.AUDIT, dispatch_inventory=self.DISPATCH)
+        self.assertEqual(self.DISPATCH, decision["dispatch_inventory"])
+        schema = json.loads((ROOT / "schemas/closeout-decision.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(set(), set(decision) - set(schema["properties"]))
+        self.assertEqual(set(), set(schema["required"]) - set(decision))
+        nested = schema["properties"]["dispatch_inventory"]
+        self.assertEqual(set(), set(decision["dispatch_inventory"]) - set(nested["properties"]))
+        self.assertEqual(set(), set(nested["required"]) - set(decision["dispatch_inventory"]))
+        self.assertEqual("dual-hat-dispatch-inventory/1.0", nested["properties"]["schema"]["const"])
+        self.assertEqual(decision["dispatch_inventory"]["schema"], nested["properties"]["schema"]["const"])
+        self.assertIs(False, nested["properties"]["unregistered_dispatch_detectable"]["const"])
 
     def test_publication_and_closure_and_lifecycle_governance_text(self):
         publication = (ROOT / "process/PUBLICATION_AND_CLOSURE.md").read_text(encoding="utf-8")

@@ -80,6 +80,55 @@
       "minItems": 1,
       "type": "array"
     },
+    "authorized_scope": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "access": {
+            "enum": [
+              "read",
+              "write",
+              "read_write"
+            ]
+          },
+          "excludes": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "non_path_constraints": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "pattern": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "rationale": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "root": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "root",
+          "pattern"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
     "current_revision": {
       "minimum": 1,
       "type": "integer"

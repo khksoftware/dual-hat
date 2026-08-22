@@ -164,13 +164,34 @@ owning layer** that prevents recurrence, while still correcting the current inst
 turn an isolated defect into a broad redesign without demonstrated recurrence risk.
 
 **First decide whether the symptom is one instance of a missing systemic mechanism.** A
-systemic gap takes one of four shapes: a process step never documented as mandatory; a check
-never made mechanical, so correctness depended on an agent remembering; a pointer,
-cross-reference, or current-state marker that must track changing state with nothing keeping it
-synchronized; or a numeric bound whose value was set at or near an observed instance's own size
-rather than derived from what the bounded thing legitimately needs — such a bound is evidence
-about the instance, not a constraint on it, and passes cleanly on the exact violation it exists
-to catch. Treat a run of superficially distinct misses that share one of these shapes as
+systemic gap takes one of the shapes below. **That sentence deliberately carries no count**: a
+number written into prose beside a list it does not derive is itself the third shape here, and
+it goes stale the first time the list grows.
+
+- **A process step never documented as mandatory.**
+- **A check never made mechanical**, so correctness depended on an agent remembering.
+- **A pointer, cross-reference, or current-state marker that must track changing state**, with
+  nothing keeping it synchronized.
+- **A numeric bound whose value was set at or near an observed instance's own size** rather than
+  derived from what the bounded thing legitimately needs — such a bound is evidence about the
+  instance, not a constraint on it, and passes cleanly on the exact violation it exists to catch.
+- **A binding carried by prose that a mechanism matches literally, severed by a paraphrase that
+  preserves the meaning.** The rule is not weakened, argued away, or overridden — it is reworded,
+  usually into something shorter and clearer, and the enforcement silently stops applying while
+  the text still reads as binding to every human who passes it. Suspect this wherever a check
+  matches a phrase rather than a structure.
+- **A remedy that closes the appearance of the defect rather than the property.** It is designed,
+  built, tested, and lands green, and measurement afterwards shows it changes nothing about the
+  property it was built to establish. This is worse than an absent mechanism rather than better:
+  the mechanism occupies the place a real one would go, so the class reads as closed and its
+  presence becomes the argument against looking again. Only measurement distinguishes it from a
+  working remedy — review will not, because the code is reasonable.
+- **A detector that answers a cheaper question when it cannot answer the real one.** The
+  substitution is frequently correct engineering, because the cheaper question may be the only
+  answerable one. The defect is the substitution going *unstated at the point the result is
+  read*, so a clean answer to the narrow question is taken for a clean answer to the broad one.
+
+Treat a run of superficially distinct misses that share one of these shapes as
 one shared cause, not independent bad luck. When the cause is systemic, repair the mechanism —
 document the missing step, or add the missing mechanical enforcement — rather than only the
 instance in front of you.
