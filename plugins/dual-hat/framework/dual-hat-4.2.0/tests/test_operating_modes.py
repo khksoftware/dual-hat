@@ -247,20 +247,25 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         unexplained=copy.deepcopy(profile); unexplained["capability_evidence_rationale"].pop("independent_deep_review"); self.assertTrue(validate_profile(unexplained,core_version()))
         mismatch=copy.deepcopy(profile); mismatch["supported_configuration"]["operating_system"]="definitely-not-this-host"; self.assertTrue(runtime_profile_failures(mismatch)); self.assertTrue(capability_preflight(mismatch,["sealed_work_order"],core_version(),ROOT,receipts(mismatch,ROOT))["hard_stop"])
     def test_known_environment_limitations_entries_are_schema_shaped(self):
-        """Every known_environment_limitations entry is an object naming what
-        breaks, how it presents, how to detect it and the safe alternative, with
-        an optional remedy -- not a bare string, which is useless to the next
-        reader because it carries none of what they need to act on the trap
-        without re-discovering it themselves."""
+        """Every known_environment_limitations entry is an object naming a
+        stable id, the trap, how it presents, how to detect it, the safe
+        alternative, and when it was established, with an optional remedy --
+        not a bare string, which is useless to the next reader because it
+        carries none of what they need to act on the trap without
+        re-discovering it themselves."""
         profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8"))
-        complete={"what_breaks":"x","how_it_presents":"y","how_to_detect":"z","safe_alternative":"w"}
+        complete={"id":"ENV-EXAMPLE","trap":"x","presents_as":"y","detect":"z","safe_alternative":"w","established":"2026-01-01"}
         good=copy.deepcopy(profile); good["known_environment_limitations"]=[complete,{**complete,"remedy":"r"}]
         self.assertEqual((),validate_profile(good,core_version()))
         bare_string=copy.deepcopy(profile); bare_string["known_environment_limitations"]=["watch out for X"]
         self.assertTrue(validate_profile(bare_string,core_version()))
         missing_field=copy.deepcopy(profile); missing_field["known_environment_limitations"]=[{k:v for k,v in complete.items() if k!="safe_alternative"}]
         self.assertTrue(validate_profile(missing_field,core_version()))
-        blank_field=copy.deepcopy(profile); blank_field["known_environment_limitations"]=[{**complete,"how_to_detect":"   "}]
+        missing_id=copy.deepcopy(profile); missing_id["known_environment_limitations"]=[{k:v for k,v in complete.items() if k!="id"}]
+        self.assertTrue(validate_profile(missing_id,core_version()))
+        missing_established=copy.deepcopy(profile); missing_established["known_environment_limitations"]=[{k:v for k,v in complete.items() if k!="established"}]
+        self.assertTrue(validate_profile(missing_established,core_version()))
+        blank_field=copy.deepcopy(profile); blank_field["known_environment_limitations"]=[{**complete,"detect":"   "}]
         self.assertTrue(validate_profile(blank_field,core_version()))
         blank_remedy=copy.deepcopy(profile); blank_remedy["known_environment_limitations"]=[{**complete,"remedy":""}]
         self.assertTrue(validate_profile(blank_remedy,core_version()))
@@ -345,6 +350,46 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
             self.assertTrue(capability_preflight(profile,profile["mandatory_capabilities"],core_version(),root,contradictory)["hard_stop"])
             changed=copy.deepcopy(profile); changed["profile_version"]="1.1.1"
             self.assertNotEqual(second["platform_profile_sha256"],capability_preflight(changed,changed["mandatory_capabilities"],core_version(),root,refreshed)["platform_profile_sha256"])
+    def test_governed_repository_digest_fails_rather_than_substitutes_on_git_failure(self):
+        """`governed_repository_digest` must fail rather than silently fall back to an
+        `rglob` walk when `git ls-files` cannot answer -- the fallback enumerates a
+        different, larger corpus (it does not honour `.gitignore`) and returns a
+        confident-looking digest over the wrong file set with nothing recording that a
+        different path was taken. The repair is to raise, in the same idiom the function
+        already uses for linked content, rather than substitute.
+
+        SPLIT 2026-08-21, on the author's word, because this test provoked the failure by
+        using a directory with no `.git` above it -- and that is NOT a git failure, it is
+        the absence of a repository. An extracted release package is exactly that, so the
+        release self-test raised on four cases in the one context it exists to exercise.
+        A repository whose git genuinely cannot answer is provoked here instead by a
+        CORRUPT `.git`: the repository is claimed, so the structural check passes, and git
+        then fails for real. The original assertion is unchanged for that case.
+        """
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary); (root / "sample.txt").write_text("data", encoding="utf-8")
+            (root / ".git").write_text("gitdir: /nonexistent/broken\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                governed_repository_digest(root, "PLATFORM_PREFLIGHT.json")
+
+    def test_governed_repository_digest_reports_no_inventory_outside_a_repository(self):
+        """The other half of the split above, and the property that actually matters.
+
+        With no repository at all the function returns the digest of an EMPTY inventory --
+        never a walk over whatever files happen to be on disk. Asserted by putting a file
+        in the directory and proving the digest does not depend on it: an `rglob`
+        substitution would fold `sample.txt` in and the two digests would differ. That is
+        the exact regression the original test was written to prevent, and it is pinned
+        here rather than lost in the split.
+        """
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            bare = governed_repository_digest(root, "PLATFORM_PREFLIGHT.json")
+            (root / "sample.txt").write_text("data", encoding="utf-8")
+            populated = governed_repository_digest(root, "PLATFORM_PREFLIGHT.json")
+            self.assertEqual(bare, populated)
+            self.assertEqual(64, len(populated))
+
     def test_runtime_gap_generates_blocking_resumable_handoff(self):
         handoff={"active_role":"engineering","operating_mode":"integrated","work_item_id":"GOV-1","sealed_work_order_hash":"A"*64,"platform_profile":{"id":"p","version":"1"},"repository_and_remote_state":{},"dirty_worktree_state":{},"completed_steps":[],"pending_steps":[],"partial_outputs":[],"temporary_and_ignored_state":[],"containment_actions":[],"permitted_next_action":"await Architecture"}
         report=runtime_gap_stop_report(gap_kind="tool_defect",unmet_requirement="mandatory validation",limitation="validator unavailable",handoff=handoff)

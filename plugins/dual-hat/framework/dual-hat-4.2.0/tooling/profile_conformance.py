@@ -19,15 +19,15 @@ GUARANTEES = {"monitoring_not_weakened", "recovery_not_weakened", "security_not_
 GAP_KINDS = {"unsupported_capability", "unavailable_capability", "misconfigured_capability", "temporarily_degraded_capability", "permission_or_access_failure", "security_or_rights_restriction", "tool_defect", "profile_defect", "core_contract_ambiguity"}
 CORE_MANDATORY_CAPABILITIES = {"sealed_work_order", "repository_state_preservation", "explicit_user_and_architecture_reporting", "resumable_handoff", "detached_validation", "governed_publication", "quality_rule_discovery", "independent_deep_review", "canonical_path_containment", "network_policy_validation", "rights_readiness_validation", "binary_secret_gate", "committed_tree_release_binding", "transactional_writes", "post_run_residue_inspection"}
 CAPABILITY_PROOF_MARKER = "DUAL_HAT_CAPABILITY_PROOFS"
-KNOWN_ENVIRONMENT_LIMITATION_REQUIRED_FIELDS = {"what_breaks", "how_it_presents", "how_to_detect", "safe_alternative"}
+KNOWN_ENVIRONMENT_LIMITATION_REQUIRED_FIELDS = {"id", "trap", "presents_as", "detect", "safe_alternative", "established"}
 
 def known_environment_limitation_failures(entries: object) -> tuple[str, ...]:
     """Enforce the per-entry contract schemas/platform-profile.schema.json declares
-    for known_environment_limitations: an object naming what breaks, how it
-    presents, how to detect it, and the safe alternative, plus an optional
-    remedy. A bare string, or an object missing one of the four, carries none
-    of what the next reader needs to act on the trap without re-discovering it
-    themselves."""
+    for known_environment_limitations: an object naming a stable id, the trap,
+    how it presents, how to detect it, the safe alternative, and when it was
+    established, plus an optional remedy. A bare string, or an object missing
+    one of the six, carries none of what the next reader needs to act on the
+    trap without re-discovering it themselves."""
     if not isinstance(entries, list): return ("known_environment_limitations is not a list",)
     failures: list[str] = []
     for index, entry in enumerate(entries):
@@ -71,13 +71,39 @@ def unittest_output_counts(output: str) -> dict[str, int]:
     executed=int(ran[0]); failed=count("failures"); errored=count("errors"); skipped=count("skipped")
     return {"discovered":executed,"executed":executed,"passed":executed-failed-errored-skipped,"failed":failed,"errored":errored,"skipped":skipped}
 
+def _inside_git_work_tree(root: Path) -> bool:
+    """Whether `root` sits inside a git work tree, decided STRUCTURALLY.
+
+    Deliberately not decided by matching git's error text: that is localized and has
+    changed wording between versions, so a text match would fail open on some machines
+    and closed on others. Walking for `.git` answers the same question and cannot drift.
+    `.git` is a directory in an ordinary clone and a FILE in a linked worktree, so this
+    tests existence rather than directory-ness.
+    """
+    for candidate in (root, *root.parents):
+        if (candidate / ".git").exists():
+            return True
+    return False
+
 def governed_repository_digest(root: Path, excluded_relative: str) -> str:
-    result=subprocess.run(("git","ls-files","--cached","--others","--exclude-standard","-z"),cwd=root,capture_output=True)
     excluded=Path(excluded_relative).as_posix(); records=[]
+    # A release package extracted into a plain directory is NOT a broken repository. The
+    # rule below -- fail rather than substitute when git cannot answer -- was written for a
+    # genuinely broken repository, and it is UNCHANGED for that case: a root that IS inside
+    # a work tree still raises on any git failure. Only the no-repository context is
+    # separated out here, because conflating the two made the release self-test raise on
+    # four operating-mode cases in exactly the context that self-test exists to exercise.
+    # It returns the digest of an empty inventory -- the honest answer to "what governed
+    # evidence is tracked here", which is none -- and never a walk over whatever files
+    # happen to be on disk, which is the substitution the rule below exists to prevent.
+    if not _inside_git_work_tree(root):
+        encoded=(json.dumps([],sort_keys=True,separators=(",",":"))+"\n").encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest().upper()
+    result=subprocess.run(("git","ls-files","--cached","--others","--exclude-standard","-z"),cwd=root,capture_output=True)
     if result.returncode:
-        relative_paths=[path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file() and ".git" not in path.parts and "__pycache__" not in path.parts]
-    else:
-        relative_paths=[raw.decode("utf-8").replace("\\","/") for raw in result.stdout.split(b"\0") if raw]
+        stderr=result.stderr.decode("utf-8",errors="replace").strip()
+        raise ValueError(f"governed evidence inventory is unavailable: git ls-files failed (exit {result.returncode}): {stderr}")
+    relative_paths=[raw.decode("utf-8").replace("\\","/") for raw in result.stdout.split(b"\0") if raw]
     for relative in relative_paths:
         if relative == excluded: continue
         raw_path=root/relative

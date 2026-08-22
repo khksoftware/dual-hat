@@ -18,6 +18,114 @@
     "counter_forced_full_closure": {
       "const": false
     },
+    "dispatch_inventory": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_workers": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "closure_authorized": {
+          "type": "boolean"
+        },
+        "nonterminal_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "registered_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "schema": {
+          "const": "dual-hat-dispatch-inventory/1.0"
+        },
+        "terminal_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unregistered_dispatch_detectable": {
+          "const": false
+        },
+        "workers": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "assigned_outcome": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "durable_cursor": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "handle": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "heartbeat_interval_seconds": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "last_probe_age_seconds": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "outcome_complete": {
+                "type": "boolean"
+              },
+              "owner": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "state": {
+                "enum": [
+                  "running",
+                  "unreachable",
+                  "stalled",
+                  "dead",
+                  "finished"
+                ]
+              },
+              "successor_handle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "terminal_evidence": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "handle",
+              "assigned_outcome",
+              "owner",
+              "durable_cursor",
+              "heartbeat_interval_seconds",
+              "last_probe_age_seconds",
+              "state",
+              "outcome_complete"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema",
+        "workers",
+        "registered_count",
+        "terminal_count",
+        "nonterminal_count",
+        "blocking_workers",
+        "closure_authorized",
+        "unregistered_dispatch_detectable"
+      ],
+      "type": "object"
+    },
     "full_closure_triggers": {
       "type": "array"
     },
@@ -124,7 +232,8 @@
     "publication_authorized",
     "required_lightweight_evidence",
     "skipped_when_lightweight",
-    "reconciliation_audit"
+    "reconciliation_audit",
+    "dispatch_inventory"
   ],
   "type": "object"
 }

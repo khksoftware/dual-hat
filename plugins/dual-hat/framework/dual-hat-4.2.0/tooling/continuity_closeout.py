@@ -59,6 +59,14 @@ def reconciliation_audit(*, reviewer_role: str, engineering_self_report_only: bo
     }
 
 
+# `select_closeout` needs to call the reconciliation audit builder above to re-derive
+# its disposition, but its own `reconciliation_audit` parameter shadows the name within
+# its body -- exactly the shape `dispatch_inventory` is imported under an alias
+# (`reconcile_dispatch_inventory`, line 10) to avoid. Captured here, at module scope,
+# before any parameter can shadow it.
+_reconcile_reconciliation_audit = reconciliation_audit
+
+
 def work_estimate(*, low_hours: float, high_hours: float, segments: Sequence[str], included: Sequence[str], uncertainties: Sequence[str], expansion_conditions: Sequence[str], revision: int = 1, prior: Mapping[str, object] | None = None, revision_reason: str | None = None) -> dict[str, object]:
     if low_hours <= 0 or high_hours < low_hours or not segments:
         raise ValueError("estimate range and segments are invalid")
@@ -97,8 +105,24 @@ def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continui
         raise ValueError("closeout selection requires a completed closure reconciliation audit")
     if reconciliation_audit.get("reviewer_role") != "independent" or reconciliation_audit.get("engineering_self_report_only") is True:
         raise ValueError("closure reconciliation audit must be independent, not engineering self-report")
+    audit_items = reconciliation_audit.get("items")
+    if not isinstance(audit_items, (list, tuple)):
+        raise ValueError(f"closure reconciliation audit's items must be the reconciled item list, not {type(audit_items).__name__}")
+    reconciled_audit = _reconcile_reconciliation_audit(
+        reviewer_role=reconciliation_audit.get("reviewer_role"),
+        engineering_self_report_only=bool(reconciliation_audit.get("engineering_self_report_only")),
+        items=audit_items,
+    )
+    if reconciled_audit["closure_authorized"] is not True:
+        raise ValueError("closure is blocked by unresolved reconciliation findings: " + ", ".join(reconciled_audit["blocking_items"]))
     if reconciliation_audit.get("closure_authorized") is not True:
         raise ValueError("closure is blocked by unresolved reconciliation findings: " + ", ".join(reconciliation_audit.get("blocking_items") or ()))
+    for field in ("blocking_items", "closure_authorized"):
+        if reconciliation_audit.get(field) != reconciled_audit[field]:
+            raise ValueError(
+                f"closure reconciliation audit contradicts its own reconciled items at {field}: "
+                f"claims {reconciliation_audit.get(field)!r}, reconciles to {reconciled_audit[field]!r}"
+            )
     required_dispatch_fields = {"schema", "workers", "registered_count", "terminal_count", "nonterminal_count", "blocking_workers", "closure_authorized", "unregistered_dispatch_detectable"}
     if not required_dispatch_fields.issubset(dispatch_inventory):
         raise ValueError("closeout selection requires a completed delegated-dispatch reconciliation")
@@ -127,6 +151,7 @@ def select_closeout(*, same_stream_next: bool, triggers: Sequence[str], continui
         "required_lightweight_evidence": ["checkpoint_commit", "focused_validation", "clean_worktree", "exit_status", "current_handover", "unresolved_findings", "inherited_dependencies", "rollback_point", "pending_publication_inventory", "architecture_disposition_boundary", "no_engineering_self_acceptance", "independent_closure_reconciliation_audit", "delegated_dispatch_reconciliation"],
         "skipped_when_lightweight": ["standalone_export", "remote_publication", "semantic_release", "release_packaging", "manifest_and_checksums", "snapshot", "exhaustive_archival"],
         "reconciliation_audit": dict(reconciliation_audit),
+        "dispatch_inventory": dict(dispatch_inventory),
     }
 
 

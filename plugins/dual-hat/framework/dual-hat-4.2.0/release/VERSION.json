@@ -3,5 +3,5 @@
   "maturity": "stable_4_x",
   "schema": "dual-hat-version/1.0",
   "stability": "Mandatory core contracts are stable; breaking changes require a new major version and governed migration.",
-  "version": "4.1.0"
+  "version": "4.2.0"
 }
