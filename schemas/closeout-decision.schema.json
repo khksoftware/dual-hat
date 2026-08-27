@@ -73,6 +73,9 @@
                 "minimum": 0,
                 "type": "number"
               },
+              "outcome_abandoned": {
+                "type": "boolean"
+              },
               "outcome_complete": {
                 "type": "boolean"
               },

@@ -43,6 +43,61 @@ Structurally invalid registration -- including unknown fields, a non-boolean
 outcome flag, or a non-finite heartbeat value -- raises instead of becoming
 authorizing evidence.
 
+An assigned outcome has two honest ends, not one. It can be COMPLETED, and it can
+be DELIBERATELY ABANDONED -- a supervisor cancels the work, or answers a worker's
+argument by calling the task off. `outcome_complete` is a boolean over *did the
+assigned work finish*, so on its own it cannot express the second: a successfully
+cancelled worker is `finished` with `outcome_complete: False`, `finished` is
+terminal and therefore takes no successor, and the row can then never be
+discharged at all. The two moves that do clear it -- reclassifying the worker
+`dead`, or setting `outcome_complete: True` -- each authorize the closure and each
+write a false claim into the gate that exists to check it.
+
+`outcome_abandoned` is that third value, recorded rather than laundered. It is
+permitted and never required, so an inventory that does not use it is unchanged in
+every respect. It relieves exactly one blocking line -- the finished-worker-with-an-
+incomplete-outcome line -- and it relieves it for `finished` and for NO OTHER STATE:
+
+* a `dead` worker keeps its successor requirement in full. Death is not a decision:
+  the outcome is still owed, someone must still deliver it, and a successor is what
+  says who. **This bound is why CONFORMANCE_POLICY.md's sentence quoted above stays
+  true of this module word for word**, and it is deliberately not expressed as a
+  shared `state in TERMINAL_WORKER_STATES` term reused at both sites, because that
+  is the form in which it would quietly widen again.
+* it never discharges terminality. A nonterminal worker still blocks, because
+  abandoning an outcome does not stop a process, and whether the worker stopped is
+  a separate question carrying its own evidence.
+* it never substitutes for `terminal_evidence`, which a terminal claim still
+  requires -- so an abandonment can only be recorded against a worker whose
+  stopping is itself evidenced.
+* it is refused outright beside `outcome_complete: True`. An outcome cannot be both
+  delivered and deliberately abandoned; a record claiming both is structurally
+  invalid rather than doubly discharged.
+
+The exact-boolean check on it is load-bearing rather than tidy: the string
+`"false"` is truthy, and a coerced read of it would silently relieve a block.
+
+BOTH GOVERNING SENTENCES ARE TRUE OF THIS MODULE, and one of them was AMENDED to
+make that so rather than this module being widened to match a text nobody revisited.
+CONFORMANCE_POLICY.md's sentence quoted above holds unchanged: its successor clause
+names a stalled or dead worker, and both keep their successor requirement exactly as
+before. GOVERNING_PRINCIPLES.md section 8 was amended on 2026-08-26 to name a second
+terminus for a successor graph -- a same-outcome worker whose assigned outcome is
+"either completed or explicitly recorded as deliberately abandoned" -- because the
+unamended rule left a correctly executed, fully evidenced cancellation with no
+discharge at all. **The amendment is a recorded end state, not a permission:** an
+outcome that is merely incomplete, unrecorded or inferred is still no terminus, and
+`dead` is still relieved of nothing.
+
+AND THE AGREEMENT IS CHECKED RATHER THAN ASSERTED. The test named
+`test_the_amended_terminus_rule_in_principle_8_is_what_this_module_implements` reads
+principle 8's own sentence, derives from its wording which termini are admissible,
+and exercises this function against every candidate terminus -- so the principle and
+the mechanism cannot drift apart in either direction without a red. It exists in that
+shape deliberately: the older pattern beside it, which asserts only that a governing
+sentence is PRESENT in a file, passes for any mechanism whatsoever, including one
+that contradicts the sentence word for word.
+
 SPDX-License-Identifier: Apache-2.0
 """
 from __future__ import annotations
@@ -60,7 +115,7 @@ WORKER_REQUIRED_FIELDS = frozenset({
     "handle", "assigned_outcome", "owner", "durable_cursor",
     "heartbeat_interval_seconds", "last_probe_age_seconds", "state", "outcome_complete",
 })
-WORKER_PERMITTED_FIELDS = WORKER_REQUIRED_FIELDS | {"terminal_evidence", "successor_handle"}
+WORKER_PERMITTED_FIELDS = WORKER_REQUIRED_FIELDS | {"terminal_evidence", "successor_handle", "outcome_abandoned"}
 
 
 def _numeric_evidence(value: int | float) -> str:
@@ -119,6 +174,13 @@ def dispatch_inventory(*, workers: Sequence[Mapping[str, object]]) -> dict[str, 
             raise ValueError(f"worker {handle} declares a negative last_probe_age_seconds")
         if type(worker["outcome_complete"]) is not bool:
             raise ValueError(f"worker {handle} outcome_complete must be boolean")
+        abandoned = worker.get("outcome_abandoned", False)
+        if type(abandoned) is not bool:
+            raise ValueError(f"worker {handle} outcome_abandoned must be boolean when present")
+        if abandoned and worker["outcome_complete"] is True:
+            raise ValueError(
+                f"worker {handle} records its assigned outcome as both complete and deliberately abandoned"
+            )
 
         raw_terminal_evidence = worker.get("terminal_evidence", "")
         if "terminal_evidence" in worker and not isinstance(raw_terminal_evidence, str):
@@ -146,7 +208,11 @@ def dispatch_inventory(*, workers: Sequence[Mapping[str, object]]) -> dict[str, 
             blocking.append(
                 f"{handle} is '{state}' with an incomplete assigned outcome and no registered successor"
             )
-        if state == "finished" and not outcome_complete:
+        # `outcome_abandoned` relieves THIS line and no other, for `finished` and for no other
+        # state. It is deliberately written here rather than as a derived `outcome_discharged`
+        # term reused above: a `dead` worker keeps its successor requirement in full, and a
+        # shared term is how that would quietly widen again. See the module docstring.
+        if state == "finished" and not outcome_complete and not abandoned:
             blocking.append(f"{handle} claims finished state with an incomplete assigned outcome")
         normalized.append({"terminal_evidence": "", "successor_handle": None, **dict(worker), "handle": handle})
 

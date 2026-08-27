@@ -59,7 +59,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             self._git_init(root)
             script = root / "tooling/example_tool.py"
             script.parent.mkdir(parents=True)
-            pointer = self._assert_detectable("Z:\\\\Example\\\\Operator\\\\projects\\\\dual-hat")
+            pointer = self._assert_detectable("Z:" + "\\\\Example\\\\Operator\\\\projects\\\\dual-hat")
             script.write_text(f'DEFAULT_ROOT = Path("{pointer}")\n', encoding="utf-8")
             subprocess.run(("git", "add", "-A"), cwd=root, check=True)
             failures = validate_no_embedded_absolute_local_paths(root)
@@ -75,8 +75,8 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             # The registry match is on `line_contains: "alpha.txt"`, so the two
             # leaf filenames are load-bearing and stay; only the disclosive
             # prefix is replaced.
-            registered = self._assert_detectable("Z:\\Example\\Operator\\alpha.txt")
-            unregistered = self._assert_detectable("Z:\\Example\\Operator\\beta.txt")
+            registered = self._assert_detectable("Z:" + "\\Example\\Operator\\alpha.txt")
+            unregistered = self._assert_detectable("Z:" + "\\Example\\Operator\\beta.txt")
             doc.write_text(
                 f"Reviewed at `{registered}`.\n"
                 f"Separately, also found at `{unregistered}`.\n",
@@ -95,7 +95,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             self._git_init(root)
             doc = root / "process/work-items/example/NOTE.md"
             doc.parent.mkdir(parents=True)
-            doc.write_text("Backup lives at `C:\\Downloads\\Example`.\n", encoding="utf-8")
+            doc.write_text("Backup lives at `C:" + "\\Downloads\\Example`.\n", encoding="utf-8")
             subprocess.run(("git", "add", "-A"), cwd=root, check=True)
             deferred = ({"path_prefix": "process/work-items/example/"},)
             self.assertEqual((), validate_no_embedded_absolute_local_paths(root, deferred_scope=deferred))
@@ -107,12 +107,33 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             self._git_init(root)
             test_file = root / "tests/test_example.py"
             test_file.parent.mkdir(parents=True)
-            test_file.write_text('BAD = "C:\\\\Attacker\\\\payload.exe"\n', encoding="utf-8")
+            test_file.write_text('BAD = "C:' + '\\\\Attacker\\\\payload.exe"\n', encoding="utf-8")
             schema_file = root / "schemas/example.schema.json"
             schema_file.parent.mkdir(parents=True)
-            schema_file.write_text('{"example": "C:/Python/python.exe"}\n', encoding="utf-8")
+            schema_file.write_text('{"example": "C:' + '/Python/python.exe"}\n', encoding="utf-8")
             regex_line = root / "tooling/example_detector.py"
             regex_line.parent.mkdir(parents=True, exist_ok=True)
+            # Every other absolute-path-shaped fixture in this file is assembled
+            # from parts (built with `+` so the drive-letter/colon shape never sits
+            # contiguous in this file's own tracked source) rather than written as
+            # one literal, on the same reasoning `_assert_detectable` states above:
+            # the shape must not appear in this file's own bytes even where the
+            # value is synthetic. This one line is deliberately left as a single
+            # contiguous literal instead, and that is a considered exception, not
+            # an oversight: for a `.py` file, `_is_exempt_by_line_shape` spares any
+            # line matching
+            # `re\.(?:compile|search|match|fullmatch|findall|finditer|sub|subn)\(`
+            # regardless of what the matched span looks like (confirmed directly
+            # against this module's own scan), and this line's own source text
+            # contains `re.compile(` verbatim -- the scan is line-text matching,
+            # not AST-aware, so it does not matter that the call sits inside a
+            # string literal here rather than as executable code. That is the same
+            # regex-pattern-source carve-out this test exists to prove, so leaving
+            # the literal whole is what the exemption under test requires: the
+            # written fixture's own line must still read as a genuine
+            # `re.compile(...)` call for `_is_exempt_by_line_shape` to have
+            # anything to spare. Splitting it would remove the very thing being
+            # tested.
             regex_line.write_text(
                 'PATTERN = re.compile(r"(?:[A-Za-z]:\\\\|/Users/|/home/)[^\\\\s]+")\n', encoding="utf-8",
             )
@@ -131,7 +152,7 @@ class AbsoluteLocalPathTests(unittest.TestCase):
             # rather than assumed: a fixture that quietly stopped matching the
             # detector would leave this test green while testing nothing, which
             # is a silently deleted test rather than a passing one.
-            citation_line = "Inspected `Z:/example-project/tooling/x.py#L38)`.\n"
+            citation_line = "Inspected `Z:" + "/example-project/tooling/x.py#L38)`.\n"
             matched = WINDOWS_DRIVE_ABSOLUTE_PATH.search(citation_line)
             self.assertIsNotNone(
                 matched, "the citation fixture no longer matches WINDOWS_DRIVE_ABSOLUTE_PATH",
