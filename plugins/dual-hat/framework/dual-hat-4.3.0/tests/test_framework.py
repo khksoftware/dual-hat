@@ -1489,6 +1489,55 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             with self.assertRaisesRegex(PublicationValidationError, "unknown"):
                 stage_manifest_owned(root)
 
+    def test_staging_ignores_gitignored_generated_content_but_still_rejects_real_unknown_files(self):
+        """The worktree scan is derived from ``git ls-files``.
+
+        A filesystem walk cannot tell gitignored, regenerable output --
+        disposable generated copies, in the recorded incident -- from real
+        publication content, and once blocked a release over dozens of such
+        paths reading as ``unknown``. The fix must not simply stop looking at
+        untracked content altogether (that would blind ``missing``/``unknown``
+        detection to genuinely new manifest-owned files and real defects
+        alike); it must stop looking only at content git itself is told to
+        disregard.
+
+        Also covers the specific way the estate's earlier walk-copy incident
+        failed: a whitespace-splitting loop dropped a filename containing a
+        space. A path-list derived from ``git ls-files`` and split on
+        newlines, as this fix does, cannot drop such a filename.
+        """
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self._publication_repo(root)
+            # A repository-level ignore rule, not a tracked .gitignore file --
+            # keeping the fixture from introducing an untracked-but-not-ignored
+            # file of its own that would otherwise need accounting for.
+            (root / ".git/info/exclude").write_text(
+                "generated_skills/\n", encoding="utf-8"
+            )
+            generated = root / "generated_skills"
+            generated.mkdir()
+            (generated / "skill_one.md").write_text("generated\n", encoding="utf-8")
+            (generated / "skill two with space.md").write_text(
+                "generated\n", encoding="utf-8"
+            )
+
+            # Gitignored, generated, untracked content -- including the
+            # space-in-filename case -- must stage cleanly. It must never
+            # read as unknown.
+            staged = stage_manifest_owned(root)
+            self.assertEqual("passed", staged["status"])
+
+            self._git(root, "reset")
+            # A genuinely unaccounted file -- untracked and NOT ignored --
+            # must still be refused. The fix narrows what counts as present;
+            # it does not disable the unknown-content check.
+            (root / "manual_real_unknown.md").write_text(
+                "not owned\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(PublicationValidationError, "unknown"):
+                stage_manifest_owned(root)
+
     def _reparse_flavours(self) -> tuple[str, ...]:
         """Every reparse flavour this host permits, or an honest skip if none does.
 

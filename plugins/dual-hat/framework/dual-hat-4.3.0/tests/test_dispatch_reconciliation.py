@@ -21,6 +21,8 @@ from dispatch_reconciliation import (
     DISPATCH_INVENTORY_SCHEMA,
     NONTERMINAL_WORKER_STATES,
     TERMINAL_WORKER_STATES,
+    WORKER_PERMITTED_FIELDS,
+    WORKER_REQUIRED_FIELDS,
     WORKER_STATES,
     dispatch_inventory,
 )
@@ -280,6 +282,262 @@ class DispatchClosureGateTests(unittest.TestCase):
     def test_the_governing_sentence_this_enforces_is_still_present_and_unchanged(self):
         policy = (ROOT / "governance/CONFORMANCE_POLICY.md").read_text(encoding="utf-8")
         self.assertIn("An unregistered, nonterminal,\nunprobed, or silently forgotten handle blocks closure, as does an incomplete\noutcome whose stalled or dead worker has no registered successor.", policy)
+
+    def test_the_amended_terminus_rule_in_principle_8_is_what_this_module_implements(self):
+        """A CONFORMANCE check over principle 8, not a presence check over its file.
+
+        **The test immediately above is a presence check, and this one exists because
+        that is not enough.** Asserting a governing sentence is IN a file passes for any
+        mechanism whatsoever, including one that contradicts the sentence word for word
+        -- which is exactly what happened here: principle 8 named a completed terminus
+        while this module admitted an abandoned one, for a whole correction round, with
+        nothing in the suite able to see it.
+
+        This test reads principle 8's own terminus clause, DERIVES from the words in it
+        which termini are admissible, and exercises `dispatch_inventory` against every
+        terminus a successor chain can end in. It goes red if the mechanism admits a
+        terminus the principle does not name, if it refuses one the principle does name,
+        and -- because the expectation is derived rather than written down here -- if the
+        principle is reworded away from the mechanism. A consistent change to both is not
+        a failure, because agreement is the property under test.
+        """
+        principles = (ROOT / "governance/GOVERNING_PRINCIPLES.md").read_text(encoding="utf-8")
+        section = principles[principles.index("## 8. The dispatch inventory"):principles.index("## 9. Worker states")]
+        opening = section.index("requires successor graphs to")
+        clause = " ".join(section[opening:section.index(", and reports whether", opening)].split())
+        self.assertIn("same-outcome worker", clause)
+
+        # Derived from the clause, never written down here. Rewording the principle
+        # changes what this test expects of the mechanism, which is the entire point.
+        admits_completed = "completed" in clause
+        admits_abandoned = "explicitly recorded as deliberately abandoned" in clause
+        self.assertTrue(admits_completed, f"principle 8 names no completed terminus: {clause!r}")
+
+        # `dead` is inadmissible on a DIFFERENT authority, and conflating the two is how
+        # a wide draft of this field read as correct: CONFORMANCE_POLICY.md's successor
+        # clause names a stalled or dead worker, so relieving `dead` would falsify THAT
+        # sentence rather than this one. Derived from it rather than assumed.
+        policy = " ".join((ROOT / "governance/CONFORMANCE_POLICY.md").read_text(encoding="utf-8").split())
+        self.assertIn("incomplete outcome whose stalled or dead worker has no registered successor", policy)
+
+        outcome = "complete the assigned review"
+        termini = {
+            "completed": (admits_completed, dict(
+                state="finished", outcome_complete=True, terminal_evidence="final result received and consumed")),
+            "abandoned": (admits_abandoned, dict(
+                state="finished", outcome_complete=False, outcome_abandoned=True,
+                terminal_evidence="cancel issued and acknowledged")),
+            "merely incomplete": (False, dict(
+                state="finished", outcome_complete=False, terminal_evidence="terminal notification received")),
+            "dead and abandoned": (False, dict(
+                state="dead", outcome_complete=False, outcome_abandoned=True,
+                terminal_evidence="platform reports process absence")),
+            "dead and incomplete": (False, dict(
+                state="dead", outcome_complete=False, terminal_evidence="platform reports process absence")),
+            "stalled": (False, dict(state="stalled", outcome_complete=False, terminal_evidence="")),
+            "running": (False, dict(state="running", outcome_complete=False, terminal_evidence="")),
+        }
+        for label, (admissible, overrides) in termini.items():
+            with self.subTest(terminus=label):
+                inventory = dispatch_inventory(workers=[
+                    worker(handle="chain-head", assigned_outcome=outcome, state="dead", outcome_complete=False,
+                           terminal_evidence="platform reports process absence", successor_handle="chain-terminus"),
+                    worker(handle="chain-terminus", assigned_outcome=outcome, **overrides),
+                ])
+                self.assertEqual(admissible, inventory["closure_authorized"], (
+                    f"principle 8 admits terminus {label!r}: {admissible}; the mechanism says "
+                    f"{inventory['closure_authorized']}. Clause read: {clause!r}. "
+                    f"Blocking: {inventory['blocking_workers']}"))
+
+        # The clause says SAME-outcome, so a completed terminus owning a different
+        # assigned outcome discharges nothing. Also derived from the clause.
+        self.assertIn("same-outcome", clause)
+        mismatched = dispatch_inventory(workers=[
+            worker(handle="chain-head", assigned_outcome=outcome, state="dead", outcome_complete=False,
+                   terminal_evidence="platform reports process absence", successor_handle="other-outcome"),
+            worker(handle="other-outcome", assigned_outcome="an unrelated cleanup", state="finished",
+                   outcome_complete=True, terminal_evidence="final result received and consumed"),
+        ])
+        self.assertFalse(mismatched["closure_authorized"])
+
+
+class AbandonedOutcomeTests(unittest.TestCase):
+    """A successfully cancelled worker had no discharge at all, and the two moves
+    that did clear it both wrote a false claim into the gate.
+
+    Cancelling produces a worker that stopped BEFORE completing its assigned
+    outcome -- that is what cancelling is -- so it registers as `finished` with
+    `outcome_complete: False`. `finished` is terminal and therefore not in
+    `SUCCESSOR_REQUIRING_STATES`, so no successor could discharge it either, and
+    the row deadlocked permanently. Measured before this field existed:
+    reclassifying the worker to `dead`, and flipping `outcome_complete` to `True`,
+    each returned `closure_authorized=True`.
+
+    Both directions are proven here. An abandoned outcome must not block; an
+    incomplete outcome that nobody flagged must still block, or the field has
+    relieved the gate of the case it exists for rather than of one case.
+    """
+
+    def test_a_deliberately_abandoned_outcome_discharges_a_cancelled_worker(self):
+        inventory = dispatch_inventory(workers=[worker(
+            handle="worker-cancelled-1", state="finished", outcome_complete=False, outcome_abandoned=True,
+            terminal_evidence="terminal notification received; cancel issued at commit abc1234",
+        )])
+        self.assertEqual([], inventory["blocking_workers"])
+        self.assertTrue(inventory["closure_authorized"])
+        self.assertEqual("lightweight_continuity", close(inventory)["selection"])
+
+    def test_an_unflagged_incomplete_outcome_still_blocks(self):
+        """The other direction, and the one that decides whether this is a gate.
+
+        Omitting the field and registering it `False` must behave identically: an
+        outcome nobody recorded a decision about is not an abandoned one."""
+        for registration in ({}, {"outcome_abandoned": False}):
+            with self.subTest(registration=registration):
+                inventory = dispatch_inventory(workers=[worker(
+                    handle="worker-silent-2", state="finished", outcome_complete=False, **registration,
+                )])
+                self.assertFalse(inventory["closure_authorized"])
+                self.assertTrue(any("worker-silent-2" in row and "incomplete" in row for row in inventory["blocking_workers"]))
+                with self.assertRaises(ValueError):
+                    close(inventory)
+
+    def test_abandonment_never_substitutes_for_terminal_evidence(self):
+        """Abandoning an outcome says nothing about whether the worker stopped.
+
+        This is what keeps the flag from becoming a bare declaration: an
+        abandonment can only be recorded against a worker whose stopping is itself
+        evidenced, and the terminal-evidence check is untouched by the change."""
+        inventory = dispatch_inventory(workers=[worker(
+            handle="worker-unevidenced-3", state="finished", outcome_complete=False,
+            outcome_abandoned=True, terminal_evidence="",
+        )])
+        self.assertFalse(inventory["closure_authorized"])
+        self.assertTrue(any("worker-unevidenced-3" in row and "no recorded terminal evidence" in row for row in inventory["blocking_workers"]))
+
+    def test_abandonment_never_discharges_a_nonterminal_worker(self):
+        """Abandoning an outcome does not stop a process. Every nonterminal state
+        still blocks with the flag set, including `stalled`, which is in
+        `SUCCESSOR_REQUIRING_STATES` and must not lose its successor requirement
+        this way -- it has not been shown to have stopped."""
+        for state in sorted(NONTERMINAL_WORKER_STATES):
+            with self.subTest(state=state):
+                inventory = dispatch_inventory(workers=[worker(
+                    handle="worker-running-4", state=state, outcome_complete=False,
+                    outcome_abandoned=True, terminal_evidence="",
+                )])
+                self.assertFalse(inventory["closure_authorized"])
+                self.assertTrue(any("nonterminal" in row for row in inventory["blocking_workers"]))
+                with self.assertRaises(ValueError):
+                    close(inventory)
+
+    def test_a_dead_worker_with_an_abandoned_outcome_STILL_REQUIRES_A_SUCCESSOR(self):
+        """The scope guard, and it is the whole reason this field is `finished`-only.
+
+        An earlier draft relieved every TERMINAL state, which swept in `dead` -- and
+        that half, and only that half, falsified CONFORMANCE_POLICY.md's sentence
+        that an incomplete outcome whose *stalled or dead* worker has no registered
+        successor blocks closure. It was withdrawn. **Death is not a decision:** the
+        outcome is still owed and a successor is what says who will deliver it,
+        whereas a cancel is a supervisor choosing that nobody will.
+
+        This test is the guard against the widening coming back. If it ever passes
+        with an empty blocking list, the framework has quietly re-adopted a change
+        nobody authorized and a governing sentence has become false with nothing
+        else able to see it."""
+        abandoned = dispatch_inventory(workers=[worker(
+            handle="worker-dead-abandoned-5", state="dead", outcome_complete=False, outcome_abandoned=True,
+            terminal_evidence="platform reports process absence", successor_handle=None,
+        )])
+        self.assertFalse(abandoned["closure_authorized"])
+        self.assertTrue(any(
+            "worker-dead-abandoned-5" in row and "no registered successor" in row
+            for row in abandoned["blocking_workers"]
+        ))
+        unflagged = dispatch_inventory(workers=[worker(
+            handle="worker-dead-abandoned-5", state="dead", outcome_complete=False,
+            terminal_evidence="platform reports process absence", successor_handle=None,
+        )])
+        self.assertFalse(unflagged["closure_authorized"])
+        self.assertEqual(abandoned["blocking_workers"], unflagged["blocking_workers"])
+
+    def test_a_successor_chain_may_now_terminate_in_an_abandoned_worker(self):
+        """The one residual no scoping removes, pinned so it cannot be discovered
+        from behaviour instead of read.
+
+        GOVERNING_PRINCIPLES.md section 8 was AMENDED on 2026-08-26 to name this as
+        a second legitimate terminus: a successor graph terminates in a same-outcome
+        worker whose assigned outcome is 'either completed or explicitly recorded as
+        deliberately abandoned'. Before the amendment the principle named only a
+        completed terminus, and this behaviour falsified it.
+
+        The amendment is not a widening, and the test below this one is what holds
+        that line: an outcome merely incomplete, unrecorded or inferred is still no
+        terminus, and `dead` is still relieved of nothing."""
+        inventory = dispatch_inventory(workers=[
+            worker(handle="worker-chain-head", assigned_outcome="complete the assigned review", state="dead",
+                   outcome_complete=False, terminal_evidence="process absence", successor_handle="worker-chain-tail"),
+            worker(handle="worker-chain-tail", assigned_outcome="complete the assigned review", state="finished",
+                   outcome_complete=False, outcome_abandoned=True, terminal_evidence="cancel issued and acknowledged"),
+        ])
+        self.assertEqual([], inventory["blocking_workers"])
+        self.assertTrue(inventory["closure_authorized"])
+
+    def test_outcome_abandoned_requires_an_exact_boolean(self):
+        """Load-bearing rather than tidy: the string `"false"` is truthy, so a
+        coerced read of it would silently relieve a block."""
+        for value in ("false", "true", 1, 0, None):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "outcome_abandoned must be boolean"):
+                dispatch_inventory(workers=[worker(outcome_complete=False, outcome_abandoned=value)])
+
+    def test_an_outcome_cannot_be_both_complete_and_deliberately_abandoned(self):
+        """A record claiming both is structurally invalid, not doubly discharged."""
+        with self.assertRaisesRegex(ValueError, "both complete and deliberately abandoned"):
+            dispatch_inventory(workers=[worker(outcome_complete=True, outcome_abandoned=True)])
+
+    def test_a_registration_without_the_field_produces_a_record_of_unchanged_shape(self):
+        """The change is additive for every existing caller, proven rather than
+        asserted: a worker registered without the field emits no such key, so an
+        adopter validating produced records against the published schema sees
+        nothing new until it records an abandonment itself."""
+        inventory = dispatch_inventory(workers=[worker(handle="worker-unchanged-6")])
+        registered = inventory["workers"][0]
+        self.assertNotIn("outcome_abandoned", registered)
+        self.assertEqual(
+            {"handle", "assigned_outcome", "owner", "durable_cursor", "heartbeat_interval_seconds",
+             "last_probe_age_seconds", "state", "outcome_complete", "terminal_evidence", "successor_handle"},
+            set(registered),
+        )
+
+    def test_the_permitted_field_vocabulary_does_not_drift_between_the_code_and_the_schemas(self):
+        """The state vocabulary was pinned against the schema enum and the FIELD
+        vocabulary was not, so a field could be permitted by the module and unknown
+        to the schema -- or the reverse -- with nothing failing. Both schemas
+        declaring these workers are pinned, including the nested copy inside the
+        closeout decision, which no test reached at worker level at all."""
+        dispatch = json.loads((ROOT / "schemas/dispatch-inventory.schema.json").read_text(encoding="utf-8"))
+        closeout = json.loads((ROOT / "schemas/closeout-decision.schema.json").read_text(encoding="utf-8"))
+        for label, item in (
+            ("dispatch-inventory", dispatch["properties"]["workers"]["items"]),
+            ("closeout-decision", closeout["properties"]["dispatch_inventory"]["properties"]["workers"]["items"]),
+        ):
+            with self.subTest(schema=label):
+                self.assertFalse(item["additionalProperties"])
+                self.assertEqual(sorted(WORKER_PERMITTED_FIELDS), sorted(item["properties"]))
+                self.assertEqual(sorted(WORKER_REQUIRED_FIELDS), sorted(item["required"]))
+                self.assertIn("outcome_abandoned", item["properties"])
+                self.assertEqual("boolean", item["properties"]["outcome_abandoned"]["type"])
+
+    def test_a_recorded_abandonment_survives_a_json_round_trip_through_the_gate(self):
+        """`select_closeout` re-derives the disposition from the registered workers,
+        so the new field has to survive normalization and be permitted on the way
+        back in. Without that the gate would refuse an inventory it had produced."""
+        inventory = json.loads(json.dumps(dispatch_inventory(workers=[worker(
+            handle="worker-roundtrip-7", state="finished", outcome_complete=False, outcome_abandoned=True,
+            terminal_evidence="terminal notification received; cancel issued",
+        )])))
+        self.assertIs(True, inventory["workers"][0]["outcome_abandoned"])
+        self.assertEqual("lightweight_continuity", close(inventory)["selection"])
 
 
 def forged(*, workers: list[dict[str, object]], **summary: object) -> dict[str, object]:

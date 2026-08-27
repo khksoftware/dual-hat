@@ -59,6 +59,43 @@ selection rule, evidence, blind spots, alternatives, and item-level or
 population-level disposition. Batch review is permitted only when every item
 and applied rule remains traceable.
 
+## Population before findings
+
+An independent review establishes its population before it writes a finding.
+The population is enumerated from the subject itself: its units, its tests, the
+clauses of its authorizing instrument, and every previously recorded finding
+still undispositioned within scope. Each enumerated member receives an explicit
+disposition. A review that takes its population from a previous round's
+findings can only confirm or extend that round's frame, and cannot answer how
+much of the subject remains unexamined.
+
+Every review reports its denominator: what was enumerated, what was inspected,
+what was sampled and under what rule, and what was never opened. A portion that
+could not be inspected is reported as unchecked. Unchecked is an absence of
+evidence, and is never reported, aggregated, or summarized as a clean result. A
+review that cannot establish its population reports that as its first finding
+rather than proceeding against an unstated one.
+
+A finding names the class it belongs to and not only the instance that revealed
+it, and the repair it authorizes takes its scope from the review's population
+rather than from the artifact list the finding happens to name. Sibling
+correction is separately required of every accepted correction under
+[Reasoning and Decision Review](../architecture/REASONING_AND_DECISION_REVIEW.md);
+what this contract adds is where the scope of a repair comes from.
+
+Every repair reports what it now permits that it did not permit before, and
+exercises that explicitly. A repair verified only against the cases its own
+finding enumerated establishes that those cases are closed, and establishes
+nothing about what the repair opened.
+
+Review rounds are bounded, and the bound is declared before the round runs.
+Where a confirming round returns blocking findings, the failure to converge is
+itself a reportable outcome, returned to the deciding authority rather than to
+a further repair. Successive rounds that each close the artifacts a finding
+named, while a later round finds the same defect in artifacts nobody named, are
+evidence about the scoping of the repairs rather than about the quantity of
+defects remaining.
+
 ## Risk-proportionate tiers
 
 - Light: localized, narrow, low-risk behavior. Inspect the diff, clarity, established patterns, obvious correctness/error/security/lifecycle hazards, test relevance, duplication, dead code, and sealed scope.

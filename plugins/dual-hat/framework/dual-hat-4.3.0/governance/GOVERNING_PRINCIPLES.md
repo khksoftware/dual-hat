@@ -445,10 +445,28 @@ durable artifact, the invoker cannot distinguish a conforming worker from a sile
 therefore commit their findings as they are produced and name the durable location in their
 final message, rather than holding a report until a boundary that may never arrive.
 
+**Amended 2026-08-26 -- the second terminus, and it is exactly as narrow as the first.** An
+assigned outcome has two honest ends: delivered, or deliberately stopped by a recorded
+supervisory decision. **It does not have a third.** A terminus whose outcome is merely
+incomplete, unrecorded, or inferred still blocks; the abandonment is carried by an explicit
+registered field rather than by absence or by narrative; and nothing here relaxes the
+requirement in principle 9 that a stalled or dead worker with an incomplete outcome register a
+successor before its handle is discharged.
+
+**Why a governing rule was amended rather than an implementation corrected.** The unamended
+rule left a correctly executed, fully evidenced cancellation with **no discharge at all**: a
+worker cancelled successfully is `finished` with its assigned outcome incomplete, and
+`finished` is terminal, so no successor can discharge it either. The two moves that did clear
+it -- reclassifying the worker `dead`, and asserting the outcome complete -- each authorized
+the closure and each wrote a false claim into the gate that exists to check it. **A rule with
+no honest exit does not produce compliance; it produces the cheapest available lie.** The
+amendment therefore adds a recorded end state, not a permission.
+
 **Armed by** `tooling/dispatch_reconciliation.py`'s `dispatch_inventory`, whose inventory is
 closed and schema-exact: it re-derives closure authorization from registered workers rather
 than from a caller's summary, refuses malformed evidence, requires successor graphs to
-terminate in a completed same-outcome worker, and reports whether unregistered dispatch is
+terminate in a same-outcome worker whose assigned outcome is either completed or explicitly
+recorded as deliberately abandoned, and reports whether unregistered dispatch is
 detectable at all. **Residual, and it is declared in the shipped schema as a constant rather
 than described only in prose:** with an empty worker list the mechanism authorizes closure and
 reports unregistered dispatch as undetectable. It is a truthfulness gate on a populated

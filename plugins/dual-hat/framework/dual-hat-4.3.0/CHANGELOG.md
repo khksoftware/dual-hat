@@ -2,6 +2,22 @@
 
 # Changelog
 
+## 4.3.0 - 2026-08-27
+
+Five accumulated changes to canonical governance, schemas and tooling, published together as one minor release.
+
+**Governance.** Quiescence is defined once, in Validation and Parallelism. Four existing requirements already named it as a precondition and each was free to acquire its own reading; the definition binds the claim to a named boundary at a named instant, requires that boundary's inside to be enumerable or widened until it is, and separates a claim about capability from a reading of observed inactivity -- an idle actor can resume, so idleness is evidence of idleness and never of quiescence. It names what does not discharge the proof: an actor's own report that it stopped, a completion or termination notification, a removed registration, a released lock, and the absence of recent output, each being authored or mediated by the actor whose stopping is in question, or recording an intention rather than a state. And because quiescence is perishable, it is paired with a bar on re-entry: authority moves in the same guarded step that proves it, and a proof taken earlier and acted on later is retaken.
+
+Principle 8 names a second terminus, minimally and explicitly not widened into any terminus. A successfully cancelled worker returns finished with its assigned outcome incomplete; finished is terminal but not successor-requiring, so no successor could discharge it and the incomplete outcome blocked closure permanently. The two escapes that did clear it -- reclassifying the worker dead, or asserting the outcome complete -- each authorized the closure by writing a false claim into the gate that exists to check it. A rule with no honest exit does not produce compliance; it produces the cheapest available lie.
+
+The code review contract gains a section on population. An independent review now establishes and dispositions its population before writing a finding, reports the denominator it covered, and marks an uninspected portion unchecked rather than summarizing it as clean. A finding names the class it belongs to, and a repair takes its scope from the review's population rather than from the artifacts the finding happened to name. Each repair reports what it now permits that it did not permit before, and rounds are bounded in advance so that failure to converge is returned to the deciding authority instead of to another repair. Sibling correction is already required elsewhere and is cited rather than restated; what is new is where a repair's scope comes from.
+
+**Schemas.** The closeout-decision and dispatch-inventory schemas gain an optional `outcome_abandoned` boolean, recording that an assigned outcome was deliberately abandoned by a supervisory decision. It is optional, so an inventory that never records one is unchanged. It relieves exactly one blocking condition and only for state `finished`; a dead worker keeps its successor requirement in full, because death is not a decision and the outcome is still owed. It never discharges terminality, never substitutes for terminal evidence, and is refused beside a completed outcome, because an outcome cannot be both delivered and deliberately abandoned.
+
+**Tooling.** `dispatch_reconciliation` implements that relief as one conjunct and no other, with a regression asserting that a dead worker's blocking output is byte-identical to the unflagged case rather than merely also blocking. `staged_publication` derives a publication worktree's file list from git rather than from a filesystem walk, so the subject of a publication is what the source tracks; a walk has copied untracked, in-progress assets into history, and did so only partially, because one filename contained spaces and a whitespace-splitting loop dropped it.
+
+**Tests.** The framework's own repository-hygiene test module writes its path-shaped fixture literals as concatenations, so no drive-letter-and-colon shape sits contiguous in tracked bytes and no absolute-path exemption is needed for the framework's own suite. Every runtime value and every assertion is unchanged.
+
 ## 4.2.0 - 2026-08-22
 
 Five accumulated changes to canonical governance, schemas and tooling, published together as one minor release.

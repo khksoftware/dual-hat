@@ -63,6 +63,10 @@
             "minimum": 0,
             "type": "number"
           },
+          "outcome_abandoned": {
+            "description": "Whether the assigned outcome was deliberately abandoned by a supervisory decision -- a cancel that worked, or an argument answered by calling the task off. Optional, so an inventory that never records one is unchanged. It relieves one blocking condition and only for state 'finished': a finished worker with an incomplete outcome. A 'dead' worker keeps its successor requirement in full, because death is not a decision and the outcome is still owed. It never discharges terminality, never substitutes for terminal_evidence, and is refused beside outcome_complete: true, because an outcome cannot be both delivered and deliberately abandoned.",
+            "type": "boolean"
+          },
           "outcome_complete": {
             "description": "Whether the assigned outcome was actually completed, independent of the worker's state.",
             "type": "boolean"

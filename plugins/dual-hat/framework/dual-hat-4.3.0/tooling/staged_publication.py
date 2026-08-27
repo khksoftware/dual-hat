@@ -121,15 +121,29 @@ def _validate_controls(manifest_bytes: bytes, marker_bytes: bytes) -> tuple[dict
 
 
 def _filesystem_files(root: Path) -> set[str]:
-    files: set[str] = set()
-    for current, directories, names in os.walk(root):
-        directories[:] = [name for name in directories if name != ".git"]
-        base = Path(current)
-        for name in names:
-            relative = (base / name).relative_to(root).as_posix()
-            if not is_release_product(relative):
-                files.add(relative)
-    return files
+    """Enumerate the publication worktree's present content.
+
+    Derived from ``git ls-files``, never a filesystem walk -- the standing
+    rule ``validate_staged`` and ``verify_commit_tree`` below already follow;
+    this was the one holdout. A walk cannot distinguish gitignored,
+    regenerable output from real publication content: a real publication was
+    once blocked by dozens of generated, gitignored files reading as
+    `unknown`, the same class of incident that once copied untracked scratch
+    files into history.
+
+    ``--cached --others --exclude-standard`` is still git's own enumeration,
+    not a narrower substitute that breaks the function's job: it includes
+    every tracked path AND every untracked path git has not been told to
+    disregard, so a manifest-owned file that exists on disk but is not yet
+    staged -- the ordinary case ``stage_manifest_owned`` calls this to
+    handle -- is still seen. Only content git itself ignores stops being
+    seen, which is exactly the fix.
+    """
+    output = _git(root, "ls-files", "--cached", "--others", "--exclude-standard")
+    return {
+        path for path in str(output).splitlines()
+        if not is_release_product(path)
+    }
 
 
 def clean_generated_python_caches(root: Path) -> list[str]:
