@@ -37,6 +37,19 @@ healthy work merely to inspect it. Planning binds one thing principle 1 does not
 state: an optimization must preserve the authorized scope, not only authority,
 acceptance, safety, and recovery.
 
+For design and test planning, make principle 1's Pareto (80/20) heuristic concrete
+before selecting a matrix: enumerate the materially distinct semantics, failure
+modes, branches, subsystem owners or protected boundaries, and risk classes first.
+Plan the smallest defect-sensitive representative set that covers those classes;
+put repeated combinatorial and scale breadth in a cheaper analytical, simulated, or
+in-memory layer where its relevant semantic equivalence is sound; and retain a small
+set of real integration, end-to-end, or durable anchors for what the cheaper layer
+cannot establish. The plan states omitted cross-products and nonclaims. It requires
+exhaustive execution only when each cell owns distinct semantics, impact cannot be
+bounded, material safety or integrity risk requires it, or explicit semantic-release
+authority requires it. The [Validation Protocol](../validation/VALIDATION_PROTOCOL.md)
+owns the evidence composition; the 80/20 name is never a numeric coverage quota.
+
 ## Required lifecycle
 
 Planning items have stable IDs, title, objective, owner, dependencies, status, entry and exit criteria, requirements, validation, risks, triggers, history, and supersession. Work-item planning assigns the abstract model tier required for each materially distinct activity, including implementation, architecture, independent review, security/privacy/rights review, and release review where applicable. It references the current project-local concrete mapping rather than embedding provider choices in portable policy. Status transitions are append-only events or otherwise auditable. Current and historical projections cannot contradict one another.

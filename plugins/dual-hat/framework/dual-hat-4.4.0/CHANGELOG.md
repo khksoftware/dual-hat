@@ -2,6 +2,14 @@
 
 # Changelog
 
+## 4.4.0 - 2026-08-28
+
+One accumulated change to canonical governance, published as one minor release.
+
+**Governance.** Pareto (80/20) is stated as an explicit design-and-assurance heuristic and, in the same breath, as never a coverage quota. Three documents each take the part they own: principle 1 states the heuristic, the planning model states what a plan enumerates before it selects a matrix, and the validation protocol states how the resulting proof is composed. The obligation added is to enumerate first -- materially distinct failure modes, decision branches, owners or protected boundaries, and risk classes -- and only then to choose the smallest defect-sensitive representative set that exercises every one of those classes. Where a large combinatorial or scale population repeats the same semantics, its breadth belongs in the cheapest sound layer, and only after that layer's semantic equivalence to the production logic, inputs and oracle has been established; real end-to-end, integration and durability anchors are retained for what the cheaper layer cannot prove. A proof states its omitted cross-products and its nonclaims, so focused evidence cannot later read as exhaustive evidence. Exhaustive execution stays required where each cell owns materially distinct semantics, where impact cannot be bounded reliably, where a material safety or integrity risk applies, or where an explicit semantic-release authority requires it. Refusal, rollback, identity, durability, safety, recovery evidence and every declared mandatory gate remain non-negotiable, stated rather than left to be inferred from a heuristic about spending less.
+
+Advice-tier throughout: no schema, tooling, gate or predicate changes, no principle is renumbered or reworded away from its existing meaning, and every existing citation still resolves.
+
 ## 4.3.0 - 2026-08-27
 
 Five accumulated changes to canonical governance, schemas and tooling, published together as one minor release.
