@@ -10,6 +10,29 @@ A test command is evidence only when the intended runner discovers and executes 
 
 Default to the minimal necessary, risk-proportionate focused subset that credibly validates the changed surfaces, affected contracts and direct consumers, known failure modes, and critical integrations. Do not run a full suite merely because work is reaching handoff or closure. Escalate to broader or full-suite validation only when the blast radius is broad or cannot be bounded confidently, a focused check produces an unexplained failure, an explicit work-order or release policy requires it, or the focused subset cannot provide credible coverage. An explicit mandatory suite remains mandatory until its governing work order or release policy is changed; this default does not waive a declared gate.
 
+## Pareto (80/20) proof composition
+
+Apply the Pareto principle as a test-design heuristic, never as a literal 80% coverage target or
+permission to leave an arbitrary remainder untested. Inventory the materially distinct failure
+modes, branches, subsystem owners or protected boundaries, lifecycle states, and risk classes
+before selecting cases. Choose the smallest defect-sensitive representative set that exercises
+every material class, including negative or mutant cases that would fail if the claimed invariant
+were absent.
+
+When a combinatorial or scale cross-product repeats the same semantics, prove its breadth in the
+cheapest sound layer -- analytical, simulated, in-memory, property-based, or equivalent. State
+the equivalence relied on and do not substitute a proxy whose behavior, inputs, or oracle differ
+from the production property being claimed. Retain a small number of real integration,
+end-to-end, and durability anchors for packaging, lifecycle, persistence, timing, operating-system,
+external-system, or failure-recovery properties the cheaper layer cannot establish.
+
+Record the omitted cross-products and the proof's nonclaims. Reuse immutable evidence while its
+declared fingerprint inputs remain unchanged. Require exhaustive execution only when each cell
+owns materially distinct semantics, impact cannot be bounded reliably, a material safety or
+integrity risk requires it, or an explicit semantic-release authority requires it. Never reduce
+cost by weakening refusal, rollback, identity, durability, safety, recovery, or a declared
+mandatory gate.
+
 ## Profiles
 
 - Focused: changed owners and direct consumers during development.

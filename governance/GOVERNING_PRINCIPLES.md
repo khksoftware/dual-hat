@@ -78,6 +78,25 @@ work item. Do not create a sequence of work items merely to number successive at
 new one only when the objective, authority, product boundary, rollback unit, or acceptance
 contract materially changes.
 
+Apply the **Pareto principle (the 80/20 rule) as a design and assurance heuristic, never as a
+literal coverage quota**. Before multiplying cases, enumerate the materially distinct failure
+modes, decision branches, owners or protected boundaries, and risk classes. Then choose the
+smallest defect-sensitive representative set that exercises every material class, and state the
+omitted cross-products and nonclaims so focused evidence cannot be mistaken for exhaustive
+evidence.
+
+Where a large combinatorial or scale population repeats the same semantics, put its breadth in
+the cheapest sound layer -- analytical, simulated, in-memory, property-based, or equivalent --
+after establishing that layer's relevant semantic equivalence to the production logic, inputs,
+and oracle. Retain a small number of real end-to-end, integration, or durable anchors for
+properties the cheaper layer cannot prove, and reuse immutable evidence while its declared
+inputs remain unchanged.
+
+Exhaustive execution is warranted when each cell owns materially distinct semantics, impact
+cannot be bounded reliably, a material safety or integrity risk requires it, or explicit
+semantic-release authority requires it. Cost reduction never justifies weakening refusal,
+rollback, identity, durability, safety, or recovery evidence.
+
 Before mutation, when a design or plan is execution-ready, consider briefly whether the same
 authorized outcome can be reached more cheaply — better sequencing, earlier value, better
 evidence reuse, a cheaper equivalent control — and apply only improvements that preserve
