@@ -30,6 +30,21 @@ of fact rather than aspiration:**
   weaker in intent than an armed one; it is weaker in what happens when it is ignored, and
   saying so is the point.
 
+**Every principle also carries exactly one visible classification:**
+
+- **mechanically armed** — this framework names a resolvable executable mechanism. The
+  principle's own **Armed by** paragraph remains the sole statement of that mechanism, its
+  invocation boundary, and its residuals; the classification does not imply every adopter has
+  invoked it.
+- **adopter-delegated** — the principle names a mechanism an adopting project or platform must
+  supply, so this framework cannot resolve or run it itself.
+- **judgement-only** — the principle has no executable detector and says so in its **Advice**
+  paragraph. The classification records enforcement location, not importance.
+
+The classification never duplicates a mechanism claim. It makes the enforcement class visible
+at the principle, while **Armed by** or **Advice** remains the authority for what actually exists
+and what it can and cannot prove.
+
 **Adding an obligation here without an arming line, or with an arming line that names a
 mechanism nobody invokes, is the defect this section exists to prevent.** Where an arming line
 names a mechanism an adopting project must supply, it says so; the framework does not claim an
@@ -114,6 +129,8 @@ mechanism when it provides equivalent evidence and protection. New process must 
 consumer, its prevented failure, its invalidation trigger, its expected cost, and its
 retirement or simplification condition.
 
+**Classification:** judgement-only.
+
 **Advice.** Nothing enforces any sentence in this principle. There is no detector for a
 disproportionate control, a duplicated record, an unnecessary rerun, or a new surface created
 where a field would have done — and the absence is consequential rather than incidental: this
@@ -169,6 +186,8 @@ second. A correction is never a route to settling a matter principle 11 reserves
 stakeholder, it remains subject to stakeholder override — which requires that the stakeholder
 actually be told, recording it alone does not discharge this — and the record keeps the
 original framing visible rather than quietly replacing it, so the error stays auditable.
+
+**Classification:** judgement-only.
 
 **Advice.** Nothing enforces this. No mechanism in this framework detects a parallel
 implementation of a governed workflow, an unperformed survey, or a proposal built on an
@@ -267,6 +286,8 @@ mistake; that release is stated here rather than left to be inferred from a shor
 Trivial slips may use a lightweight behavioral defense and review unless they reveal a
 recurring or materially harmful class; do not create speculative controls or unrelated scope.
 
+**Classification:** judgement-only.
+
 **Advice.** Nothing enforces this. No mechanism checks that an abstract sibling search was
 performed, that a fix landed in the owning layer rather than at the call site, or that
 already-produced artifacts were backfilled. The regression test principle 4 requires is the
@@ -317,6 +338,8 @@ complete. A genuine failure that cannot be fixed immediately is recorded as acce
 debt with an explicit remediation trigger naming exactly what unblocks it, never left silently
 red with no tracked disposition.
 
+**Classification:** adopter-delegated.
+
 **Armed by** the adopting project's own test suite, for the second half only: a confirmed red
 is detected by running the tests, which is the one mechanism in this framework that reliably
 fires. **Residual, stated rather than closed:** nothing detects the *ordering* — a suite cannot
@@ -342,6 +365,8 @@ and the smaller figure always looks plausible.
 The same discipline applies to a claim about what was verified. A report that asserts something
 was "verified" or "confirmed" states what was actually re-checked and when, not merely that its
 author believes it to be so.
+
+**Classification:** judgement-only.
 
 **Advice.** Nothing enforces this, and the admission matters more here than anywhere else in
 this document: on the evidence available when this set was authored, this is the single most
@@ -393,6 +418,8 @@ files, commits, or other output it was assigned to produce — rather than waiti
 to force it, and do not wait for confirmation that the work is complete before treating an
 absent handle as informative.
 
+**Classification:** mechanically armed.
+
 **Armed by** `tooling/dispatch_reconciliation.py`'s `dispatch_inventory`, which re-derives
 closure disposition from registered workers and refuses a caller's self-reported summary, and
 by principle 7's receipt, which must reproduce the inventory exactly. **Residual, declared in
@@ -429,6 +456,8 @@ of every planned item, owned process state, delegated worker state, and which of
 terminal conditions is satisfied. If that receipt cannot be produced, the response is progress
 only, and the role executes, reactivates, or monitors the next safe action in the same turn. **A
 promise to continue later is not continuation.**
+
+**Classification:** mechanically armed.
 
 **Armed by** `tooling/work_item_governance.py`. `termination_preflight_failures` validates the
 receipt and `transition_allowed` refuses the transition when it fails, on five guarded terminal
@@ -481,6 +510,8 @@ the closure and each wrote a false claim into the gate that exists to check it. 
 no honest exit does not produce compliance; it produces the cheapest available lie.** The
 amendment therefore adds a recorded end state, not a permission.
 
+**Classification:** mechanically armed.
+
 **Armed by** `tooling/dispatch_reconciliation.py`'s `dispatch_inventory`, whose inventory is
 closed and schema-exact: it re-derives closure authorization from registered workers rather
 than from a caller's summary, refuses malformed evidence, requires successor graphs to
@@ -517,6 +548,8 @@ closure its own sole authority did not implement. **The retired rule set made no
 at all, which makes this a defect introduced by the successor rather than one inherited by
 it**: a false completeness claim, in the document that requires every completeness claim to
 state its mechanism.
+
+**Classification:** mechanically armed.
 
 **Armed by** `tooling/dispatch_reconciliation.py`, which implements this vocabulary once and is
 the sole authority for registration, state, heartbeat, successor, consumed-result, and
@@ -566,6 +599,8 @@ tracking half is confirmed current, through its own governed mechanism, at the m
 completion claim is made. This binds every such pairing a project establishes, present or
 future, rather than the specific pairs it was most recently caught in.
 
+**Classification:** mechanically armed.
+
 **Armed by** `governance/WORK_ITEM_TYPE_REGISTRY.json` and
 `tooling/work_item_governance.py`'s `validate_sealed` and `registry_failures`, which fail closed
 on an unregistered type, a definition-free identifier, and a lifecycle incompatible with the
@@ -609,6 +644,8 @@ newly launched worker regardless of whether that worker reads the underlying sou
 that binds only future sessions while the current one continues under the old behavior defeats
 the purpose of codifying it the moment the gap was found.
 
+**Classification:** judgement-only.
+
 **Advice, and deliberately so.** Nothing mechanical enforces the go-ahead, and no mechanism
 should: every mechanical substitute for it that has been built here was satisfiable by an agent
 writing a receipt about itself. Nothing detects a mid-session codification that was not
@@ -647,6 +684,8 @@ which role or assigned task produced it**, so a reader can attribute any output 
 cross-referencing launch records, and so a session that has drifted between hats is visible in
 its own transcript.
 
+**Classification:** adopter-delegated.
+
 **Armed by** the adopting platform's session-stop check, where the platform provides one: a
 response-boundary hook that inspects the emitted turn for its role label is the only control in
 this framework's observed use that fires automatically on every turn, and it is the shape every
@@ -680,6 +719,8 @@ implicitly superseded or satisfied — until it is itself verified complete, ind
 much adjacent work has been completed meanwhile. **Breadth of investigation is not a substitute
 for finishing what the investigation was for.**
 
+**Classification:** judgement-only.
+
 **Advice, and this is the admission that matters most to whoever is paying for this
 framework's time.** Nothing enforces it. Principle 7's receipt is the nearest mechanism — its
 planned-item dispositions force an accounting of the authoritative plan at a guarded terminal
@@ -707,6 +748,8 @@ what a past mistake actually contained — where nothing depends on the quoted p
 nor a path recorded as a **factual provenance claim** about where a specific process actually
 ran, provided nothing treats it as a live pointer. The distinction is whether the path functions
 as navigation something will follow, not whether the string appears in the file at all.
+
+**Classification:** mechanically armed.
 
 **Armed by** `tooling/repository_hygiene.py`'s `validate_no_embedded_absolute_local_paths`,
 which fails closed on every drive-letter-rooted, home-directory, or mounted-drive path in
@@ -743,6 +786,8 @@ retired convention indefinitely, with nothing to signal the drift until an unrel
 investigation finds it by accident. This is the standing defense for the commonest shape of the
 systemic gap principle 3 names: a pointer that must track changing state with no enforcement
 keeping it synchronized.
+
+**Classification:** judgement-only.
 
 **Advice.** Nothing in this framework's shipped source enforces this principle, and it holds
 because a reasonable agent reads it and complies.
@@ -796,6 +841,8 @@ its first line without anyone deciding it should be.
 **This principle is the same shape as principle 3's owning layer, applied to reach rather than
 to code.** Content placed where only one reader can find it has been repaired in the wrong
 layer, and the second reader's absence is not detectable from inside the first one.
+
+**Classification:** judgement-only.
 
 **Advice.** Nothing in this framework's shipped source enforces this, and no mechanism can:
 what counts as a platform's auto-loaded file is defined by that platform, changes when the

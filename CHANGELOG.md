@@ -2,6 +2,14 @@
 
 # Changelog
 
+## 4.5.0 - 2026-08-28
+
+One accumulated change to canonical governance, published as one minor release.
+
+**Governance.** Every numbered principle now states exactly one enforcement-location classification: mechanically armed, adopter-delegated, or judgement-only. The vocabulary is defined once in the arming constraint. Each principle's existing Armed-by or Advice paragraph remains the sole authority for its mechanism, invocation boundary, residuals, or admission that no detector exists, so the new classification exposes the enforcement class without duplicating the claim.
+
+**Assurance.** The current population is six mechanically armed, two adopter-delegated, and eight judgement-only principles. The classification census proves every principle carries exactly one approved class, that the class agrees structurally with the separate Armed-by or Advice shape, that every judgement-only principle carries exactly one canonical Advice paragraph, and that mechanically armed file and symbol references resolve. It deliberately does not claim semantic equivalence between prose and mechanism. No gate, hook, predicate, principle number, identifier, schema, or runtime behavior changes.
+
 ## 4.4.0 - 2026-08-28
 
 One accumulated change to canonical governance, published as one minor release.
