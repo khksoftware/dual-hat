@@ -1,6 +1,6 @@
 {
-  "archive_root": "dual-hat-4.4.0",
-  "file_count": 208,
+  "archive_root": "dual-hat-4.5.0",
+  "file_count": 209,
   "files": [
     {
       "bytes": 106,
@@ -8,9 +8,9 @@
       "sha256": "BF0A6EB0F6B042E39CC51F1FE2B18B958D569BAB3F99C6D17E8F4084CF262D6A"
     },
     {
-      "bytes": 65788,
+      "bytes": 66979,
       "path": "CHANGELOG.md",
-      "sha256": "A673B5A9E76C6C4F711AAA5518140C778A8BC6D98B736222EF0721A7EA775E41"
+      "sha256": "9B4BE2573FCD24819D5EF001CAFF6E5D16E50B3433AA96EE056A8C223B51298D"
     },
     {
       "bytes": 11357,
@@ -25,7 +25,7 @@
     {
       "bytes": 6799,
       "path": "README.md",
-      "sha256": "9465FC62E1525960232444C6F0460DDE58FB44DECAFA24A9A83DDA3B78ADCCB9"
+      "sha256": "60E016ABEEF483A6C17F7AA8C8177D1C7A1A7447E076287723F30AED5157F7A0"
     },
     {
       "bytes": 3755,
@@ -100,7 +100,7 @@
     {
       "bytes": 4924,
       "path": "examples/platform-profile.example.json",
-      "sha256": "6E8B8552E1FB8FCE0EF6DFA799B825D2D3CB2992015BB0B826502B68FE0DC0F3"
+      "sha256": "B28F488B68D36CF67D0AC88BBD6260F489B48A5591247CF4D647BB6CEAF6DA8A"
     },
     {
       "bytes": 795,
@@ -218,9 +218,9 @@
       "sha256": "A761A39E6A21694DB9FC28E1084B021647864181555FE06367E3AAADB563021C"
     },
     {
-      "bytes": 60837,
+      "bytes": 62377,
       "path": "governance/GOVERNING_PRINCIPLES.md",
-      "sha256": "49649C113CB8FF8CE49759068E5740475557F9A1CA6D7480B40DD69EA4FD57C0"
+      "sha256": "1E0B049F5498E580D102C8A35FF77E4B7C6F2C7EC4EA42B5776B2E68CFBDA498"
     },
     {
       "bytes": 1551,
@@ -508,6 +508,11 @@
       "sha256": "86E7D5E98053DD3E76E66E6DFC83476E668AA631930F078238219C655D3516AF"
     },
     {
+      "bytes": 1994,
+      "path": "release/RELEASE_NOTES_v4.5.0.md",
+      "sha256": "E8DB8F3154B8929405F72607935012D1C28B5D38D2BAC74C77C6CB6BF21C23F7"
+    },
+    {
       "bytes": 3563,
       "path": "release/RELEASE_POLICY.md",
       "sha256": "926651718225E7AF09E106916F209678728F2E69A63EF36B005735415D4E72B5"
@@ -520,7 +525,7 @@
     {
       "bytes": 266,
       "path": "release/VERSION.json",
-      "sha256": "CB3E09AB196CC904D3FFA75F14FC0974F9071B7564F8E65192F5E4A5EFBCEA24"
+      "sha256": "C8E3D08A8EA99D69D238747494A5A0274B523A7FF77C3A6A27153C6349FFC20F"
     },
     {
       "bytes": 1709,
@@ -1045,5 +1050,5 @@
   ],
   "license_expression": "Apache-2.0",
   "schema": "dual-hat-release-content-manifest/1.0",
-  "version": "4.4.0"
+  "version": "4.5.0"
 }
