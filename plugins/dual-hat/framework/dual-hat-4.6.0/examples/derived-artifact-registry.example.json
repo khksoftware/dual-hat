@@ -1,0 +1,131 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0. Illustrative only. Three entries chosen to show three different declared maturities, because a worked example showing only the best case teaches an adopter to omit the entries that are below the floor -- which is the one thing the registry exists to prevent. Paths and identifiers are invented.",
+  "entries": [
+    {
+      "canonical_record": "state/issue-ledger.json",
+      "concurrency_control": "read-back-and-refuse: the writer re-reads the record immediately before writing and refuses if it moved since this run read it",
+      "derived_artifacts": [
+        {
+          "kind": "file",
+          "note": "active side of the partition",
+          "path": "views/OPEN_ISSUES.md"
+        },
+        {
+          "kind": "file",
+          "note": "closed side of the partition",
+          "path": "views/CLOSED_ISSUES.md"
+        },
+        {
+          "kind": "field_in_canonical_record",
+          "note": "written back by the same writer",
+          "path": "state/issue-ledger.json#/projection_stamp"
+        },
+        {
+          "kind": "embedded_marker_or_pointer",
+          "note": "found by observing the writer, not by recollection",
+          "path": "issues/<id>/DETAIL.md :: lifecycle marker"
+        },
+        {
+          "kind": "directory_location",
+          "note": "position encodes lifecycle state",
+          "path": "issues/<id>/ and archive/issues/<id>/"
+        }
+      ],
+      "generation_method": {
+        "reference": "tooling.issue_ledger:write_ledger_and_views",
+        "resolution_checked": "traced_to_the_emitting_call"
+      },
+      "inbound_write_back": {
+        "allowed_fields": [],
+        "permitted": false,
+        "reconciliation_report": null
+      },
+      "partition_declaration": "$.terminal_statuses",
+      "re_runnable": {
+        "alternative_integrity_mechanism": null,
+        "converges_on_re_run": true,
+        "reason": null
+      },
+      "state_stamp": {
+        "carried": true,
+        "computed_over": [
+          "entries[].id",
+          "entries[].status",
+          "entries[].title",
+          "entries[].detail",
+          "entries[].updated"
+        ]
+      },
+      "validation_binding": "revision_under_judgement",
+      "writer_governance": "governed_transactional_writer"
+    },
+    {
+      "canonical_record": "state/roadmap.json",
+      "concurrency_control": null,
+      "derived_artifacts": [
+        {
+          "kind": "file",
+          "note": null,
+          "path": "views/ROADMAP.md"
+        }
+      ],
+      "generation_method": {
+        "reference": "tooling.roadmap_view:render",
+        "resolution_checked": "resolvability_only"
+      },
+      "inbound_write_back": {
+        "allowed_fields": [],
+        "permitted": false,
+        "reconciliation_report": null
+      },
+      "partition_declaration": null,
+      "re_runnable": {
+        "alternative_integrity_mechanism": null,
+        "converges_on_re_run": true,
+        "reason": null
+      },
+      "state_stamp": {
+        "carried": false,
+        "computed_over": null
+      },
+      "validation_binding": "working_tree",
+      "writer_governance": "no_ongoing_writer"
+    },
+    {
+      "canonical_record": "state/issue-ledger.json",
+      "concurrency_control": "read-back-and-refuse at the canonical write; the projection itself has none and that is the reason this entry is uncovered",
+      "derived_artifacts": [
+        {
+          "kind": "external_projection",
+          "note": "a projection a person can also type into",
+          "path": "tracker://board/engineering"
+        }
+      ],
+      "generation_method": {
+        "reference": "tooling.tracker_adapter:push_projection",
+        "resolution_checked": "traced_to_the_emitting_call"
+      },
+      "inbound_write_back": {
+        "allowed_fields": [
+          "order",
+          "priority"
+        ],
+        "permitted": true,
+        "reconciliation_report": "events/reconciliation.jsonl"
+      },
+      "partition_declaration": null,
+      "re_runnable": {
+        "alternative_integrity_mechanism": "periodic field-level diff against the canonical record, reported as named events; explicitly NOT the adapter's own report that it synced",
+        "converges_on_re_run": false,
+        "reason": "re-deriving the projection requires a network round trip, so the runner cannot re-derive it and this entry is declared uncovered"
+      },
+      "state_stamp": {
+        "carried": false,
+        "computed_over": null
+      },
+      "validation_binding": "revision_under_judgement",
+      "writer_governance": "governed_writer_with_pre_write_guard"
+    }
+  ],
+  "schema": "dual-hat-derived-artifact-registry/1.0"
+}
