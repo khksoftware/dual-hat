@@ -137,11 +137,46 @@ def source_files() -> dict[str, bytes]:
     return result
 
 
-def _git(*arguments: str) -> str:
-    result = subprocess.run(("git", *arguments), cwd=ROOT, capture_output=True, text=True)
+def _git(*arguments: str, root: Path | None = None) -> str:
+    result = subprocess.run(("git", *arguments), cwd=root or ROOT, capture_output=True, text=True)
     if result.returncode:
         raise RuntimeError(result.stderr.strip() or "Git provenance query failed")
     return result.stdout.strip()
+
+
+def verify_head_on_canonical_branch_with_upstream(root: Path | None = None) -> dict[str, str]:
+    """The exact branch/upstream precondition `fresh_remote_repository_state`
+    enforces, factored out so it can be proven -- against either this module's
+    own `ROOT` or an explicit target repository -- before any write, rather
+    than discovered only when a production build already requires a pushed
+    commit to exist.
+
+    Accepts an explicit `root` (defaulting to this module's own `ROOT`, exactly
+    as `_git` does) rather than assuming the caller's own checkout, so a
+    preflight run from a different repository entirely -- as
+    `release_dual_hat.py` does, against a standalone checkout this module does
+    not itself live in yet -- can still call this exact function rather than
+    restating its two-command shape.
+
+    A detached HEAD, an unborn branch, or a branch without an upstream all
+    fail the `@{upstream}` resolution itself (`git`'s own "HEAD does not point
+    to a branch" or "no upstream configured" message), which `_git` already
+    turns into a plain `RuntimeError` rather than a raw subprocess traceback.
+
+    Calls `_git` with no `root` keyword at all when `root` is `None` -- not
+    merely `root=None` -- so this function's own default call shape is
+    byte-identical to every pre-existing caller's. A test elsewhere in this
+    module replaces `_git` wholesale with a positional-only stub keyed by
+    exact argument tuples; a keyword this function's default path never used
+    before would raise inside that stub rather than inside anything this
+    change is meant to prove.
+    """
+    kwargs = {} if root is None else {"root": root}
+    branch = _git("branch", "--show-current", **kwargs)
+    upstream = _git("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}", **kwargs)
+    if branch != "main" or upstream != "origin/main":
+        raise RuntimeError("standalone publication is not on canonical main and origin/main")
+    return {"branch": branch, "upstream": upstream}
 
 
 def _is_ancestor(ancestor: str, descendant: str) -> bool:
@@ -205,11 +240,10 @@ def fresh_remote_repository_state(expected_remote_identity: str, *, expected_rem
     """Query the authorized remote and prove canonical local/upstream alignment."""
     approved=_remote_identity(expected_remote_identity)
     if not approved: raise RuntimeError("approved remote identity is invalid")
-    head=_git("rev-parse","HEAD"); branch=_git("branch","--show-current"); upstream=_git("rev-parse","--abbrev-ref","--symbolic-full-name","@{upstream}")
-    if branch!="main" or upstream!="origin/main": raise RuntimeError("standalone publication is not on canonical main and origin/main")
+    head=_git("rev-parse","HEAD"); verify_head_on_canonical_branch_with_upstream()
     fetch_identities=_remote_endpoint_identities("remote","get-url","--all","origin"); push_identities=_remote_endpoint_identities("remote","get-url","--all","--push","origin")
     if not fetch_identities or not push_identities or set(fetch_identities)|set(push_identities)!={approved}: raise RuntimeError("standalone publication fetch or push endpoint is not the explicitly approved repository identity")
-    remote_head=_fresh_remote_ref(); cached_head=_git("rev-parse",upstream)
+    remote_head=_fresh_remote_ref(); cached_head=_git("rev-parse","origin/main")
     if expected_remote_commit is not None and remote_head!=expected_remote_commit: raise RuntimeError("fresh remote main differs from the authorized expected starting or publication commit")
     if remote_head!=head or cached_head!=remote_head: raise RuntimeError("fresh remote main, cached upstream, and local publication HEAD are not aligned")
     # The record enumerates every endpoint proven rather than naming one. A

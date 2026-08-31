@@ -17,6 +17,7 @@ sys.dont_write_bytecode = True
 from release_artifacts import is_release_product
 from content_security import ContentSecurityError, inspect_content_set
 from path_containment import ContainmentError, contained, is_reparse
+from publication_ownership import standalone_owned
 
 
 MANIFEST = ".dual-hat/export-manifest.json"
@@ -420,7 +421,20 @@ def validate_staged(
     forbidden = sorted(path for path in index_paths | staged if _forbidden(path))
     unknown = sorted(path for path in index_paths - owned if not preserved_path(path))
     missing = sorted(owned - index_paths)
-    unknown_staged = sorted(staged - owned)
+    # Unlike `unknown` two lines above, this arm used to compute
+    # `staged - owned` with no `preserved_path` filter -- an asymmetry
+    # inside one function this module's own history shows to be an
+    # oversight rather than a deliberate narrower check: the identical
+    # `if not preserved_path(path)` guard was added, in one mechanical
+    # edit, to `unknown` here, to the equivalent line in
+    # `stage_manifest_owned`, to the equivalent line in
+    # `verify_commit_tree`, and to the `prior_owned - owned` removal loop
+    # below -- four occurrences of the same pattern -- and simply did not
+    # reach this fifth, textually identical, occurrence two lines below the
+    # one it did change. No caller or test ever exercised this arm with a
+    # supplied `preserved_path` either, so nothing pinned the asymmetry as
+    # intended.
+    unknown_staged = sorted(path for path in staged - owned if not preserved_path(path))
     if forbidden or unknown or missing or unknown_staged:
         raise PublicationValidationError(
             f"staged publication mismatch; forbidden={forbidden}; unknown={unknown}; "
@@ -438,6 +452,79 @@ def validate_staged(
     }
 
 
+def worktree_hygiene_mismatch(
+    current: set[str],
+    owned: set[str],
+    *,
+    preserved_path: Callable[[str], bool] | None = None,
+) -> dict:
+    """The forbidden/unknown/missing computation ``stage_manifest_owned`` performs
+    before it stages anything, over explicit path sets rather than the live
+    filesystem.
+
+    One authority for the rule, callable against either the real worktree
+    (``check_worktree_hygiene`` below) or a projection of what the worktree will
+    contain once a pending write actually lands -- so a caller proving this half
+    of the gate will pass, before an irreversible act it is otherwise reached
+    only after, runs the identical rule rather than a second description of it
+    that could drift from this one.
+    """
+    preserved_path = preserved_path or (lambda path: False)
+    forbidden = sorted(path for path in current if _forbidden(path))
+    unknown = sorted(path for path in current - owned if not preserved_path(path))
+    missing = sorted(owned - current)
+    if forbidden or unknown or missing:
+        raise PublicationValidationError(
+            f"publication worktree mismatch; forbidden={forbidden}; unknown={unknown}; missing={missing}"
+        )
+    return {"status": "passed", "owned_file_count": len(owned), "current_file_count": len(current)}
+
+
+def check_worktree_hygiene(
+    root: Path,
+    *,
+    preserved_path: Callable[[str], bool] | None = None,
+) -> dict:
+    """Read-only. Fetch the real (owned, current) pair from ``root`` and apply
+    ``worktree_hygiene_mismatch`` to it -- the exact check ``stage_manifest_owned``
+    performs before it stages anything, runnable without staging or committing
+    anything so a caller can prove it will pass ahead of an irreversible act.
+    """
+    root = root.resolve()
+    _, owned = _worktree_controls(root)
+    current = _filesystem_files(root)
+    return worktree_hygiene_mismatch(current, owned, preserved_path=preserved_path)
+
+
+def current_worktree_files(root: Path) -> set[str]:
+    """Public read of the exact enumeration ``check_worktree_hygiene`` compares
+    against ``owned`` -- tracked files plus untracked-and-not-ignored ones, via
+    ``git ls-files``, never a filesystem walk. Exposed so a caller that must
+    reason about the worktree's present content BEFORE a pending write lands
+    (a projection, rather than the post-write real check above) can start from
+    the identical enumeration rather than a second one free to drift from it.
+    """
+    return _filesystem_files(root.resolve())
+
+
+def head_owned_paths(root: Path) -> set[str]:
+    """The owned-path set the publication manifest committed at ``HEAD``
+    declares, or the empty set for a repository with no prior publication.
+
+    Factored out of ``stage_manifest_owned`` -- which uses this to decide what
+    a prior manifest's now-dropped paths are, so it can stage their removal --
+    so a caller building a projection of the worktree hygiene condition can
+    reuse the identical "what did the last publication own" read rather than
+    restating it.
+    """
+    root = root.resolve()
+    try:
+        prior_manifest = _json_bytes(_revision_bytes(root, "HEAD", MANIFEST), f"HEAD:{MANIFEST}")
+    except subprocess.CalledProcessError:
+        return set()
+    return _owned(prior_manifest)
+
+
 def stage_manifest_owned(
     root: Path,
     *,
@@ -449,22 +536,11 @@ def stage_manifest_owned(
     cleaned_python_cache_paths = clean_generated_python_caches(root)
     manifest, owned = _worktree_controls(root)
     current = _filesystem_files(root)
-    forbidden = sorted(path for path in current if _forbidden(path))
-    unknown = sorted(path for path in current - owned if not preserved_path(path))
-    missing = sorted(owned - current)
-    if forbidden or unknown or missing:
-        raise PublicationValidationError(
-            f"publication worktree mismatch; forbidden={forbidden}; unknown={unknown}; missing={missing}"
-        )
+    worktree_hygiene_mismatch(current, owned, preserved_path=preserved_path)
     if str(_git(root, "diff", "--cached", "--name-only")).strip():
         raise PublicationValidationError("staged index must be empty before governed staging")
     pre_stage_status = str(_git(root, "status", "--short", "--untracked-files=all")).splitlines()
-    prior_owned: set[str] = set()
-    try:
-        prior_manifest = _json_bytes(_revision_bytes(root, "HEAD", MANIFEST), f"HEAD:{MANIFEST}")
-        prior_owned = _owned(prior_manifest)
-    except subprocess.CalledProcessError:
-        pass
+    prior_owned = head_owned_paths(root)
     subprocess.run(("git", "add", "--", *sorted(owned)), cwd=root, check=True)
     for removed in sorted(path for path in prior_owned - owned if not preserved_path(path)):
         subprocess.run(("git", "add", "-u", "--", removed), cwd=root, check=True)
@@ -518,12 +594,24 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--revision", default="HEAD")
     args = parser.parse_args()
+    # A derived publication repository legitimately carries standalone
+    # deployment packaging (`plugins/`, `.agents/plugins/`, `.claude-plugin/`,
+    # `assets/`, and the other paths `publication_ownership.standalone_owned`
+    # declares) alongside the portable core these commands govern. Without a
+    # preserved-path predicate, every one of these three actions rejects that
+    # content as unknown -- so the exact command sequence this module's own
+    # guide documents cannot succeed against the repository shape the guide
+    # says to run it from. `standalone_owned` is this module's sibling and
+    # its only existing preserved-path predicate; wiring it here is additive
+    # only -- a caller that reaches these functions directly, as every
+    # existing test does, is unaffected, and nothing outside the standalone
+    # namespace is exempted, so a genuinely unknown file is still refused.
     if args.action == "stage":
-        result = stage_manifest_owned(args.root)
+        result = stage_manifest_owned(args.root, preserved_path=standalone_owned)
     elif args.action == "validate-staged":
-        result = validate_staged(args.root)
+        result = validate_staged(args.root, preserved_path=standalone_owned)
     else:
-        result = verify_commit_tree(args.root, args.revision)
+        result = verify_commit_tree(args.root, args.revision, preserved_path=standalone_owned)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 

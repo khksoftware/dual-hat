@@ -1,0 +1,216 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "$defs": {
+    "entry": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_record": {
+          "description": "Repository-relative path of the record everything else in this entry is derived from.",
+          "type": "string"
+        },
+        "concurrency_control": {
+          "description": "The adopter-supplied control at the canonical write, or null for a declared absence. This framework requires one and requires it declared; it supplies none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "derived_artifacts": {
+          "description": "Every derived site, enumerated by observing what the writer actually wrote rather than by recollection. A site is not always a file.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "description": "external_projection is a projection a person can also type into; it is governed by the bounded-write-back clauses in addition to everything else.",
+                "enum": [
+                  "file",
+                  "field_in_canonical_record",
+                  "embedded_marker_or_pointer",
+                  "directory_location",
+                  "external_projection"
+                ]
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "generation_method": {
+          "additionalProperties": false,
+          "description": "A resolvable reference to the callable or executable that emits the derived bytes. A reference that resolves to something real is not a reference that resolves to the correct something.",
+          "properties": {
+            "reference": {
+              "type": "string"
+            },
+            "resolution_checked": {
+              "description": "resolvability_only is the weaker check and is declared as such rather than reported under the stronger name.",
+              "enum": [
+                "resolvability_only",
+                "traced_to_the_emitting_call"
+              ]
+            }
+          },
+          "required": [
+            "reference",
+            "resolution_checked"
+          ],
+          "type": "object"
+        },
+        "inbound_write_back": {
+          "additionalProperties": false,
+          "description": "Positive enumeration only. A field not named here is prohibited inbound, and any field a generation method derives is prohibited regardless of what is named. Lifecycle state -- status, closure, scope -- is never admissible.",
+          "properties": {
+            "allowed_fields": {
+              "description": "Empty when no inbound write-back is permitted. Admissible members are fields a person genuinely manipulates and that no mechanism derives.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "permitted": {
+              "type": "boolean"
+            },
+            "reconciliation_report": {
+              "description": "Where an overwritten inbound value is reported as a named, durable event. Required whenever write-back is permitted: a reconciliation that cannot report what it discarded has not reconciled, it has overwritten.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "permitted",
+            "allowed_fields",
+            "reconciliation_report"
+          ],
+          "type": "object"
+        },
+        "partition_declaration": {
+          "description": "Where the partition predicate lives inside the canonical record, when the derived set partitions it; null when the derived set does not partition.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "re_runnable": {
+          "additionalProperties": false,
+          "description": "An entry whose writer cannot be re-run safely is declared uncovered here, with its real integrity mechanism recorded. It is never listed as covered on that mechanism's strength.",
+          "properties": {
+            "alternative_integrity_mechanism": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "converges_on_re_run": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "converges_on_re_run",
+            "reason",
+            "alternative_integrity_mechanism"
+          ],
+          "type": "object"
+        },
+        "state_stamp": {
+          "additionalProperties": false,
+          "description": "A stamp computed over a subset of fields is not a stamp over the record, so the field coverage is part of what the entry declares.",
+          "properties": {
+            "carried": {
+              "type": "boolean"
+            },
+            "computed_over": {
+              "description": "The exact field set the stamp covers, or null when no stamp is carried.",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "carried",
+            "computed_over"
+          ],
+          "type": "object"
+        },
+        "validation_binding": {
+          "description": "Which revision a derived-artifact validation is evaluated against. working_tree means a validator re-renders with the writer on disk rather than the writer in the revision it is judging, so a revision whose derived member was produced by an uncommitted writer validates clean while the committed pair is self-inconsistent.",
+          "enum": [
+            "revision_under_judgement",
+            "working_tree",
+            "undeclared"
+          ]
+        },
+        "writer_governance": {
+          "description": "The maturity actually in force, declared rather than implied. An adopter below the governed-writer floor declares that here rather than omitting the entry; the declaration is the honest form and silence is not.",
+          "enum": [
+            "governed_transactional_writer",
+            "governed_writer_with_pre_write_guard",
+            "governed_for_some_operations_only",
+            "no_ongoing_writer"
+          ]
+        }
+      },
+      "required": [
+        "canonical_record",
+        "derived_artifacts",
+        "generation_method",
+        "state_stamp",
+        "partition_declaration",
+        "writer_governance",
+        "re_runnable",
+        "concurrency_control",
+        "validation_binding",
+        "inbound_write_back"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://example.invalid/dual-hat/derived-artifact-registry.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Generic Dual Hat derived-artifact registry contract (see dual-hat/governance/REPOSITORY_GOVERNANCE.md, 'Derived artifacts'). One entry per canonical record that has any derived artifact. Carried as its own schema rather than as fields added to artifact-classification.schema.json, whose closed property set is a deliberate constraint on every adopter and is not widened for the benefit of adopters who have derived artifacts. Every entry field is required, including the ones whose honest value is a declared absence: an absent field and a declared absence are different claims and the registry must be able to tell them apart. This schema checks the shape of a declaration and nothing else. It does not discover a canonical record that was never declared, does not verify that generation_method names the writer that actually emits the bytes rather than one that merely resolves, and does not run any derivation. No code path in this repository loads this file or validates any registry against it; the registry, the runner and the assertions are the adopting project's.",
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/entry"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "entries"
+  ],
+  "type": "object"
+}

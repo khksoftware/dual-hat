@@ -37,6 +37,20 @@ healthy work merely to inspect it. Planning binds one thing principle 1 does not
 state: an optimization must preserve the authorized scope, not only authority,
 acceptance, safety, and recovery.
 
+Every test plan and cost projection receives at least two adversarial reduction
+passes before it is ready for approval. The first removes work already proved by
+unchanged evidence, duplicated coverage, repeated setup or adjudication, and
+manual steps an existing governed operation performs deterministically. The
+second challenges every survivor against measured command or runtime evidence
+and requires the distinct risk or outcome that item alone establishes. Repeat
+the challenge while generic contingency, duplicated handoff or publication
+work, an hour-scale allowance for seconds-scale commands, or another unsupported
+component remains. Record the unreduced plan, what each pass removed, the
+measured basis of the remainder, its de-duplicated test population, the distinct
+risk owned by every retained test or end-to-end anchor, and a hard ceiling that
+unused allowance cannot expand. A challenged plan returns to Architecture for
+reduction; execution does not consume the disputed allowance.
+
 For design and test planning, make principle 1's Pareto (80/20) heuristic concrete
 before selecting a matrix: enumerate the materially distinct semantics, failure
 modes, branches, subsystem owners or protected boundaries, and risk classes first.

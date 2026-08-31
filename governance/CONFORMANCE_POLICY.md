@@ -23,6 +23,8 @@ Conformance is a reasoned determination that implementation, repository state, v
 
 Closure fails on an unvalidated required behavior, contradictory authority, unexplained drift, omitted changed file, stale current-state projection, unknown artifact, hidden retry, unowned transient, or unreported exception. Evidence is bound to a deterministic candidate identity and states commands, environment, counts, skips, failures, reuse, and cleanup.
 
+Stale current-state projection is evaluated against the derived-artifact registry defined in [Repository Governance](REPOSITORY_GOVERNANCE.md), so the failure is computable rather than a judgement with nothing to evaluate it against: every registry entry the closure's changes reach is re-derived and diffed, and the set of entries the runner did not independently re-derive is reported by name. A closure that names no registry cannot claim this dimension; it reports the projection as unchecked. The residual is the registry's own completeness — a canonical record absent from the registry is invisible here, exactly as it is there — so this binds what an adopter has declared and never establishes that the declaration is complete.
+
 A terminal response, execution-lease release, capability closure, or cessation of
 background-worker monitoring is nonconforming unless its termination-preflight
 receipt proves complete reconciliation of the authoritative planned-scope inventory

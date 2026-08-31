@@ -190,7 +190,9 @@
         "repository/CANONICAL_DOMAIN_INDEX.md",
         "templates/PRODUCT_REPOSITORY.md",
         "templates/CANONICAL_ENTRYPOINTS.md",
-        "templates/CANONICAL_DOMAIN_INDEX.md"
+        "templates/CANONICAL_DOMAIN_INDEX.md",
+        "schemas/derived-artifact-registry.schema.json",
+        "examples/derived-artifact-registry.example.json"
       ],
       "validation": "tooling/framework_completeness.py"
     },

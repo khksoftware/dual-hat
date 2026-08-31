@@ -33,6 +33,17 @@ integrity risk requires it, or an explicit semantic-release authority requires i
 cost by weakening refusal, rollback, identity, durability, safety, recovery, or a declared
 mandatory gate.
 
+Before approval, challenge the validation plan twice for reducible work. The first pass
+deduplicates focused owners against computed or candidate-derived unions, reuses unchanged
+immutable evidence, removes repeated setup and adjudication, and replaces repeated semantics
+with the cheapest sound proof layer. The second pass requires measured runtime or command
+evidence and a distinct failure class for every surviving test, suite, or end-to-end anchor.
+Repeat if either pass leaves generic contingency, overlapping coverage, or breadth without a
+separate risk claim. The plan records its unreduced population, each removal, the final unique
+population, the risk owned by every retained member, measured execution basis, nonclaims, and
+the hard ceiling. A full suite is not retained merely as reassurance when the reduced
+defect-sensitive population already establishes the bounded claim.
+
 ## Profiles
 
 - Focused: changed owners and direct consumers during development.

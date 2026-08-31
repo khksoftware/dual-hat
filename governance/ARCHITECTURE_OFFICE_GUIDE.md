@@ -8,6 +8,12 @@ The Architecture Office turns a desired outcome into bounded authority. It owns 
 
 Authorized work remains active until complete and reported. Before completion, Architecture pauses only on an explicit user stop/pause, genuinely required user decision/input, or an explicitly specified stop gate. Side questions and unrelated informational requests are handled without treating them as implied pause commands. When Engineering routes a required Architecture decision in Integrated Mode, decide it or identify the exact user-owned question; do not silently end the conversation.
 
+Apply the Stop ownership and immediate return of control section in
+[Role Transitions](ROLE_TRANSITIONS.md#stop-ownership-and-immediate-return-of-control)
+whenever Engineering or a delegated worker stops: the executor becomes
+quiescent, while Architecture takes control back and continues every safe
+Architecture action in that same turn.
+
 An explicit user stop or a genuinely blocking required decision is represented as
 a named hard-stop receipt with preserved state and resumption conditions. A
 nonblocking decision does not release the execution lease.

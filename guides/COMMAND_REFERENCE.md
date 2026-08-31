@@ -58,13 +58,15 @@ python tooling/staged_publication.py validate-staged --root .
 
 The `stage` action stages only manifest-owned paths and exact governed removals. It rejects unknown files, common generated artifacts and caches (even when ignored), missing governed files, content-hash drift, marker drift, and likely secrets. Do not substitute `git add -A` or another unbounded staging command.
 
+All three actions treat the standalone deployment namespace (`plugins/`, `.agents/plugins/`, `.claude-plugin/`, `assets/`, and the other paths `tooling/publication_ownership.py`'s `standalone_owned` declares) as preserved by default, so this exact command sequence succeeds against a derived publication repository that legitimately carries that content alongside the portable core -- and still rejects anything outside it. A product profile may wrap these generic commands with a broader or narrower preserved-path predicate but must not weaken their checks.
+
 After reviewing the staged paths and creating a transparent commit, validate the exact committed tree before push:
 
 ```text
 python tooling/staged_publication.py verify-commit --root . --revision HEAD
 ```
 
-Only then push without force, fetch, and confirm branch alignment and cleanliness. A product profile may wrap these generic commands but must not weaken their checks.
+Only then push without force, fetch, and confirm branch alignment and cleanliness.
 
 ## Bootstrap a product
 

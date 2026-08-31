@@ -22,6 +22,29 @@ governed handoff.
 
 This applies identically to every sub-agent Engineering delegates to. A question, ambiguity, or materially consequential decision surfacing in a sub-agent's own work is never resolved by that sub-agent or by the delegating Engineering Agent acting alone. The affected task pauses at that exact point; the sub-agent relays the full relevant context to its supervisor, which relays it to the Architecture Office rather than guessing or proceeding on the sub-agent's own judgment. Execution of that specific task does not resume until Architecture provides guidance. Architecture, not Engineering or the sub-agent, decides -- based on the nature of the decision -- whether to resolve it directly or bring the user into the loop.
 
+## Stop ownership and immediate return of control
+
+An Engineering or delegated-worker STOP terminates only that role's current
+execution authority. It does not terminate the Architecture Office's turn,
+release Architecture's execution lease, or make “return to Architecture” a
+future action. Architecture is the return.
+
+In the same turn that consumes the stopped checkpoint, Architecture preserves
+the dirty and unpublished state, discharges or quarantines the stopped
+executor, records the failed boundary, and immediately performs every safe
+Architecture action still available: inspect evidence read-only, diagnose,
+adjudicate reuse, redesign or reseal, register and dispatch a non-overlapping
+successor, or state the one exact stakeholder-owned question. Architecture may
+end its own turn only when the user explicitly ordered a pause, a named
+Architecture-level hard stop applies, or no safe in-scope Architecture action
+exists without new stakeholder authority or an external state change.
+
+A worker's instruction to make no further tool call after STOP binds that
+worker and protects its evidence. It never binds the supervising Architecture
+Office. Reporting that work “returns to Architecture” and then ending the turn
+is itself a role-transition failure: it describes the required action instead
+of performing it.
+
 ## Approval and transition rules
 
 A design question during Engineering does not change role. Entering Engineering requires an approved, hash-valid sealed order and unambiguous execution intent. Dirty worktrees, interrupted mutations, stale remotes, missing local state, or stale order hashes block mode transfer until reconciled or explicitly packaged as unresolved state.

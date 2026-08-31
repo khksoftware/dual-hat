@@ -695,6 +695,19 @@ governed source, so it is invisible to the framework's tests, absent by default 
 installation, and — measured once — capable of drifting from its tracked source with nothing
 detecting the drift. An adopter that arms this arms it *and* pins the installed artifact
 against its tracked source, or the control is indistinguishable from its own absence.
+**And pinning the artifact is necessary, not sufficient — three separate things must hold, and
+the third is the one nothing checks.** A hook is a control only once its tracked source exists,
+a deployed copy matches that source, and the platform's own configuration *references* the
+deployed copy so that something actually invokes it. A pinning check answers the second question
+and is routinely read as answering the third: measured, a hook was tracked, deployed,
+byte-identical to its source, covered by its own passing tests, and referenced by nothing in the
+platform's configuration — so it fired on no turn, ever, while the drift check reported clean on
+every commit throughout. **The reassurance is what makes this expensive.** Neither a pinning
+check nor the hook's own tests can answer it: tests import the module and call it directly,
+which proves the logic and not the wiring, and that is precisely how a hook can be fully tested
+and entirely inert at the same time. So an adopter verifies arming by reading the platform's
+configuration, states the three conditions separately when reporting a hook's status, and treats
+arming as a third act with its own evidence rather than as a consequence of the first two.
 **Even where armed, the hook's coverage stops at the session it is attached to.** A delegated
 or sub-agent's own turn is a separate execution context the parent's hook cannot introspect, by
 construction, on any supervisor/worker agent architecture whose hook model looks like this one

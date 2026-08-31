@@ -31,8 +31,10 @@ from staged_publication import (  # noqa: E402
     PublicationValidationError,
     VERSION_AUTHORITY,
     declared_core_versions,
+    main as staged_publication_main,
     stage_manifest_owned,
     validate_bundle_version_currency,
+    validate_staged,
     verify_commit_tree,
 )
 from publication_ownership import standalone_owned  # noqa: E402
@@ -1697,6 +1699,74 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             self._write_publication(root, credential_fixture)
             with self.assertRaisesRegex(PublicationValidationError, "possible secrets"):
                 stage_manifest_owned(root)
+
+    # --- preserved_path reaches every arm, and the documented CLI can supply
+    # one -------------------------------------------------------------------
+    #
+    # `validate_staged`'s `unknown_staged` arm computed `staged - owned` with
+    # no `preserved_path` filter while `unknown` two lines above applies one.
+    # This module's own history shows the asymmetry is an oversight: the
+    # commit that added `preserved_path` applied the identical guard to
+    # `unknown` in all three functions and to the `prior_owned - owned`
+    # removal loop, and simply did not reach this fifth, textually
+    # identical, occurrence. Separately, the documented CLI (`main`) never
+    # passed a `preserved_path` to any of the three functions it dispatches
+    # to, so the exact command sequence the guide documents could not
+    # succeed against any repository carrying the standalone deployment
+    # content (`plugins/`, `.agents/plugins/`, ...) a derived publication
+    # repository legitimately has alongside the portable core.
+
+    def test_unknown_staged_respects_a_supplied_preserved_path(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self._publication_repo(root)
+            preserved = root / "assets/dual-hat/icon.png"
+            preserved.parent.mkdir(parents=True)
+            preserved.write_bytes(b"not-a-real-icon")
+            self._git(root, "add", "--", "assets/dual-hat/icon.png")
+            result = validate_staged(root, preserved_path=standalone_owned)
+            self.assertEqual("passed", result["status"])
+
+    def test_unknown_staged_still_refuses_a_non_preserved_staged_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self._publication_repo(root)
+            (root / "manual.txt").write_text("unowned", encoding="utf-8")
+            self._git(root, "add", "--", "manual.txt")
+            with self.assertRaisesRegex(PublicationValidationError, r"unknown_staged=\['manual\.txt'\]"):
+                validate_staged(root, preserved_path=standalone_owned)
+
+    def test_documented_cli_stage_action_succeeds_against_standalone_deployment_content(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self._publication_repo(root)
+            plugin = root / "plugins/dual-hat/some-form/plugin.json"
+            plugin.parent.mkdir(parents=True)
+            plugin.write_text('{"name":"standalone-plugin"}\n', encoding="utf-8")
+            previous_argv = sys.argv
+            sys.argv = ["staged_publication.py", "stage", "--root", str(root)]
+            try:
+                self.assertEqual(0, staged_publication_main())
+            finally:
+                sys.argv = previous_argv
+            staged = subprocess.run(
+                ("git", "diff", "--cached", "--name-only"), cwd=root,
+                check=True, capture_output=True, text=True,
+            ).stdout
+            self.assertNotIn("plugins/dual-hat/some-form/plugin.json", staged)
+
+    def test_documented_cli_still_refuses_a_genuinely_unknown_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self._publication_repo(root)
+            (root / "manual.txt").write_text("unowned", encoding="utf-8")
+            previous_argv = sys.argv
+            sys.argv = ["staged_publication.py", "stage", "--root", str(root)]
+            try:
+                with self.assertRaisesRegex(PublicationValidationError, "manual.txt"):
+                    staged_publication_main()
+            finally:
+                sys.argv = previous_argv
 
     # --- the core version has exactly one authority ---------------------------
     #
