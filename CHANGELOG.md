@@ -2,6 +2,38 @@
 
 # Changelog
 
+## 5.0.0 - 2026-09-14
+
+Fifteen accumulated changes to canonical governance, planning, process, sessions, schemas and tooling, published together as one major release. The level is derived from three independent compatibility breaks, each named with its migration in `release/UPGRADING.md`. No principle is added, removed, renumbered or reclassified.
+
+**Breaking — sealed work orders are held to their schema.** `validate_sealed()` now reads `schemas/work-item.schema.json`'s declared properties at call time and refuses a `dual-hat-sealed-work-order/1.1` order carrying a top-level field the schema does not declare. It also refuses when the schema cannot be read. The schema's closed property set had been applied to nothing but one example file, one-directionally. Measured against an adopting project's committed orders, a real share already carried undeclared fields, and the count was growing. The repair is forward only: a hash-sealed historical order is never rewritten or exempted by the framework, and any accepted exception is recorded by the adopter, order by order. Legacy `1.0` orders are unaffected.
+
+**Breaking — `release_package.build()` lost `failure_after_publish`.** The release package is now restart-journalled through a new redo-journal module, `tooling/cross_family_transaction.py`. Every write to a release directory is planned, staged and committed at a single rename before any real byte changes, and an interrupted transaction is finished forward by the next caller. `validate_release_set()` recovers a pending journal before it reads. The test-only integer `failure_after_publish` parameter is replaced by `fail_after_commit: bool`, the one point that still distinguishes "nothing real touched" from "recovery must finish this forward". The guarantee is bounded to process death and is not a power-loss claim.
+
+**Breaking — `templates/DOCUMENT_METADATA.md` removed.** It had no consumer anywhere in the framework.
+
+**Tooling — a seal cannot authorize what it forbids.** Sealed orders gain an optional `excluded_paths` list, now declared in the schema. `validate_sealed()` refuses an order whose authorized paths include one of its own excluded paths. Only exact identity counts, because containment in either direction is the legitimate narrowing and carve-out idiom. The structured field replaces a prose scan that, run against real orders, refused sentences naming a path as the permitted alternative rather than as a prohibition.
+
+**Tooling — staging a publication that removes a file.** A publication that removes a file the previous publication owned was refused at staging: the hygiene check read the index, which still listed the file propagation had deleted, as present unowned content, and the index validation then read the staged deletion itself as unknown. A tracked path deleted from the worktree is no longer present content, and a staged deletion of a path the committed publication owned is a removal. Every refusal message is unchanged, and deleting a path no prior publication owned is still refused. One intended consequence: a manifest-owned file deleted from disk now reads as missing rather than as present.
+
+**Schemas.** The four `roots` patterns in `product-profile.schema.json` were under-escaped by one JSON level, so no character class terminated and a validator reaching them raised instead of validating. They now compile and enforce the constraint they always stated.
+
+**Process — a push publishes its whole ancestry.** Before a push to a shared branch, the commits between the remote tip and the pushed commit are enumerated and read. Every one is this session's own, or the push does not happen, because another writer's unpublished commit may be held back deliberately. This is a separate gate from the validation verdict. Where history is forward-only the remedy is to wait or escalate, never to resequence. The rule states that nothing can enforce it where all writers share one identity.
+
+**Planning — reading an item is a disposition point.** An item opened and understood leaves that reading worked, re-owned into a named queue with a named owner, corrected, or closed, and returning it unchanged is not an outcome. Deferral with a reason is not a disposition, and closing as irrelevant needs demonstrated grounds. The rule binds outside review events and is judgement-only.
+
+**Planning — debt is owed.** An unresolved debt item is a commitment to repay. A percentage allocation is named as a non-mechanism. Carry-forward is an explicit per-item reauthorization, or the item is reported as unmanaged. A register that only grows is a finding about the process.
+
+**Planning — reduction passes bind every plan.** The two adversarial reduction passes now bind any design, brief, dispatch, batch, sequence, estimate, test population or execution approach, not only test plans and cost projections. The mechanics are unchanged.
+
+**Conformance — reachability of what a closure introduced.** A closure states, for the surface its own changes touched, whether each capability, control, rule or obligation it introduced is reached by something that runs. It records one of four admissible answers for each item that is not. Fabricating a caller to clear one is forbidden.
+
+**Framework — response-boundary checks.** A check at the response boundary is a control only while its reach on a live turn equals its rule. That requires three things: a refusal re-evaluated on retry under a structurally counted ceiling, a turn window that closes at every stakeholder message however the platform stores one, and acts read from the platform's record of acts rather than from text. Principle 12 cross-references the requirement. The residual is stated, including that no such check reaches a delegated worker's own turns.
+
+**Sessions — active-session record.** Free prose is admitted per entry, by a declared kind that names an executable falsifier. A kind adds a check and never exempts an entry from one. Making a declaration mandatory makes every parsing control a consumer, each verified to still read the text. An item shown in progress says who holds it, and prose about delegated work states policy, never inventory state.
+
+**Governance — derived values.** A derivation whose input does not exist yet fails the write that needed it and is never stored as a placeholder. Loosening the stale-value check and falling back to a second source are both prohibited repairs.
+
 ## 4.6.0 - 2026-08-31
 
 Ten accumulated changes to canonical governance, planning, validation, schemas, tooling and release policy, published together as one minor release.

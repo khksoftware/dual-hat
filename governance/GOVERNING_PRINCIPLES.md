@@ -708,6 +708,10 @@ which proves the logic and not the wiring, and that is precisely how a hook can 
 and entirely inert at the same time. So an adopter verifies arming by reading the platform's
 configuration, states the three conditions separately when reporting a hook's status, and treats
 arming as a third act with its own evidence rather than as a consequence of the first two.
+**Arming is still not reach**: what such a hook must additionally satisfy on a live turn to remain
+a control is stated once, under active-task continuity in the framework contract
+(framework/DUAL_HAT_FRAMEWORK.md) -- a requirement on the adopter's hook, not a mechanism this
+framework ships.
 **Even where armed, the hook's coverage stops at the session it is attached to.** A delegated
 or sub-agent's own turn is a separate execution context the parent's hook cannot introspect, by
 construction, on any supervisor/worker agent architecture whose hook model looks like this one

@@ -13,6 +13,7 @@ import re
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+import time
 import unittest
 from unittest.mock import patch
 
@@ -26,6 +27,30 @@ from test_framework import available_reparse_flavours, make_reparse, remove_repa
 import release_package  # noqa: E402
 from content_security import ContentSecurityError, inspect_content_set, sha256  # noqa: E402
 from release_artifacts import is_release_product  # noqa: E402
+
+
+_PUBLISH_KILL_HELPER = r"""
+import sys, time
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import release_package as module
+
+output = Path(sys.argv[2])
+marker = Path(sys.argv[3])
+
+_real_commit = module._txn.commit
+
+
+def _commit_then_park(root, txn_id):
+    result = _real_commit(root, txn_id)
+    marker.write_text("committed-not-yet-applied", encoding="utf-8")
+    time.sleep(30)
+    return result
+
+
+module._txn.commit = _commit_then_park
+module.build(output, production=False)
+"""
 
 
 class ReleasePackageTests(unittest.TestCase):
@@ -257,21 +282,76 @@ class ReleasePackageTests(unittest.TestCase):
         (ROOT / "export/EXPORT_SOURCES.json").is_file() or (ROOT / ".dual-hat/export-manifest.json").is_file(),
         "release construction requires canonical or publication controls",
     )
-    def test_release_set_is_exact_and_transaction_rolls_back_prior_bytes(self) -> None:
+    def test_release_set_is_exact_and_a_foreign_file_is_rejected(self) -> None:
         with TemporaryDirectory() as temporary:
             output = Path(temporary) / "release"
-            provenance = ("a" * 40, "b" * 40)
-            with patch.object(release_package, "release_provenance", return_value=provenance):
-                result = release_package.build(output, production=False)
-                self.assertEqual("nonpublishable_plan", result["release_mode"])
-                prior = {path.name: path.read_bytes() for path in output.iterdir()}
-                for failure_point in (2, 4):
-                    with self.assertRaisesRegex(RuntimeError, "injected"):
-                        release_package.build(output, failure_after_publish=failure_point, production=False)
-                    self.assertEqual(prior, {path.name: path.read_bytes() for path in output.iterdir()})
+            result = release_package.build(output, production=False)
+            self.assertEqual("nonpublishable_plan", result["release_mode"])
             (output / "unexpected.release.txt").write_text("unexpected", encoding="utf-8")
             with self.assertRaisesRegex(RuntimeError, "membership mismatch"):
                 release_package.validate_release_set(output, require_publication_provenance=False)
+
+    @unittest.skipUnless(
+        (ROOT / "export/EXPORT_SOURCES.json").is_file() or (ROOT / ".dual-hat/export-manifest.json").is_file(),
+        "release construction requires canonical or publication controls",
+    )
+    def test_build_failure_after_commit_leaves_output_untouched_and_journal_recoverable(self) -> None:
+        """`fail_after_commit` fires right after the transaction commits and before
+        `_txn.apply()` runs, so no release artifact under `output` (besides the
+        journal directory, which is never itself a release artifact) has changed yet
+        -- the property that makes a crash at this exact point a trivial thing to
+        finish forward rather than something that leaves an ambiguous mix of old and
+        new release files."""
+        with TemporaryDirectory() as temporary:
+            output = Path(temporary) / "release"
+            with self.assertRaisesRegex(RuntimeError, "injected"):
+                release_package.build(output, fail_after_commit=True, production=False)
+            self.assertEqual([], [path.name for path in output.iterdir() if path.is_file()])
+            self.assertEqual(len(release_package._txn.scan(output)), 1, "the committed journal survives")
+            completed = release_package._txn.recover_pending(output)
+            self.assertEqual(len(completed), 1)
+            release_package.validate_release_set(output, require_publication_provenance=False)
+            self.assertEqual(release_package._txn.scan(output), ())
+            self.assertFalse((output / release_package._txn.JOURNAL_DIR).exists())
+
+    @unittest.skipUnless(
+        (ROOT / "export/EXPORT_SOURCES.json").is_file() or (ROOT / ".dual-hat/export-manifest.json").is_file(),
+        "release construction requires canonical or publication controls",
+    )
+    def test_a_real_process_kill_mid_publish_is_recovered_forward(self) -> None:
+        """The non-simulated half of the same property: a REAL subprocess is
+        launched, calls the actual production `build()` entry point, is allowed to
+        reach "committed, nothing applied yet", and REALLY killed -- the crash-
+        durability case the in-process `fail_after_commit` test above cannot reach,
+        because it raises from inside the same process rather than actually dying."""
+        with TemporaryDirectory() as temporary, TemporaryDirectory() as helper_dir:
+            output = Path(temporary) / "release"
+            helper = Path(helper_dir) / "_kill_helper_publish.py"
+            helper.write_text(_PUBLISH_KILL_HELPER, encoding="utf-8")
+            marker = Path(helper_dir) / "reached_marker.txt"
+
+            process = subprocess.Popen(
+                [sys.executable, str(helper), str(ROOT / "tooling"), str(output), str(marker)],
+                cwd=str(output.parent), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            deadline = time.time() + 15
+            while not marker.is_file() and time.time() < deadline and process.poll() is None:
+                time.sleep(0.05)
+            self.assertTrue(marker.is_file(), "the helper process never reached its marker")
+
+            process.kill()
+            process.wait(timeout=10)
+            process.stdout.close()
+            process.stderr.close()
+
+            self.assertEqual([], [path.name for path in output.iterdir() if path.is_file()])
+            self.assertEqual(len(release_package._txn.scan(output)), 1)
+
+            completed = release_package._txn.recover_pending(output)
+            self.assertEqual(len(completed), 1)
+            release_package.validate_release_set(output, require_publication_provenance=False)
+            self.assertEqual(release_package._txn.scan(output), ())
+            self.assertFalse((output / release_package._txn.JOURNAL_DIR).exists())
 
     def test_versioned_products_are_not_source_inputs(self) -> None:
         self.assertTrue(is_release_product("release/v0.1.0/dual-hat-0.1.0.zip"))

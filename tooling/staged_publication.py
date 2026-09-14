@@ -139,11 +139,23 @@ def _filesystem_files(root: Path) -> set[str]:
     staged -- the ordinary case ``stage_manifest_owned`` calls this to
     handle -- is still seen. Only content git itself ignores stops being
     seen, which is exactly the fix.
+
+    **A tracked path deleted from the worktree is not present content.**
+    ``--cached`` lists every index entry, including one whose file is gone,
+    and ``stage_manifest_owned`` checks hygiene over this set BEFORE it stages
+    the removal of paths the prior manifest owned and the new one drops. So a
+    publication that removes a file read that file as present and unowned, and
+    was refused as ``unknown`` -- measured on the first release to remove a
+    published file, after propagation had already written the worktree. Paths
+    ``git ls-files --deleted`` reports are therefore excluded. The consequence
+    in the other direction is intended: a manifest-owned file deleted from
+    disk now reads as ``missing`` rather than as present.
     """
     output = _git(root, "ls-files", "--cached", "--others", "--exclude-standard")
+    deleted = set(str(_git(root, "ls-files", "--deleted")).splitlines())
     return {
         path for path in str(output).splitlines()
-        if not is_release_product(path)
+        if path not in deleted and not is_release_product(path)
     }
 
 
@@ -434,7 +446,18 @@ def validate_staged(
     # one it did change. No caller or test ever exercised this arm with a
     # supplied `preserved_path` either, so nothing pinned the asymmetry as
     # intended.
-    unknown_staged = sorted(path for path in staged - owned if not preserved_path(path))
+    #
+    # A staged DELETION of a path the publication committed at HEAD owned is a removal, not
+    # unknown content: `stage_manifest_owned` stages exactly those removals, so counting them
+    # here refused the first publication that removed a file. Only that one case is excluded.
+    # A deletion of anything a prior publication did not own still reads as `unknown_staged`,
+    # with the message unchanged.
+    removed_prior_owned = set(
+        str(_git(root, "diff", "--cached", "--name-only", "--diff-filter=D")).splitlines()
+    ) & head_owned_paths(root)
+    unknown_staged = sorted(
+        path for path in staged - owned - removed_prior_owned if not preserved_path(path)
+    )
     if forbidden or unknown or missing or unknown_staged:
         raise PublicationValidationError(
             f"staged publication mismatch; forbidden={forbidden}; unknown={unknown}; "

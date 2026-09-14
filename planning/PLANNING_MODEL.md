@@ -37,8 +37,15 @@ healthy work merely to inspect it. Planning binds one thing principle 1 does not
 state: an optimization must preserve the authorized scope, not only authority,
 acceptance, safety, and recovery.
 
-Every test plan and cost projection receives at least two adversarial reduction
-passes before it is ready for approval. The first removes work already proved by
+Every plan receives at least two adversarial reduction passes before it is ready
+for approval, and *plan* is read at its widest: any design, brief, dispatch,
+batch, sequence, estimate, test population or execution approach, whether or not
+it is called a test plan or a cost projection, whether or not it goes to an
+approver, and whether or not anyone suspects it of being large. If you are about
+to do a thing more than once, or to hand a way of doing it to someone else, that
+is a plan and this rule governs it. A narrow reading is not available in this
+text: the rule's own first pass removes broad coverage carrying no distinct risk,
+which is a property of execution designs and not only of estimates. The first removes work already proved by
 unchanged evidence, duplicated coverage, repeated setup or adjudication, and
 manual steps an existing governed operation performs deterministically. The
 second challenges every survivor against measured command or runtime evidence
@@ -81,6 +88,14 @@ simultaneous current/unopened or active/history contradictions.
 Each project profile inventories its forward-looking authorities—such as roadmap, backlog, debt, future-work triggers, deferred decisions, risk/mitigation registers, and migration, upgrade, release, or productization plans—and assigns progression-point and change-driven review events. Default progression points are phase or governed subphase opening/closure, material roadmap replanning, and release/productization gates; an owning scope, assumption, dependency, or environment change may trigger a narrower review. Groom the affected delta for activation, completion, obsolescence, duplication, stale assumptions/conditions/owners/mappings/review dates/status, and next placement. Use a full portfolio review only when the progression point or breadth of change warrants it. Avoid duplicate roadmaps, milestone ledgers, or status dashboards that independently claim current truth.
 
 The canonical future-work registry has the stronger item-level rule: at phase or governed subphase closure and material replanning, evaluate every registered trigger; advance satisfied triggers or explicitly disposition them; retire obsolete/duplicate triggers with successor/reason; refresh stale trigger state; and map every live trigger to planned work or a named trigger-only review event. Other forward-looking artifacts use their own concrete contracts when present and the portfolio rule above only as fallback.
+
+**Reading an item is itself a disposition point, and this binds outside review events.** The grooming and trigger rules above are attached to progression points and change-driven reviews, so an item read at any other time -- during adjacent work, a triage, an inspection, or by noticing it in passing -- has no obligation attached to that reading. It acquires one here. An item that has been opened and understood leaves that act with one of four outcomes, and returning it unchanged is not among them: **worked**; **re-owned**, meaning placed in a named queue with a named owner able to act on it, which for an item whose subject lies in a scope the reader does not own means that scope's queue rather than a note in a report; **corrected**, where the record was inaccurate or has been overtaken by other work; or **closed**, where it is demonstrably no longer relevant.
+
+**The reason to state this as an obligation is that putting the item back is the cheapest available outcome**, and an item put back is indistinguishable from an item nobody read. A register whose entries are repeatedly read and repeatedly survive unchanged is not a register being managed; the reading is producing no disposition, and nothing in the register records that it happened.
+
+**Deferral with a stated reason is not a disposition.** Recording why an item was not worked is better than silence and does not discharge this: the item still leaves the reading with an owner and a queue position, or it does not survive the reading. **An item may only be closed as irrelevant on demonstrated grounds** -- a subject that no longer exists, a duplicate whose survivor is named, a claim shown false -- never on the reader's impression that it no longer matters.
+
+**Classification: judgement-only. Advice.** Nothing in this framework's shipped source enforces it and nothing can: the registers, the queues and the reading occasions are all the adopting project's, and a detector would have to know that a human or agent read an item, which no artifact records. It holds because a reasonable agent reads it and complies, and because a register that only grows is visible to whoever owns the work it represents.
 
 Requirement-to-roadmap traceability is bidirectional: every scheduled requirement reaches a capability or explicit defer decision; every capability identifies its requirement, maintenance, debt, or remediation basis. The broader intent-to-delivery chain follows the [traceability protocol](TRACEABILITY_PROTOCOL.md).
 

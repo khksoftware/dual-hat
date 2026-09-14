@@ -23,6 +23,7 @@ from content_security import inspect_content_set
 from path_containment import ContainmentError, contained
 from publication_ownership import standalone_owned
 from staged_publication import verify_commit_tree
+import cross_family_transaction as _txn
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -375,8 +376,35 @@ def _validate_output_boundary(output: Path, names: tuple[str, ...]) -> None:
 
 
 def build(output: Path, source_commit: str | None = None, external_publication_commit: str | None = None, *,
-          failure_after_publish: int | None = None, production: bool = True,
+          fail_after_commit: bool = False, production: bool = True,
           expected_remote_identity: str = "") -> dict[str, object]:
+    """Build a deterministic release set and publish it into `output`.
+
+    **Restart-journalled through `cross_family_transaction`, in place of the
+    pre-existing hand-rolled replace loop with an in-process-only prior-bytes
+    rollback**, which had no answer for a process actually killed mid-replace: a kill
+    between two `os.replace` calls left `output` holding a mix of old and new release
+    files, observably ambiguous about which release it actually held.
+    `_txn.recover_pending(output)` runs UNCONDITIONALLY first, so a transaction left
+    committed by a killed prior build is always finished before this call does
+    anything else. The write set (the archive as a `binary_writes` entry -- a ZIP is
+    not valid UTF-8 -- the manifest and checksum companions as `writes` entries) is
+    planned, staged, and committed as ONE transaction before any byte of `output`
+    (besides the private journal directory) is touched; only then is it applied.
+
+    **The recovery direction follows from where a crash lands, not a runtime choice**
+    -- a crash before `commit()` has changed nothing real, so the next call's
+    `recover_pending` finds nothing to redo. A crash after `commit()` is always
+    finished FORWARD. This retires the old prior-bytes-capture-and-restore rollback,
+    which only ever protected against an in-process Python exception. `fail_after_commit`
+    (test-only; no production caller passes it) replaces the old
+    `failure_after_publish: int` per-index hook, which had no equivalent once the
+    replace loop became one `_txn.apply()` call -- the one point that still
+    distinguishes "nothing real touched yet" from "recovery must now finish this
+    forward" is immediately after `commit()`.
+    """
+    output = Path(output)
+    _txn.recover_pending(output)
     if production:
         provenance_record=release_provenance_record(expected_remote_identity)
         derived_source,derived_publication=str(provenance_record["canonical_source_commit"]),str(provenance_record["external_publication_commit"])
@@ -428,36 +456,21 @@ def build(output: Path, source_commit: str | None = None, external_publication_c
                              require_publication_provenance=production, expected_remote_identity=expected_remote_identity)
         names = (basename, manifest_name, checksum_name)
         _validate_output_boundary(output, names)
-        output.mkdir(parents=True, exist_ok=True)
-        prior = {name: (output / name).read_bytes() for name in names if (output / name).is_file()}
-        try:
-            for index, name in enumerate(names, 1):
-                source = staging / name
-                destination = output / name
-                temporary = output / f".{name}.replace.tmp"
-                temporary.write_bytes(source.read_bytes())
-                os.replace(temporary, destination)
-                if sha256(destination.read_bytes()) != sha256(source.read_bytes()):
-                    raise RuntimeError(f"published release artifact hash mismatch: {name}")
-                if failure_after_publish == index:
-                    raise RuntimeError("injected release publication failure")
-            release_set = validate_release_set(
-                output, source_commit=source_commit,
-                external_publication_commit=external_publication_commit,
-                require_publication_provenance=production, expected_remote_identity=expected_remote_identity)
-            if failure_after_publish == 4:
-                raise RuntimeError("injected release final-validation failure")
-        except BaseException:
-            for name in names:
-                destination = output / name
-                (output / f".{name}.replace.tmp").unlink(missing_ok=True)
-                if name in prior:
-                    restore = output / f".{name}.rollback.tmp"
-                    restore.write_bytes(prior[name])
-                    os.replace(restore, destination)
-                else:
-                    destination.unlink(missing_ok=True)
-            raise
+        archive_bytes = staged_archive.read_bytes()
+        manifest_text = (staging / manifest_name).read_text(encoding="utf-8")
+        checksum_text = (staging / checksum_name).read_text(encoding="utf-8")
+        writes = {manifest_name: manifest_text, checksum_name: checksum_text}
+        binary_writes = {basename: archive_bytes}
+        txn_plan = _txn.plan(output, writes, binary_writes=binary_writes)
+        _txn.stage(output, txn_plan, writes, binary_writes=binary_writes)
+        _txn.commit(output, txn_plan.txn_id)
+        if fail_after_commit:
+            raise RuntimeError("injected release publication failure")
+        _txn.apply(output, txn_plan.txn_id)
+        release_set = validate_release_set(
+            output, source_commit=source_commit,
+            external_publication_commit=external_publication_commit,
+            require_publication_provenance=production, expected_remote_identity=expected_remote_identity)
     archive_path = output / basename
     manifest_path = output / manifest_name
     checksum_path = output / checksum_name
@@ -475,6 +488,14 @@ def validate_release_set(output: Path, *, source_commit: str | None = None,
                          external_publication_commit: str | None = None,
                          require_publication_provenance: bool = True,
                          expected_remote_identity: str = "") -> dict[str, object]:
+    output = Path(output)
+    # A reader, exactly as much as `build()` is a writer: called directly (the
+    # `validate` CLI action) against an `output` a prior `build()` may have left with
+    # a committed-but-unapplied transaction, never only from inside `build()` itself
+    # right after its own `apply()` already ran. A no-op when `output` carries no
+    # journal, which is the overwhelming majority of calls (including every call
+    # against `staging`, which never has one).
+    _txn.recover_pending(output)
     release_version = version()
     basename = f"dual-hat-{release_version}.zip"
     expected = {basename, f"dual-hat-{release_version}.release.json", f"dual-hat-{release_version}.zip.sha256"}

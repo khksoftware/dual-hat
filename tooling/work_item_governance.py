@@ -157,6 +157,132 @@ def _nonempty_list(order: Mapping[str, object], name: str) -> bool:
     return isinstance(value, list) and bool(value) and all(isinstance(row, str) and row.strip() for row in value)
 
 
+#: A path-shaped token inside prose: a slash-bearing run, or a bare filename with a suffix.
+#: Deliberately not a general path parser -- see `contradicted_authorized_paths`.
+def contradicted_authorized_paths(order: Mapping[str, object]) -> tuple[str, ...]:
+    """Authorized paths the order's own `excluded_paths` also forbid, in the same document.
+
+    **The defect this closes, measured rather than supposed.** `authorized_paths` and
+    `explicit_exclusions` were both loaded and both structurally validated, and **neither was
+    ever compared against the other**. A sealed order was constructed whose exclusions read
+    *"Do not touch dual-hat/ or engineering/dual-hat-profile/"* while its authorized paths
+    authorized `dual-hat/`, and `validate_sealed` returned `()`. In the finding's own words:
+    *a seal can authorize what it forbids, in the same document, and validate clean.*
+
+    **Why this compares a STRUCTURED field and not the prose, established by execution rather
+    than preference.** The obvious repair -- extract path-shaped tokens from each
+    `explicit_exclusions` sentence and compare those -- was built, and then run against every
+    committed sealed order in the estate: **it refused 5 of 45.** Reading one showed why, and
+    the reason is not fixable by a better pattern. A real sealed order excluded *"incremental
+    framework publication during this work -- accumulate canonical `dual-hat/` changes and
+    publish exactly one aggregated batch"*. That sentence forbids a PRACTICE and merely
+    **mentions** the excluded path while describing the permitted alternative. A prose scan
+    cannot distinguish a path named as forbidden from a path named as the remedy, and treating
+    every mention as a prohibition refuses the legitimate idiom -- exclude a region, authorize
+    specific members of it -- that narrow authorization is written in.
+
+    **So the exclusion gets a machine-readable half rather than the checker getting a
+    parser.** `excluded_paths` is an OPTIONAL list beside the prose. Where an author states a
+    forbidden path structurally, this compares it; where an order carries none -- every
+    existing seal -- the check yields nothing and refuses nobody.
+
+    **Exact identity only, and that bound is deliberate.** Containment in either direction is
+    a legitimate shape: authorizing a region while excluding a subtree is narrowing, and
+    excluding a region while authorizing one file inside it is a carve-out. Only the same path
+    appearing in both lists is a self-contradiction, which is precisely the measured instance.
+
+    **What this does not reach, stated because overclaiming here is how the authorized-surface
+    guarantee came to be trusted in the first place**: an order whose exclusions are prose
+    only. The same measured order carried *"Do not restructure, rewrite, compact, or re-key
+    the append-only JSONL ledger"* against an authorized `technical_debt_history.jsonl`; the
+    sentence names no path, and nothing mechanical relates the two.
+
+    Returns the offending authorized paths, deduplicated, in order of first appearance.
+    """
+    def _normal(value: object) -> str:
+        return str(value).strip().strip("/") if isinstance(value, str) else ""
+
+    excluded = {_normal(row) for row in order.get("excluded_paths", ()) or ()}
+    excluded.discard("")
+    if not excluded:
+        return ()
+    hits = [str(row).strip() for row in order.get("authorized_paths", ()) or ()
+            if _normal(row) and _normal(row) in excluded]
+    return tuple(dict.fromkeys(hits))
+
+
+#: `schemas/work-item.schema.json`'s own file, resolved relative to this module rather than
+#: hardcoded elsewhere -- see `_declared_schema_properties`.
+_WORK_ORDER_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas" / "work-item.schema.json"
+
+
+def _declared_schema_properties() -> frozenset[str] | None:
+    """The top-level property names `schemas/work-item.schema.json` declares, read at call time.
+
+    Never bound at import, for the same reason release evidence never is (see the top-of-file
+    comment on `VERSION_EVIDENCE_SCHEMA`): a missing or malformed schema file must surface as a
+    `validate_sealed` failure entry for its one caller, not as an ImportError for every module
+    that imports this one. Returns None on any read/parse failure or a missing/empty/malformed
+    `properties` object, so the caller can tell "schema unreadable" apart from "schema declares
+    nothing" and fail closed on either -- see `undeclared_schema_fields`'s caller in
+    `validate_sealed`.
+    """
+    try:
+        schema = json.loads(_WORK_ORDER_SCHEMA_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    properties = schema.get("properties") if isinstance(schema, Mapping) else None
+    return frozenset(properties) if isinstance(properties, Mapping) and properties else None
+
+
+def undeclared_schema_fields(order: Mapping[str, object], *, schema_properties: frozenset[str] | None = None) -> tuple[str, ...]:
+    """Top-level order fields `work-item.schema.json` does not declare.
+
+    **The condition this closes.** The schema declares `additionalProperties: false` against a
+    fixed `properties` set -- a closed contract. Nothing ever applied it to a real sealed order:
+    the sole consumer compared one example file's keys against the schema, one-directionally,
+    and `validate_sealed` never consulted the schema at all. Measured against an adopting
+    project's own committed sealed orders, a real population carried a field the schema does not
+    declare, across several distinct names. The schema was tightened at adoption and every seal
+    that later needed a field simply carried one, because nothing could refuse it -- an open
+    channel, not a closed legacy backlog: some of those names first appear on seals sealed after
+    the schema already declared the closed set.
+
+    **Why this is scoped to NEW seals, never a historical population found already carrying the
+    defect.** Every previously-sealed order is a byte-pinned, `work_order_hash`-sealed artifact;
+    editing any of them to conform invalidates its own seal, which no repair here is authorized
+    to do: the forward fix, not a historical re-seal. This function is a pure comparison against
+    whatever `schema_properties` it is given -- it does not read that historical population,
+    does not special-case it, and refuses it exactly as it refuses any other order carrying an
+    undeclared field. `validate_sealed` decides which orders it runs against; nothing here
+    sweeps it over the historical corpus.
+
+    **Any accepted historical exception set is recorded by the adopting project's own
+    governance process, order by order with each one's undeclared fields, never inside this
+    function.** Read that record before concluding anything from a historical sweep: a count
+    that no longer matches it means either a new seal was written non-conforming, which this
+    function should have refused, or a historical seal was edited, which nothing authorizes.
+    The exception lives in that external record and NOT in this function, which is the whole
+    difference between an accepted exception and a hole in the check.
+
+    **Why `schema_properties` is a parameter rather than always resolved internally.** So a
+    caller validating many orders in one pass -- `validate_sealed` included -- reads the schema
+    file once rather than once per order, and so a test can hand it a synthetic property set
+    without a real schema file on disk. Omitting it (the default) resolves it fresh via
+    `_declared_schema_properties`, for the common one-order call.
+
+    Returns the offending field names, deduplicated, in order of first appearance. A
+    `schema_properties` that resolves to `None` (the schema itself is unreadable) is reported as
+    `()` here -- an empty verdict is this function's honest answer to "compared against nothing";
+    deciding that "nothing to compare against" is itself a failure is `validate_sealed`'s to make,
+    not this pure comparison's to assume.
+    """
+    properties = schema_properties if schema_properties is not None else _declared_schema_properties()
+    if not properties:
+        return ()
+    return tuple(dict.fromkeys(name for name in order if name not in properties))
+
+
 def _revision_set_hash(revisions: object) -> str:
     if not isinstance(revisions, list):
         return ""
@@ -189,6 +315,11 @@ def validate_sealed(order: Mapping[str, object], *, registered_types: set[str] |
         "revision_hash_set_encoding", "sealed_state", "material_revision_rule", "work_order_hash",
     }
     if required - set(order): failures.append("work order is incomplete")
+    schema_properties = _declared_schema_properties()
+    if schema_properties is None: failures.append("work-item schema is unreadable")
+    else:
+        undeclared = undeclared_schema_fields(order, schema_properties=schema_properties)
+        if undeclared: failures.append(f"work order carries fields the schema does not declare: {', '.join(undeclared)}")
     if order.get("schema") != "dual-hat-sealed-work-order/1.1": failures.append("unknown work-order schema")
     if not str(order.get("work_item_id", "")).strip() or not str(order.get("title", "")).strip(): failures.append("work-item identity or title is invalid")
     kind = str(order.get("work_item_type", ""))
@@ -203,6 +334,9 @@ def validate_sealed(order: Mapping[str, object], *, registered_types: set[str] |
     for field in ("approved_scope", "stop_gates", "authorized_repositories", "authorized_paths", "destructive_permissions", "required_validation"):
         if not _nonempty_list(order, field): failures.append(f"work order lacks {field}")
     if not isinstance(order.get("explicit_exclusions"), list): failures.append("explicit exclusions are invalid")
+    else:
+        contradicted = contradicted_authorized_paths(order)
+        if contradicted: failures.append(f"authorized paths are forbidden by this order's own exclusions: {', '.join(contradicted)}")
     if not str(order.get("authorized_mutation", "")).strip(): failures.append("mutation authority is missing")
     publication = order.get("publication_authority")
     if not isinstance(publication, Mapping) or not all(isinstance(value, bool) for value in publication.values()) or not any("push" in str(key) for key in publication): failures.append("publication or push authority is incomplete")

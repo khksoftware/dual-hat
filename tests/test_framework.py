@@ -1455,6 +1455,62 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             self.assertEqual("passed", verified["status"])
             self.assertEqual(3, verified["tree_file_count"])
 
+    def test_staging_a_publication_that_removes_a_previously_owned_file(self):
+        """A file the prior manifest owned, dropped by the new manifest and deleted
+        from the worktree, is a removal to stage, not an unknown file.
+
+        The hygiene check runs before the removal is staged, and the index still
+        lists the deleted file, so an enumeration that trusted the index alone
+        refused this publication as ``unknown``. Measured on a real release, the
+        first to remove a published file.
+        """
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self._git(root, "init", "-b", "main")
+            self._git(root, "config", "user.name", "Dual Hat Test")
+            self._git(root, "config", "user.email", "dual-hat-test@example.invalid")
+
+            def publish(files: dict[str, bytes]) -> None:
+                manifest = {
+                    "schema": "dual-hat-export-manifest/3.0",
+                    "tree_sha256": "TEST-TREE",
+                    "content_files": [
+                        {"path": path, "sha256": hashlib.sha256(data).hexdigest().upper()}
+                        for path, data in sorted(files.items())
+                    ],
+                }
+                manifest_bytes = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8")
+                marker = {
+                    "schema": "dual-hat-published-state/1.0",
+                    "tree_sha256": "TEST-TREE",
+                    "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest().upper(),
+                }
+                (root / ".dual-hat").mkdir(exist_ok=True)
+                for path, data in files.items():
+                    (root / path).parent.mkdir(parents=True, exist_ok=True)
+                    (root / path).write_bytes(data)
+                (root / ".dual-hat/export-manifest.json").write_bytes(manifest_bytes)
+                (root / ".dual-hat/published-state.json").write_text(
+                    json.dumps(marker, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                )
+
+            publish({"README.md": b"initial\n", "templates/ORPHAN.md": b"orphan\n"})
+            self._git(root, "add", "--", "README.md", "templates/ORPHAN.md",
+                      ".dual-hat/export-manifest.json", ".dual-hat/published-state.json")
+            self._git(root, "commit", "-m", "Initial governed publication")
+
+            (root / "templates/ORPHAN.md").unlink()
+            publish({"README.md": b"updated\n"})
+            staged = stage_manifest_owned(root)
+            self.assertEqual("passed", staged["status"])
+            self._git(root, "commit", "-m", "Forward publication removing the orphan")
+            verified = verify_commit_tree(root)
+            self.assertEqual("passed", verified["status"])
+            tree = subprocess.run(("git", "ls-tree", "-r", "--name-only", "HEAD"), cwd=root,
+                                  check=True, capture_output=True, text=True).stdout.splitlines()
+            self.assertNotIn("templates/ORPHAN.md", tree)
+            self.assertIn("README.md", tree)
+
     def test_staging_cleans_python_cache_but_rejects_unknown_files(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

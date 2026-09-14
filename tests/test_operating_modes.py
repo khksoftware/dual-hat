@@ -723,4 +723,166 @@ class OperatingModeTests(CanonicalHomeAssertions, unittest.TestCase):
         self.assertIn("Capability chronology must not remain mixed into current product output",phase)
         self.assertIn("active/output locations limited to current operational artifacts",prompt)
 
+
+class SealedOrderSelfContradiction(unittest.TestCase):
+    """A seal may not authorize a path it also forbids, in the same document.
+
+    **The defect, measured before this class existed.** `authorized_paths` and
+    `explicit_exclusions` were both loaded and both structurally validated, and neither was
+    ever compared against the other. An order was constructed whose exclusions read "Do not
+    touch dual-hat/ or engineering/dual-hat-profile/" while its authorized paths authorized
+    `dual-hat/`, and `validate_sealed` returned `()` -- *a seal can authorize what it
+    forbids, in the same document, and validate clean.*
+
+    **Why the comparison is against a STRUCTURED field, established by execution.** A first
+    version extracted path-shaped tokens from the prose exclusions and compared those. Run
+    against every committed sealed order in the consuming estate, it refused 5 of 45 -- because
+    an exclusion sentence names paths for reasons other than forbidding them, including
+    describing the permitted alternative. A prose scan cannot tell a path named as forbidden
+    from a path named as the remedy. `excluded_paths` is the machine-readable half; orders
+    carrying none are unaffected.
+    """
+
+    def _order(self, **overrides):
+        order = {"authorized_paths": ["dual-hat/"], "explicit_exclusions": []}
+        order.update(overrides)
+        return order
+
+    def test_the_same_path_in_both_lists_is_reported(self):
+        self.assertEqual(
+            ("dual-hat/",),
+            contradicted_authorized_paths(
+                self._order(excluded_paths=["dual-hat/"])))
+
+    def test_a_trailing_slash_does_not_hide_the_contradiction(self):
+        self.assertEqual(
+            ("dual-hat",),
+            contradicted_authorized_paths(
+                self._order(authorized_paths=["dual-hat"], excluded_paths=["dual-hat/"])))
+
+    def test_a_carve_out_stays_legal(self):
+        """Excluding a region and authorizing one file inside it is how a narrow
+        authorization is written, not a contradiction."""
+        self.assertEqual((), contradicted_authorized_paths(
+            self._order(authorized_paths=["dual-hat/tooling/x.py"], excluded_paths=["dual-hat/"])))
+
+    def test_narrowing_stays_legal(self):
+        """The mirror shape: authorize a region, exclude a subtree of it."""
+        self.assertEqual((), contradicted_authorized_paths(
+            self._order(authorized_paths=["engineering/"], excluded_paths=["engineering/secrets/"])))
+
+    def test_prose_only_exclusions_are_not_compared_and_do_not_refuse(self):
+        """The stated limit. An order whose exclusions are prose carries nothing to compare,
+        and this check refuses it on no grounds rather than guessing."""
+        self.assertEqual((), contradicted_authorized_paths(
+            self._order(explicit_exclusions=["Do not touch dual-hat/ or engineering/dual-hat-profile/"])))
+
+    def test_validate_sealed_reports_the_contradiction(self):
+        """The check is wired into the validator, not merely available beside it."""
+        order = {"schema": "dual-hat-sealed-work-order/1.1", "explicit_exclusions": [],
+                 "authorized_paths": ["dual-hat/"], "excluded_paths": ["dual-hat/"]}
+        failures = validate_sealed(order)
+        self.assertTrue(any("forbidden by this order's own exclusions" in row for row in failures),
+                        failures)
+
+    def test_no_committed_order_in_this_repository_is_refused(self):
+        """The arming evidence. A check that refuses existing, accepted seals is not a check,
+        it is a migration nobody agreed to."""
+        refused = []
+        for path in sorted(ROOT.glob("examples/*work-item*.json")):
+            order = json.loads(path.read_text(encoding="utf-8"))
+            if contradicted_authorized_paths(order):
+                refused.append(path.name)
+        self.assertEqual([], refused, refused)
+
+
+class UndeclaredSchemaFieldsTests(unittest.TestCase):
+    """`work-item.schema.json` declares `additionalProperties: false` against a fixed
+    `properties` set. Before this class existed, nothing applied that declaration to a real
+    sealed order: the sole consumer compared one example file's keys against the schema,
+    one-directionally, and `validate_sealed` never consulted the schema at all. Measured
+    against every committed `SEALED_WORK_ORDER.json` in one adopting repository: 45 files,
+    17 carrying a field the schema does not declare across 8 distinct
+    names -- a population that grew after the schema was adopted, because nothing could
+    refuse an addition. None of those 17 is read or touched here: they are byte-pinned,
+    `work_order_hash`-sealed artifacts, and repairing them would mean editing a seal, which
+    is forbidden absolutely. This class proves the invariant against synthetic fixtures and
+    this repository's own shipped examples, and closes the channel going forward.
+    """
+
+    def _schema_properties(self):
+        schema = json.loads((ROOT / "schemas/work-item.schema.json").read_text(encoding="utf-8"))
+        return frozenset(schema["properties"])
+
+    def test_a_field_the_schema_does_not_declare_is_reported(self):
+        properties = self._schema_properties()
+        self.assertEqual(
+            ("risk_tier",),
+            undeclared_schema_fields({"schema": "dual-hat-sealed-work-order/1.1", "risk_tier": "high"},
+                                     schema_properties=properties))
+
+    def test_every_declared_property_is_accepted(self):
+        """The positive side of the invariant: every property the schema actually declares,
+        not only the subset this suite's own fixtures happen to use, is accepted."""
+        properties = self._schema_properties()
+        self.assertEqual((), undeclared_schema_fields({name: None for name in properties}, schema_properties=properties))
+
+    def test_a_measured_historical_violation_shape_would_be_refused(self):
+        """Reproduces the real defect class (a sealed governance order that carried an
+        undeclared `risk_tier`) as an in-memory fixture --
+        never by reading the live seal itself, which this class's docstring already excludes."""
+        properties = self._schema_properties()
+        reproduced = order("gov"); reproduced["risk_tier"] = "high-risk"
+        self.assertEqual(("risk_tier",), undeclared_schema_fields(reproduced, schema_properties=properties))
+
+    def test_validate_sealed_reports_an_undeclared_field(self):
+        """The check is wired into the validator, not merely available beside it."""
+        bad = order("gov"); bad["risk_tier"] = "high"; bad = seal(bad)
+        failures = validate_sealed(bad)
+        self.assertTrue(any("carries fields the schema does not declare" in row and "risk_tier" in row for row in failures), failures)
+
+    def test_a_conforming_order_is_not_refused_on_this_ground(self):
+        clean = order("gov")
+        failures = validate_sealed(clean)
+        self.assertFalse(any("does not declare" in row for row in failures), failures)
+
+    def test_the_newly_declared_excluded_paths_field_is_not_flagged(self):
+        """Regression: `excluded_paths` (landed in the same change as the
+        self-contradiction check that consumes it) is a legal optional field. Landing this
+        check without adding it to the schema would refuse that sibling feature the moment an
+        order actually used it."""
+        properties = self._schema_properties()
+        self.assertIn("excluded_paths", properties)
+        carrying = order("gov"); carrying["excluded_paths"] = ["dual-hat/"]
+        self.assertEqual((), undeclared_schema_fields(carrying, schema_properties=properties))
+        carrying = seal({k: v for k, v in carrying.items() if k != "work_order_hash"})
+        self.assertFalse(any("does not declare" in row for row in validate_sealed(carrying)))
+
+    def test_no_shipped_example_carries_an_undeclared_field(self):
+        """The arming evidence, scoped to this repository's own fixture examples -- never to
+        a live committed seal, 17 of which this class's docstring already names as historical
+        and out of bounds for this check to be run against."""
+        properties = self._schema_properties()
+        refused = []
+        for path in sorted(ROOT.glob("examples/*work-item*.json")):
+            candidate = json.loads(path.read_text(encoding="utf-8"))
+            if undeclared_schema_fields(candidate, schema_properties=properties):
+                refused.append(path.name)
+        self.assertEqual([], refused, refused)
+
+    def test_an_unreadable_schema_fails_closed_in_validate_sealed(self):
+        """If the schema itself cannot be read, validate_sealed says so as a distinct failure
+        rather than silently skipping the check -- fail closed, never fail open. And the pure
+        comparison function, given nothing to compare against, answers honestly with an empty
+        verdict rather than guessing -- it is validate_sealed's job to treat that as a failure,
+        proven above, not this function's to assume."""
+        good = seal(order("gov"))
+        original = work_item_governance._WORK_ORDER_SCHEMA_PATH
+        work_item_governance._WORK_ORDER_SCHEMA_PATH = ROOT / "schemas" / "does-not-exist.json"
+        try:
+            failures = validate_sealed(good)
+            self.assertEqual((), undeclared_schema_fields({"risk_tier": "high"}, schema_properties=None))
+        finally:
+            work_item_governance._WORK_ORDER_SCHEMA_PATH = original
+        self.assertIn("work-item schema is unreadable", failures)
 if __name__ == "__main__": unittest.main()

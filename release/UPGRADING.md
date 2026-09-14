@@ -593,3 +593,173 @@ Stated so none of it is inferred from the fact that a major version shipped.
 - It makes **no** stability, security, portability, durability or comparative
   claim of any kind. A new major version is a statement about compatibility and
   nothing else.
+
+## 4.x -> 5.0.0
+
+Three groups break compatibility, and each would force a major on its own. The
+rest of the release is a staging repair (group 5) and additive governance text, listed in group 6 so an
+adopter can see what it is now expected to read.
+
+**This is first contact, not a tightening, for group 1.** No 4.x release
+consulted the work-item schema from `validate_sealed()` at all. An adopter who
+reasons about it as a stricter version of a check they have observed will look
+for the wrong orders.
+
+### 1. `validate_sealed()` refuses a sealed order carrying a field its schema does not declare
+
+`schemas/work-item.schema.json` has declared `additionalProperties: false`
+against a fixed property set for several releases. Nothing applied that
+declaration to a real order: the only consumer compared one example file's keys
+against the schema, in one direction. `validate_sealed()` now reads the
+schema's declared top-level properties **at call time** and fails a
+`dual-hat-sealed-work-order/1.1` order with:
+
+- `work order carries fields the schema does not declare: <names>` for any
+  top-level field outside that set;
+- `work-item schema is unreadable` when the schema file cannot be read or
+  declares no top-level properties. **The schema is resolved relative to the tooling
+  directory, as `../schemas/work-item.schema.json`.** A vendoring that ships
+  `tooling/` without `schemas/` beside it now refuses every `1.1` order.
+
+Legacy `dual-hat-sealed-work-order/1.0` orders take their own branch and are
+validated exactly as at 4.6.0.
+
+**What to do before upgrading.** Sweep your committed sealed orders with the
+exported `undeclared_schema_fields()`. **Do not edit a sealed order to make it
+conform**: every sealed order is pinned by its own `work_order_hash`, and editing
+it invalidates the seal. The framework neither rewrites nor exempts a historical
+population. If you accept historical orders as they are, record that exception
+in your own governance, order by order with each order's undeclared fields, and
+treat a sweep count that stops matching that record as a finding. A seal written
+after the upgrade gets no exception: it declares only schema fields.
+
+`excluded_paths` is added to the schema's declared properties in this release,
+so the one new field an order may now carry (group 2) is not refused by this
+check.
+
+### 2. A new optional field, and a refusal that applies only to orders using it
+
+Sealed orders may carry `excluded_paths`, a list of non-empty strings.
+`validate_sealed()` refuses an order whose `authorized_paths` include one of its
+own `excluded_paths`, with `authorized paths are forbidden by this order's own
+exclusions: <paths>`. The comparison is exact identity after trimming
+surrounding whitespace and forward slashes. Containment in either direction is not a contradiction,
+because narrowing and carve-outs are written that way. An order with no
+`excluded_paths` is unaffected. The comparison is also exported as
+`contradicted_authorized_paths()`.
+
+**It does not read the prose `explicit_exclusions`.** An order whose exclusions
+exist only as prose is not compared at all.
+
+### 3. `release_package.build()` replaced a keyword parameter
+
+`build()`'s `failure_after_publish: int | None` is **removed**. Its replacement
+is `fail_after_commit: bool = False`. A caller passing the old keyword now gets
+a `TypeError`. The old parameter selected a failure index inside a file-by-file
+replace loop, and that loop no longer exists: every write to the output
+directory is now one journalled transaction through
+`tooling/cross_family_transaction.py`, with a single rename as its commit point.
+The one distinction still worth injecting a failure at is before or after that
+commit.
+
+Two observable consequences for a caller:
+
+- An interrupted build can leave a `.release-transaction/` journal directory
+  under the output root. **It is not debris.** The next `build()` or
+  `validate_release_set()` finishes a committed transaction forward, or discards
+  an uncommitted one, before doing anything else, and removes the directory once
+  empty. Do not delete it by hand while a transaction is committed.
+- **`validate_release_set()` may now write**, because recovering a committed
+  journal is the first thing it does. A caller that treated it as strictly
+  read-only against an output directory a crashed build left behind should
+  expect that directory to be completed.
+
+The guarantee is bounded to process death. The module states that it is not a
+power-loss or filesystem-crash guarantee.
+
+### 4. A shipped template was removed
+
+`templates/DOCUMENT_METADATA.md` is no longer distributed. Nothing in the
+framework referenced it. If you copied it into your own templates, your copy is
+unaffected, and the framework no longer maintains the original.
+
+### 5. Staging a publication that removes a file now succeeds
+
+`tooling/staged_publication.py` refused any publication that removed a file the
+previous publication owned, first as `unknown` worktree content and then as
+`unknown_staged`, because both checks read a deletion as present content. A
+tracked path deleted from the worktree is no longer present, and a staged
+deletion of a path the committed publication owned is a removal. **Refusal
+messages are unchanged**, and deleting a path no prior publication owned is
+still refused. One consequence is intended: a manifest-owned file deleted from
+disk now reads as `missing` rather than as present.
+
+### 6. Governance text you are now expected to read
+
+None of this changes an executable predicate beyond groups 1 to 3 and 5. Each item
+adds or widens an obligation and removes none:
+
+- `process/PUBLICATION_AND_CLOSURE.md`: a push publishes its whole ancestry, and
+  every commit between the remote tip and the pushed commit must be the pushing
+  session's own.
+- `planning/PLANNING_MODEL.md`: reading an item is a disposition point. The two
+  adversarial reduction passes now bind every plan, not only test plans and cost
+  projections. That widens the rule's subject, and a plan that conformed before
+  still conforms.
+- `planning/TECHNICAL_DEBT.md`: debt is owed, and carry-forward is an explicit
+  per-item act. Its copy of the reading rule is now a citation to the planning
+  model, so there is one statement of it.
+- `governance/CONFORMANCE_POLICY.md`: closure states the reachability of what it
+  introduced, as a new dimension.
+- `framework/DUAL_HAT_FRAMEWORK.md`, under active-task continuity: the three
+  properties a response-boundary check needs to remain a control. Principle 12
+  gains a two-line cross-reference and keeps its classification.
+- `sessions/SESSION_AND_HANDOVER_PROTOCOL.md`: per-entry prose admission, and
+  who holds an item.
+- `governance/REPOSITORY_GOVERNANCE.md`: a derivation whose input does not exist
+  fails the write.
+- `schemas/product-profile.schema.json`: the four `roots` patterns now compile.
+  A validator that raised on those properties now validates them, so a profile
+  whose roots break the stated constraint now fails validation instead of
+  erroring.
+
+### 7. Your platform profile's declared core version
+
+As at every release, and for the reason recorded in the 2.0.0 section's group
+4: profile conformance compares `dual_hat_core_version` by exact string
+equality on the full version triple, so set your profile's
+`dual_hat_core_version` to `5.0.0`. `release/VERSION.json`'s `maturity`
+becomes `stable_5_x`, derived from the major.
+
+### Why 5.0.0, derived rather than chosen
+
+`release/VERSION.json`'s stability string is the authority: *mandatory core
+contracts are stable; breaking changes require a new major version and governed
+migration.* The 4.0.0 section above stated, as a compatibility fact, that
+`validate_sealed` refused exactly what it refused at the previous major. That
+statement cannot be repeated for this release, because of group 1. Three independent breaks each force a
+major:
+
+1. **An executable gate refuses input it accepted at 4.6.0** (group 1). The
+   input was already outside the published schema. That makes the change a
+   repair of the framework's own contract, not a narrowing of it, and it does
+   not make it compatible for an adopter whose orders carry such fields. A
+   patch or minor classification on that ground is the error this document's
+   1.17.7 correction records.
+2. **An exported function's keyword parameter was removed** (group 3).
+3. **A distributed file was removed** (group 4).
+
+### What this release does NOT do
+
+- It does **not** rewrite, re-seal or exempt any historical sealed order, and
+  gives no switch to disable group 1's refusal.
+- It does **not** compare prose exclusions with authorized paths.
+- It does **not** change any principle's number or enforcement
+  classification.
+- It does **not** change the publication, export, packaging or provenance
+  contracts, apart from group 3's journal on the package's own writes.
+- It does **not** claim durability beyond process death for the release
+  journal.
+- It makes **no** stability, security, portability, durability or comparative
+  claim of any kind. A new major version is a statement about compatibility and
+  nothing else.
