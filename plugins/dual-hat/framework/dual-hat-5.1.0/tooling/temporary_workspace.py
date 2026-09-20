@@ -117,8 +117,30 @@ class OwnedTemporaryRun(AbstractContextManager["OwnedTemporaryRun"]):
             shutil.rmtree(self.path)
         if self.path.exists():
             raise TemporaryWorkspaceError("temporary run cleanup postcondition failed")
-        if self.base.exists() and not any(self.base.iterdir()):
+        self._remove_base_if_unused()
+
+    def _remove_base_if_unused(self) -> None:
+        """Remove the shared base directory while it is empty, without ever
+        failing a completed run because a concurrent sibling got there first.
+
+        Every run under one policy shares this base, so listing it and removing
+        it race each sibling's own cleanup. Two interleavings are real and both
+        have been reproduced: the base can vanish between the listing being
+        requested and performed, and a sibling can create its own run directory
+        between the listing and the removal, which fails as not empty.
+
+        Both outcomes mean the same thing -- the base is not this run's to
+        remove right now -- and neither says anything about this run's OWN
+        directory, whose removal the postcondition above has already proved.
+        So every failure here is tolerated, and the guarantee this class makes
+        is unchanged.
+        """
+        try:
+            if any(self.base.iterdir()):
+                return
             self.base.rmdir()
+        except OSError:
+            return
 
     def __exit__(self, exc_type, exc_value, traceback) -> bool:
         self.cleanup()

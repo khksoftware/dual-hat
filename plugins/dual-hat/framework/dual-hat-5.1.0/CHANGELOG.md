@@ -2,6 +2,81 @@
 
 # Changelog
 
+## 5.1.0 - 2026-09-20
+
+## 5.1.0
+
+Twelve pending propagations published together, per the standing rule that a release carries every
+pending item and never a subset. A minor increment because three of the twelve change what an adopter
+observes: one governance codification, one new governance rule with its enforceable half, and a
+validation tightening that can newly fail a build which previously passed.
+
+**Release integrity and the publication endpoint.** A non-production release build — the framework's own
+self-test included — now refuses to package a working tree that disagrees with the commit its own manifest
+stamps, unless a caller says otherwise by an explicit named parameter with a disclosed reason. The two
+remaining unvalidated reads of the release-version authority are validated rather than trusted, and
+`release_maturity()` refuses a malformed version through the module's own exception convention instead of
+raising something a caller has no reason to expect. A bare push can no longer be routed away from the
+approved remote by `remote.pushDefault` or `branch.<branch>.pushRemote`: both are refused when they name
+anything else, and the runbook now names the exact push command rather than leaving a bare push implied.
+The remote-identity comparison's contract — what is kept, what is refused, what is normalised, in a fixed
+order — is stated once in its own docstring, a non-default port is kept in the identity, an `http` or `git`
+push endpoint is refused rather than collapsed into the approved scheme, and a normalisation-order
+asymmetry that made two spellings of one repository look like two unapproved identities is corrected.
+
+**Concurrency.** A finished temporary run no longer fails because a concurrent sibling removed or
+repopulated the shared base directory first; the removal is attempted and every failure tolerated, since
+neither failure says anything about the run's own directory, whose removal the postcondition already
+proves. The framework completeness walk's probe file carries a per-run random suffix, so two runs
+validating one working tree can no longer collide on a fixed path and report the collision as the defect
+the walk exists to catch.
+
+**What a green suite means.** Three misfiled or under-coupled assertions are repaired: an obligation
+restricting the narrowing of external-source discovery, which lived inside a differently-named test, is
+moved into its own and now checks the canonical text; five host-dependent reparse guards gain a shared
+assertion that every probed flavour actually completed, where before one of two completing reported an
+unchanged green; and a containment guard that asserted only a non-empty error list now asserts the
+specific message it exists to produce. The single-canonical-home convention records a limitation beside
+itself: a mutation or assurance measurement scores at test granularity, which is not the claim that every
+assertion inside a test does work.
+
+**Core-version conformance.** The standing anti-reintroduction check goes from three subtests to seven,
+closing eight independently constructed defeats — expression-assembled values, location, shipped text
+artifacts beyond JSON, an inline dictionary inside a test module, and version-token-boundary matching,
+which also removes a false positive the previous form produced. An AST scan that had sat unadopted in
+evidence becomes two standing tests: no import-scope binding of the resolved version, and the resolver
+surviving its release evidence being deleted outright. A sibling test proves the quality-review version
+comparison is real rather than drawing both of its operands from one profile. The README framework-areas
+completeness check stops reporting a standalone-owned top-level directory as an unlisted area, deferring
+to the ownership module's own function instead of restating its prefixes.
+
+**Sealed-order conformance.** Two purely additive predicates in `work_item_governance.py` — a closed
+permission vocabulary, and a definition-of-done check against a work-order type's registered criteria —
+each taking its registry as a required keyword argument with **no built-in default**, so the framework
+carries the mechanism and a host repository carries its own data. One new optional `definition_of_done`
+property on the work-item schema. No existing function changed and no `required` array added.
+
+**Governance.** Principle 2 extends its survey discipline to work-item allocation: search the backlogs,
+active and historical, before allocating an identifier. Principle 10 applies its one-act pairing to the
+allocation moment as well as the closure moment — a systemic defect is discharged when its naming,
+identifier, index entry and detail record land together, never when a description is trusted to be
+tracked later — and discloses in its own residual that the existing mechanism checks closure only.
+Principle 11 states the release half of its hold/release pair: content held outside durable source by a
+named constraint lands as the first act once that constraint lifts. The session and handover protocol
+gains one product-neutral paragraph: a handover, a bootstrap prompt or a record written before a gap is a
+set of **claims**, not an authority, and each operative claim is reconciled against live state before it
+is acted on. Work-item identity is namespace, identifier, title or purpose, provenance and chronology
+compared together — an identifier hit alone never counts as reconciled — and the planning-reconciliation
+tooling gains the function that returns identity-match, identifier-collision or absent, with fixtures for
+a reused identifier and for a claim whose live entry changed state since the handover.
+
+**Documentation.** The staging gate's documented contract now describes the git-based enumeration it
+actually performs (tracked paths, plus untracked-and-not-ignored paths) rather than a stale filesystem
+walk, states plainly that content outside that view is outside the gate's reach, and names the recovery
+step for a staging run that fails partway through — inspect the staged content before clearing it, and
+unstage with `git reset`, never `git reset --hard`. The release policy's own text is updated where
+propagation provenance is described.
+
 ## 5.0.0 - 2026-09-14
 
 Fifteen accumulated changes to canonical governance, planning, process, sessions, schemas and tooling, published together as one major release. The level is derived from three independent compatibility breaks, each named with its migration in `release/UPGRADING.md`. No principle is added, removed, renumbered or reclassified.

@@ -23,7 +23,9 @@ DUAL_HAT_CAPABILITY_PROOFS = {"governed_publication", "binary_secret_gate", "com
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
 sys.path.insert(0, str(ROOT / "tests"))
-from test_framework import available_reparse_flavours, make_reparse, remove_reparse  # noqa: E402
+from test_framework import (  # noqa: E402
+    assert_probed_flavours_all_ran, available_reparse_flavours, make_reparse, remove_reparse,
+)
 import release_package  # noqa: E402
 from content_security import ContentSecurityError, inspect_content_set, sha256  # noqa: E402
 from release_artifacts import is_release_product  # noqa: E402
@@ -242,6 +244,7 @@ class ReleasePackageTests(unittest.TestCase):
             flavours = available_reparse_flavours(Path(probe))
         if not flavours:
             self.skipTest("host permits neither a symlink nor a junction fixture")
+        ran = []
         for flavour in flavours:
             with self.subTest(reparse=flavour), TemporaryDirectory() as temporary, TemporaryDirectory() as outside:
                 root = Path(temporary); (root / "export").mkdir()
@@ -260,10 +263,17 @@ class ReleasePackageTests(unittest.TestCase):
                 try:
                     (root / "export/EXPORT_SOURCES.json").write_text(json.dumps({"included": [declared]}), encoding="utf-8")
                     with patch.object(release_package, "ROOT", root):
+                        # `root` is a bare TemporaryDirectory, never a
+                        # git repository -- this fixture tests the containment
+                        # guard against a reparse-point escape, a property
+                        # orthogonal to commit-binding, which the new
+                        # git-cleanliness check cannot evaluate here at all.
                         with self.assertRaisesRegex(RuntimeError, "containment"):
-                            release_package.source_files()
+                            release_package.source_files(require_clean=False)
                 finally:
                     remove_reparse(link)
+                ran.append(flavour)
+        assert_probed_flavours_all_ran(self, flavours, ran)
 
     def test_private_key_and_embedded_token_are_rejected(self) -> None:
         for value in (
@@ -371,7 +381,11 @@ class ReleasePackageTests(unittest.TestCase):
             portable, plugin = self._write_composite_publication(root)
             plugin_path = root / "plugins/dual-hat/plugin.json"
             with patch.object(release_package, "ROOT", root):
-                self.assertEqual({"README.md": portable}, release_package.source_files())
+                # `root` is a bare TemporaryDirectory, never a git
+                # repository -- this fixture tests the manifest-owned
+                # classification match itself, a property orthogonal to
+                # commit-binding, which `require_clean` cannot evaluate here.
+                self.assertEqual({"README.md": portable}, release_package.source_files(require_clean=False))
                 self.assertEqual(plugin, plugin_path.read_bytes())
                 (root / "manual.txt").write_text("unknown", encoding="utf-8")
                 with self.assertRaisesRegex(RuntimeError, "unclassified=.*manual.txt"):
@@ -406,6 +420,123 @@ class ReleasePackageTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "missing=.*README.md"):
                 release_package.verify_portable_publication_commit(root, "HEAD")
             self.assertEqual(plugin, plugin_path.read_bytes())
+
+    @staticmethod
+    def _write_binding_publication(root: Path) -> None:
+        """A composite-publication sandbox that also carries a valid
+        `release/VERSION.json` as a canonical-source entry, so `build()` --
+        which `_write_composite_publication` above never needed to satisfy --
+        can resolve and validate a version. The Red below exercises `build()`
+        end to end, not just `source_files()`."""
+        readme = b"# Portable framework\n"
+        version_json = release_package.canonical_json({
+            "$comment": "SPDX-License-Identifier: Apache-2.0",
+            "maturity": "functional_pre_1_0",
+            "schema": "dual-hat-version/1.0",
+            "stability": "test fixture",
+            "version": "0.1.0",
+        })
+        records = [
+            {"path": "README.md", "sha256": sha256(readme), "bytes": len(readme),
+             "mode": "100644", "license": "Apache-2.0", "origin": "canonical_source"},
+            {"path": "release/VERSION.json", "sha256": sha256(version_json), "bytes": len(version_json),
+             "mode": "100644", "license": "Apache-2.0", "origin": "canonical_source"},
+        ]
+        manifest = {
+            "source_commit": "a" * 40,
+            "tree_sha256": sha256(release_package.canonical_json(records)),
+            "content_files": records,
+        }
+        manifest_bytes = release_package.canonical_json(manifest)
+        marker = {
+            "schema": "dual-hat-published-state/1.0",
+            "license_expression": "Apache-2.0",
+            "source_commit": "a" * 40,
+            "tree_sha256": manifest["tree_sha256"],
+            "manifest_sha256": sha256(manifest_bytes),
+            "previous_export_identity": None,
+            "canonical_branch": "main",
+        }
+        (root / ".dual-hat").mkdir(parents=True)
+        (root / "release").mkdir(parents=True)
+        (root / "plugins/dual-hat").mkdir(parents=True)
+        (root / "README.md").write_bytes(readme)
+        (root / "release/VERSION.json").write_bytes(version_json)
+        (root / ".dual-hat/export-manifest.json").write_bytes(manifest_bytes)
+        (root / ".dual-hat/published-state.json").write_bytes(release_package.canonical_json(marker))
+        (root / "plugins/dual-hat/plugin.json").write_bytes(b'{"name":"standalone-deployment"}\n')
+
+    def test_dirty_collected_path_makes_a_nonproduction_build_refuse(self) -> None:
+        """`source_files()` -- the collection path every
+        non-production build (the framework's own `self_test()` included)
+        reads from -- is now bound to the commit `build()` stamps: a
+        collected path that disagrees with `HEAD` fails collection closed,
+        rather than silently packaging the uncommitted bytes under a
+        manifest that claims they came from `HEAD`.
+        """
+        with TemporaryDirectory() as sandbox, TemporaryDirectory() as outputs:
+            root = Path(sandbox)
+            self._write_binding_publication(root)
+            self._git(root, "init", "-b", "main")
+            self._git(root, "config", "user.name", "Dual Hat Release Test")
+            self._git(root, "config", "user.email", "dual-hat-release@example.invalid")
+            self._git(root, "add", ".")
+            self._git(root, "commit", "-m", "Binding publication sandbox")
+            head = self._git(root, "rev-parse", "HEAD")
+            # Outputs live in a SEPARATE temporary directory, never under
+            # `root`/`ROOT` -- a build's own output directory is otherwise
+            # read back as unclassified content by the very next collection.
+            def _canonical_source_commit(output: Path) -> str:
+                manifest_path = output / f"dual-hat-{release_package.version()}.release.json"
+                return json.loads(manifest_path.read_text(encoding="utf-8"))["canonical_source_commit"]
+
+            def _propagate_uncommitted_readme_edit(new_bytes: bytes) -> None:
+                """Mirror what a release orchestrator's propagation step
+                actually does: rewrite README.md AND its export-manifest
+                declaration together, consistently, then leave both
+                uncommitted. Isolates the property under test -- staleness
+                against `HEAD` -- from the pre-existing, unrelated
+                declared-vs-actual content check a few lines below the one
+                this test targets."""
+                manifest_path = root / ".dual-hat/export-manifest.json"
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                for row in manifest["content_files"]:
+                    if row["path"] == "README.md":
+                        row["sha256"] = sha256(new_bytes)
+                        row["bytes"] = len(new_bytes)
+                manifest["tree_sha256"] = sha256(release_package.canonical_json(manifest["content_files"]))
+                manifest_path.write_bytes(release_package.canonical_json(manifest))
+                (root / "README.md").write_bytes(new_bytes)
+
+            with patch.object(release_package, "ROOT", root):
+                clean_output = Path(outputs) / "out-clean"
+                release_package.build(clean_output, production=False)
+                self.assertEqual(head, _canonical_source_commit(clean_output))
+
+                # Dirty exactly one collected path, without committing --
+                # consistently with its own manifest declaration, exactly as
+                # the real mid-propagation state is (manifest and content
+                # agree; only the git commit lags behind).
+                _propagate_uncommitted_readme_edit(b"uncommitted edit\n")
+                dirty_output = Path(outputs) / "out-dirty"
+                with self.assertRaisesRegex(RuntimeError, "dirty"):
+                    release_package.build(dirty_output, production=False)
+
+                # The one enumerated, disclosed caller with a real reason to
+                # build from a dirty tree still can, by explicit request.
+                allowed_output = Path(outputs) / "out-allowed"
+                release_package.build(
+                    allowed_output, production=False, allow_uncommitted_source=True,
+                )
+                self.assertEqual(head, _canonical_source_commit(allowed_output))
+
+                # Refused outright for a production build: dirty tolerance
+                # must never reach the path that stamps a real publication.
+                with self.assertRaisesRegex(RuntimeError, "only valid for a non-production build"):
+                    release_package.build(
+                        Path(outputs) / "out-prod", production=True,
+                        allow_uncommitted_source=True, expected_remote_identity="x",
+                    )
 
     def test_canonical_source_tree_cannot_issue_a_production_release(self) -> None:
         if not (ROOT / "export/EXPORT_SOURCES.json").is_file(): self.skipTest("test applies to canonical source tree")
@@ -479,7 +610,14 @@ class ReleasePackageTests(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             output=Path(temporary)/"release"; release_package.build(output,production=False)
             manifest_path=output/f"dual-hat-{release_package.version()}.release.json"; manifest=json.loads(manifest_path.read_text(encoding="utf-8"))
-            record={"schema":"dual-hat-remote-publication-provenance/1.0","canonical_source_commit":manifest["canonical_source_commit"],"external_publication_commit":manifest["external_publication_commit"]}
+            # The schema string is read from the module's own constant rather
+            # than typed as a literal here, so this fixture cannot go stale
+            # against a future schema bump the way a hand-typed "/1.0" once
+            # did -- inert either way, since `release_provenance_record` is
+            # patched to return this exact record and the record is
+            # therefore compared against itself, but at least the ONE fact
+            # this fixture asserts (the identity is propagated) cannot rot.
+            record={"schema":release_package.PUBLICATION_PROVENANCE_SCHEMA,"canonical_source_commit":manifest["canonical_source_commit"],"external_publication_commit":manifest["external_publication_commit"]}
             manifest["release_mode"]="production_standalone"; manifest["publication_provenance"]=record; manifest_path.write_bytes(release_package.canonical_json(manifest))
             with patch.object(release_package,"release_provenance_record",return_value=record) as verified:
                 release_package.validate_release_set(output,require_publication_provenance=True,expected_remote_identity="example.invalid/approved/dual-hat")
@@ -487,6 +625,172 @@ class ReleasePackageTests(unittest.TestCase):
                 "example.invalid/approved/dual-hat",
                 publication_commit=manifest["external_publication_commit"],
             )
+
+    @unittest.skipUnless(
+        (ROOT / "export/EXPORT_SOURCES.json").is_file() or (ROOT / ".dual-hat/export-manifest.json").is_file(),
+        "release construction requires canonical or publication controls",
+    )
+    def test_validate_release_set_drives_the_unpatched_provenance_record_against_a_real_remote(self) -> None:
+        """Every other production-path test above reaches the endpoint
+        verification only through a patched `_git` or a patched
+        `release_provenance_record` itself. Nothing exercises
+        `validate_release_set(require_publication_provenance=True)` through
+        the UNPATCHED function end to end, against a real remote -- so a
+        real defect in the seam between the two could exist and nothing here
+        would notice. This closes that gap with the same real-git, no-network
+        sandbox `_publication_sandbox` already uses for the identity checks
+        above, extended one level up to the record a release manifest
+        actually ships, and to the exact vector the identity contract above
+        exists to refuse: a second, unapproved push endpoint.
+        """
+        with TemporaryDirectory() as sandbox, TemporaryDirectory() as outputs:
+            container = Path(sandbox)
+            work = container / "work"
+            work.mkdir()
+            self._write_binding_publication(work)
+            approved = container / "approved.git"
+            self._git(container, "init", "--bare", "-b", "main", str(approved))
+            self._git(work, "init", "-b", "main")
+            self._git(work, "config", "user.name", "Dual Hat Release Test")
+            self._git(work, "config", "user.email", "dual-hat-release@example.invalid")
+            self._git(work, "add", ".")
+            self._git(work, "commit", "-m", "Binding publication sandbox")
+            self._git(work, "remote", "add", "origin", str(approved))
+            self._git(work, "push", "-u", "origin", "main")
+            output = Path(outputs) / "release"
+            with patch.object(release_package, "ROOT", work):
+                built = release_package.build(output, production=True, expected_remote_identity=str(approved))
+                self.assertEqual("production_standalone", built["release_mode"])
+                # Passes on the approved identity: a second, direct call
+                # through the public validation entry point, unpatched,
+                # exactly as the design for this seam asks for.
+                release_package.validate_release_set(
+                    output, require_publication_provenance=True, expected_remote_identity=str(approved),
+                )
+                # Refused when a second `pushurl` names another bare
+                # repository -- the exact vector the identity contract
+                # above exists to close, now proven at the level a real
+                # release manifest is actually validated against.
+                unapproved = container / "unapproved.git"
+                self._git(container, "init", "--bare", "-b", "main", str(unapproved))
+                self._git(work, "remote", "set-url", "--add", "--push", "origin", str(unapproved))
+                with self.assertRaisesRegex(RuntimeError, "endpoint"):
+                    release_package.validate_release_set(
+                        output, require_publication_provenance=True, expected_remote_identity=str(approved),
+                    )
+
+    def test_remote_identity_keeps_a_non_default_port_and_collapses_the_scheme_default(self) -> None:
+        approved = release_package._remote_identity("https://example.invalid/org/dual-hat.git")
+        self.assertEqual(
+            approved, release_package._remote_identity("https://example.invalid:443/org/dual-hat.git"),
+            "the scheme's own default port must collapse to the same identity as omitting it",
+        )
+        self.assertEqual(
+            approved, release_package._remote_identity("ssh://git@example.invalid:22/org/dual-hat.git"),
+            "ssh's own default port must collapse to the same identity as omitting it",
+        )
+        self.assertNotEqual(
+            approved, release_package._remote_identity("https://example.invalid:8443/org/dual-hat.git"),
+            "a non-default port names a different repository identity",
+        )
+
+    def test_remote_identity_refuses_a_downgraded_push_transport_never_collapsing_it(self) -> None:
+        approved = release_package._remote_identity("https://example.invalid/org/dual-hat.git")
+        for scheme in ("http", "git"):
+            with self.subTest(scheme=scheme):
+                with self.assertRaisesRegex(RuntimeError, "refused transport"):
+                    release_package._remote_identity(f"{scheme}://example.invalid/org/dual-hat.git", push=True)
+        # A transport downgrade is refused only where `push` says this
+        # value is being compared AS a push endpoint. Scheme was never part
+        # of the identity string at all -- only host and a non-default port
+        # are -- so the identical spelling remains an ordinary fetch
+        # endpoint identity, equal to the approved one, on the non-push call
+        # path; this function does not decide fetch endpoint policy, proven
+        # here by executing that path rather than asserted from its
+        # signature.
+        self.assertEqual(approved, release_package._remote_identity("http://example.invalid/org/dual-hat.git"))
+
+    def test_remote_identity_still_normalises_userinfo_scp_form_suffix_case_and_slashes(self) -> None:
+        # Positive control for the deliberate collapses this repair leaves
+        # alone: a refusal-shaped fix must not also refuse -- or stop
+        # matching -- a spelling that was always meant to compare equal.
+        approved = release_package._remote_identity("https://example.invalid/org/dual-hat.git")
+        for spelling in (
+            "https://token@example.invalid/org/dual-hat.git",
+            "https://user:password@example.invalid/org/dual-hat.git",
+            "ssh://git@example.invalid/org/dual-hat.git",
+            "git@example.invalid:org/dual-hat.git",
+            "https://example.invalid/org/dual-hat",
+            "HTTPS://EXAMPLE.INVALID/ORG/DUAL-HAT.GIT",
+            "https://example.invalid/org/dual-hat.git?ref=main",
+            "https://example.invalid/org/dual-hat.git#fragment",
+            "https://example.invalid//org/dual-hat.git",
+        ):
+            with self.subTest(spelling=spelling):
+                self.assertEqual(approved, release_package._remote_identity(spelling))
+
+    def test_remote_identity_normalisation_order_now_matches_a_trailing_slash_and_an_uppercase_spelling(self) -> None:
+        # The two false alarms a normalisation-order asymmetry used to
+        # produce for a legitimate second endpoint spelling the SAME
+        # repository: `.git` removal ran before the slash strip and before
+        # casefolding, so a trailing slash or an uppercase spelling of the
+        # identical repository read as a DIFFERENT, unapproved identity.
+        approved = release_package._remote_identity("https://example.invalid/org/dual-hat.git")
+        self.assertEqual(
+            approved, release_package._remote_identity("https://example.invalid/org/dual-hat.git/"),
+            "a trailing slash on an otherwise-identical spelling must match",
+        )
+        self.assertEqual(
+            approved, release_package._remote_identity("https://example.invalid/org/DUAL-HAT.GIT"),
+            "an uppercase spelling of an otherwise-identical repository must match",
+        )
+
+    def test_fresh_remote_repository_state_accepts_a_second_endpoint_spelled_with_a_trailing_slash(self) -> None:
+        # A real-git regression guard for the same false alarm the pure
+        # normalisation tests above prove in isolation: a second push
+        # endpoint naming the SAME approved repository, merely spelled with
+        # a trailing slash, must not read as an unapproved endpoint.
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            work, approved = self._publication_sandbox(root, "trailingslashwork")
+            trailing = str(approved) + "/"
+            self._git(work, "remote", "set-url", "--push", "origin", str(approved))
+            self._git(work, "remote", "set-url", "--add", "--push", "origin", trailing)
+            identity = release_package._remote_identity(str(approved))
+            with patch.object(release_package, "ROOT", work):
+                state = release_package.fresh_remote_repository_state(str(approved))
+            self.assertEqual([identity, identity], state["push_endpoint_identities"])
+
+    def test_fresh_remote_repository_state_refuses_a_diverted_push_default_naming_the_key_and_value(self) -> None:
+        # The push-routing vector this endpoint check cannot otherwise see:
+        # `origin`'s own configured endpoints stay entirely clean in both
+        # cases, and a bare `git push` would still land somewhere else.
+        for key, mutate in (
+            ("remote.pushDefault", lambda work, diverted: self._git(work, "config", "remote.pushDefault", "diverted")),
+            ("branch.main.pushRemote", lambda work, diverted: self._git(work, "config", "branch.main.pushRemote", "diverted")),
+        ):
+            with self.subTest(key=key):
+                with TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    work, approved = self._publication_sandbox(root, f"divertwork-{key.replace('.', '-')}")
+                    diverted = root / "diverted.git"
+                    self._git(root, "init", "--bare", "-b", "main", str(diverted))
+                    self._git(work, "remote", "add", "diverted", str(diverted))
+                    mutate(work, diverted)
+                    with patch.object(release_package, "ROOT", work):
+                        with self.assertRaisesRegex(RuntimeError, re.escape(key) + r"='diverted'"):
+                            release_package.fresh_remote_repository_state(str(approved))
+
+    def test_fresh_remote_repository_state_still_passes_with_no_diverted_push_default(self) -> None:
+        # Positive control for the refusal immediately above: an ordinary
+        # sandbox with neither setting configured must still pass, exactly
+        # as it did before this repair.
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            work, approved = self._publication_sandbox(root, "nodivertwork")
+            with patch.object(release_package, "ROOT", work):
+                state = release_package.fresh_remote_repository_state(str(approved))
+            self.assertEqual("main", state["branch"])
 
     @unittest.skipUnless(
         (ROOT / "export/EXPORT_SOURCES.json").is_file() or (ROOT / ".dual-hat/export-manifest.json").is_file(),
@@ -500,6 +804,7 @@ class ReleasePackageTests(unittest.TestCase):
             flavours = available_reparse_flavours(Path(probe))
         if not flavours:
             self.skipTest("host permits neither a symlink nor a junction fixture")
+        ran = []
         for flavour in flavours:
             with self.subTest(reparse=flavour), TemporaryDirectory() as temporary:
                 root = Path(temporary)
@@ -512,6 +817,44 @@ class ReleasePackageTests(unittest.TestCase):
                             release_package.build(link, production=False)
                 finally:
                     remove_reparse(link)
+                ran.append(flavour)
+        assert_probed_flavours_all_ran(self, flavours, ran)
+
+    def test_version_refuses_malformed_governed_release_evidence(self) -> None:
+        """`version()` is a second entry point to the same
+        `release/VERSION.json` authority `active_core_version()` validates,
+        and previously performed none of that validation itself. Routed
+        through `work_item_governance.core_version_failures` -- the identical
+        check the conformance path already applies -- rather than a second
+        copy of it."""
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "release").mkdir(parents=True)
+            bad = {
+                "$comment": "SPDX-License-Identifier: Apache-2.0",
+                "maturity": "stable_1_x",  # contradicts the declared version below
+                "schema": "dual-hat-version/1.0",
+                "stability": "test fixture",
+                "version": "2.0.0",
+            }
+            (root / "release/VERSION.json").write_text(json.dumps(bad), encoding="utf-8")
+            with patch.object(release_package, "ROOT", root):
+                with self.assertRaisesRegex(RuntimeError, "maturity contradicts"):
+                    release_package.version()
+
+    def test_release_maturity_refuses_each_malformed_shape(self) -> None:
+        """Measured against the shipped module: every shape below
+        either parsed silently to a plausible-looking label, or raised a bare
+        `ValueError` outside this module's `RuntimeError` convention -- so a
+        caller catching `RuntimeError` (as `version()`'s new
+        `core_version_failures` cross-check above does) never caught it."""
+        for malformed in (
+            "007.1.1", "1_0.0.0", " 2.0.0", "+2.0.0", "2.0.0-rc1", "2.x", "2",
+            "2.0.0\n", "٠2.0.0", "", "abc",
+        ):
+            with self.subTest(malformed=malformed):
+                with self.assertRaises(RuntimeError):
+                    release_package.release_maturity(malformed)
 
     def test_release_maturity_agrees_with_the_major_it_derives_from(self) -> None:
         # The invariant is that the label agrees with its own major, not that

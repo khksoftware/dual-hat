@@ -16,9 +16,11 @@ DUAL_HAT_CAPABILITY_PROOFS = {"quality_rule_discovery"}
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
 sys.path.insert(0, str(ROOT / "tests"))
-from test_framework import available_reparse_flavours, make_reparse, remove_reparse  # noqa: E402
+from test_framework import (  # noqa: E402
+    assert_probed_flavours_all_ran, available_reparse_flavours, make_reparse, remove_reparse,
+)
 from quality_review import (  # noqa: E402
-    baseline_hash, compare_baselines, derive_governed_baseline_state, discover_rule_files, effective_review_plan, load_rules,
+    QualityReviewError, baseline_hash, compare_baselines, derive_governed_baseline_state, discover_rule_files, effective_review_plan, load_rules,
     governed_state_binding_hash, review_acceptance_blockers, select_review_tier, validate_baseline,
     validate_baseline_against_state, validate_baseline_from_repository, validate_rule, write_generated_json,
 )
@@ -240,6 +242,35 @@ class QualityReviewTests(unittest.TestCase):
             self.assertFalse(comparison["non_regression_passed"]); self.assertEqual("coverage",comparison["metric_regressions"][0]["metric"]); self.assertEqual([],comparison["invalid_historical_baseline_evidence"])
             (root/"dirty.txt").write_text("dirty",encoding="utf-8"); self.assertTrue(any("dirty repository" in row for row in validate_baseline_from_repository(candidate,root,"quality/state.json")))
 
+    def test_actual_state_rejects_a_profile_whose_declared_core_version_disagrees_with_the_independently_stated_release_version(self) -> None:
+        """Sibling case to the fixture above. It writes
+        `dual-hat/release/VERSION.json` from a version stated independently
+        of the profile, never derived from it -- so a real disagreement
+        between the two must surface wherever this test's own subject,
+        `derive_governed_baseline_state`, reads the version. It does:
+        `quality_review.py`'s admission gate calls `validate_profile(profile,
+        dual_hat_version)` against the version this fixture writes and raises
+        before any baseline is ever derived, proving the comparison the
+        sibling test's shared setup exercises is a real one, not a fixture
+        that agrees with itself.
+        """
+        with TemporaryDirectory() as temporary:
+            root=Path(temporary); (root/"profile").mkdir(); (root/"quality/rules").mkdir(parents=True); (root/"dual-hat/release").mkdir(parents=True); (root/"work").mkdir()
+            profile=json.loads((ROOT/"examples/platform-profile.example.json").read_text(encoding="utf-8")); (root/"profile/active.json").write_text(json.dumps(profile),encoding="utf-8")
+            disagreeing_version="9.9.9"; self.assertNotEqual(profile["dual_hat_core_version"],disagreeing_version)
+            (root/"dual-hat/release/VERSION.json").write_text(json.dumps({"version":disagreeing_version}),encoding="utf-8")
+            sources={"sources":[{"source_id":"user","path":"quality/rules","required":True}]}; (root/"quality/sources.json").write_text(json.dumps(sources),encoding="utf-8")
+            user_rule=rule("USER-1",precedence="user",action={"type":"require"}); (root/"quality/rules/user.json").write_text(json.dumps({"schema":"dual-hat-quality-rules/1.0","rules":[user_rule]}),encoding="utf-8")
+            architecture_rule=rule("ARCH-1",precedence="non_waivable",action={"type":"require"}); (root/"quality/architecture.json").write_text(json.dumps({"schema":"dual-hat-quality-rules/1.0","rules":[architecture_rule]}),encoding="utf-8")
+            inventory=discover_rule_files(root,"quality/sources.json"); (root/"quality/inventory.json").write_text(json.dumps(inventory),encoding="utf-8")
+            context={"date":"2026-07-20","repository":"test"}; plan=effective_review_plan([architecture_rule],inventory["rules"],"deep",context,inventory["rule_set_hash"],inventory["errors"]); (root/"quality/plan.json").write_text(json.dumps(plan),encoding="utf-8")
+            seal=json.loads((ROOT/"examples/integrated-work-item.example.json").read_text(encoding="utf-8")); (root/"work/seal.json").write_text(json.dumps(seal),encoding="utf-8")
+            handover={"active_work_item":{"work_item_id":seal["work_item_id"],"work_order_revision":seal["current_revision"],"work_order_hash":seal["work_order_hash"],"lifecycle_state":"engineering"}}; (root/"work/handover.json").write_text(json.dumps(handover),encoding="utf-8")
+            config={"schema":"dual-hat-baseline-state-sources/1.0","repository_identity":"test","profile":"profile/active.json","dual_hat_version":"dual-hat/release/VERSION.json","rule_sources":"quality/sources.json","rule_inventory":"quality/inventory.json","architecture_rules":"quality/architecture.json","effective_plan":"quality/plan.json","sealed_work_order":"work/seal.json","current_handover":"work/handover.json"}; (root/"quality/state.json").write_text(json.dumps(config),encoding="utf-8")
+            subprocess.run(("git","init"),cwd=root,check=True,capture_output=True); subprocess.run(("git","config","user.email","test@example.invalid"),cwd=root,check=True); subprocess.run(("git","config","user.name","Test"),cwd=root,check=True); subprocess.run(("git","config","core.autocrlf","true"),cwd=root,check=True); subprocess.run(("git","add","."),cwd=root,check=True); subprocess.run(("git","commit","-m","fixture"),cwd=root,check=True,capture_output=True)
+            with self.assertRaisesRegex(QualityReviewError,"active platform profile is invalid"):
+                derive_governed_baseline_state(root,"quality/state.json")
+
     def test_baseline_rejects_open_medium_conflicts_and_missing_nonwaivable_evidence(self) -> None:
         baseline = json.loads((ROOT / "templates/REPOSITORY_QUALITY_BASELINE.json").read_text(encoding="utf-8"))
         baseline.update({"repository_commit":"A"*40, "dual_hat_commit":"B"*40, "dual_hat_version":"1.1.0", "date":"2026-07-20", "active_platform_profile":{"profile_id":"test","profile_version":"1.1.0","profile_sha256":"C"*64},
@@ -266,6 +297,7 @@ class QualityReviewTests(unittest.TestCase):
             flavours = available_reparse_flavours(Path(probe))
         if not flavours:
             self.skipTest("host permits neither a symlink nor a junction fixture")
+        ran = []
         for flavour in flavours:
             with self.subTest(reparse=flavour), TemporaryDirectory() as temporary, TemporaryDirectory() as outside:
                 root = Path(temporary); rules = root / "rules"; rules.mkdir()
@@ -276,10 +308,21 @@ class QualityReviewTests(unittest.TestCase):
                 try:
                     config = root / "sources.json"; config.write_text(json.dumps({"sources":[{"path":"rules","required":True}]}), encoding="utf-8")
                     inventory = discover_rule_files(root, config)
-                    self.assertTrue(inventory["errors"])
+                    # Not just that `errors` is non-empty -- an unrelated failure
+                    # (a required source that does not exist, say) also leaves
+                    # `errors` non-empty and would pass this guard for the wrong
+                    # reason. Coupled to the specific message the nested-link
+                    # containment check itself emits.
+                    self.assertTrue(
+                        any("linked/reparse rule source entry is prohibited" in error
+                            for error in inventory["errors"]),
+                        f"expected a linked/reparse rule source refusal, got: {inventory['errors']}",
+                    )
                     self.assertEqual([], inventory["files"])
                 finally:
                     remove_reparse(link)
+                ran.append(flavour)
+        assert_probed_flavours_all_ran(self, flavours, ran)
 
 
 if __name__ == "__main__":

@@ -133,6 +133,10 @@
       "minimum": 1,
       "type": "integer"
     },
+    "definition_of_done": {
+      "minLength": 1,
+      "type": "string"
+    },
     "dependency_permissions": {
       "additionalProperties": {
         "type": "boolean"
