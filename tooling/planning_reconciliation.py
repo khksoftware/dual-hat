@@ -191,6 +191,93 @@ def reconcile_planning(backlog_path: Path, future_path: Path, history_path: Path
     return tuple(sorted(set(failures)))
 
 
+def load_current_registry(backlog_path: Path, future_path: Path) -> dict[str, tuple[str, dict[str, Any]]]:
+    """Build the identifier -> (namespace, item) map ``check_claimed_identity`` reads.
+
+    Mirrors the ``current`` mapping ``reconcile_planning`` builds internally (backlog
+    items under namespace ``"backlog"``, future-work items under ``"future_work"``),
+    exposed standalone so a caller reconciling a single claimed reference does not need
+    to run the full history-validated reconciliation just to get a live registry to
+    check it against. Malformed entries are skipped rather than raised on: this function
+    answers "what does the live registry currently say", not "is the registry itself
+    valid" -- that question is ``reconcile_planning``'s.
+    """
+    backlog, _ = _load_registry(backlog_path, "dual-hat-planning-backlog/1.0")
+    future, _ = _load_registry(future_path, "dual-hat-future-work/1.0")
+    registry: dict[str, tuple[str, dict[str, Any]]] = {}
+    for namespace, items in (("backlog", backlog), ("future_work", future)):
+        for item in items:
+            if isinstance(item, dict) and isinstance(item.get("id"), str) and item["id"]:
+                registry[item["id"]] = (namespace, item)
+    return registry
+
+
+def check_claimed_identity(
+    claimed: dict[str, Any],
+    live_registry: dict[str, tuple[str, dict[str, Any]]],
+) -> str:
+    """Compare a claimed work-item reference against a live planning registry.
+
+    This is the enforceable half of the handover-as-claims paragraph in
+    ``dual-hat/sessions/SESSION_AND_HANDOVER_PROTOCOL.md``: "Work-item identity is
+    namespace, identifier, and title or purpose, together with provenance and
+    chronology, compared as a set; an identifier hit alone never counts as
+    reconciled." This function is the identifier/namespace/title-or-purpose slice of
+    that comparison -- provenance and chronology are not observable from a planning
+    registry entry alone and are reconciled by the caller from whatever record does
+    carry them.
+
+    ``claimed`` is the reference as a stale handover, bootstrap prompt, or cross-agent
+    record asserts it: a mapping with a non-empty ``identifier``, an optional
+    ``namespace`` (``"backlog"`` or ``"future_work"``; omitted when the claim does not
+    assert one), and a ``title`` or a ``purpose`` (at least one, non-empty). Extra keys
+    are ignored.
+
+    ``live_registry`` is the mapping ``load_current_registry`` returns: identifier to
+    ``(namespace, item)``, ``item`` carrying the registry's own ``title``/``objective``.
+
+    Returns exactly one of:
+    - ``"absent"``: no live item carries this identifier at all.
+    - ``"identifier-collision"``: the identifier exists in the live registry, but its
+      namespace or its title/objective disagrees with the claim -- the shape of a
+      later item reusing a number an earlier one reserved, which an identifier-only
+      presence check cannot distinguish from a match.
+    - ``"identity-match"``: the identifier exists and its namespace and title/purpose
+      are consistent with the claim. This is a narrower question than "is the claim
+      still current": a matched identity can still carry a changed status, and this
+      function says nothing about that -- ``reconcile_planning``'s own status/history
+      checks are what catch that drift.
+
+    Raises ``ValueError`` if ``claimed`` carries no identifier, or neither a title nor
+    a purpose -- both are required for the comparison this function exists to make;
+    a caller with only an identifier has nothing to compare it against.
+    """
+    identifier = claimed.get("identifier")
+    if not isinstance(identifier, str) or not identifier:
+        raise ValueError("a claimed reference requires a non-empty identifier")
+    claimed_title_or_purpose = claimed.get("title") or claimed.get("purpose")
+    if not isinstance(claimed_title_or_purpose, str) or not claimed_title_or_purpose.strip():
+        raise ValueError("a claimed reference requires a non-empty title or purpose")
+
+    live = live_registry.get(identifier)
+    if live is None:
+        return "absent"
+
+    live_namespace, live_item = live
+    claimed_namespace = claimed.get("namespace")
+    live_title_or_purpose = live_item.get("title") or live_item.get("objective")
+
+    namespace_matches = claimed_namespace is None or claimed_namespace == live_namespace
+    title_matches = (
+        isinstance(live_title_or_purpose, str)
+        and live_title_or_purpose.strip().casefold() == claimed_title_or_purpose.strip().casefold()
+    )
+
+    if namespace_matches and title_matches:
+        return "identity-match"
+    return "identifier-collision"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Reconcile Dual Hat planning registries and history")
     parser.add_argument("--backlog", required=True, type=Path)

@@ -683,3 +683,134 @@ def boundary_review_failures(review: Mapping[str, object]) -> tuple[str, ...]:
         if not review.get("analogous_gap_review"): failures.append("boundary violation lacks analogous-gap review")
     if review.get("material_violation_unresolved") is True and review.get("architecture_disposition") in {"accepted", "accepted_with_follow_up"}: failures.append("acceptance is blocked by unresolved material boundary violation")
     return tuple(failures)
+
+
+def permission_vocabulary_failures(
+    order: Mapping[str, object],
+    *,
+    vocabulary: Mapping[str, tuple[str, ...]],
+    aliases: Mapping[str, Mapping[str, str]] = {},
+) -> tuple[str, ...]:
+    """Every key `vocabulary` registers for a block is stated explicitly, grant or denial, in
+    each of `order`'s permission blocks -- `publication_authority`, `dependency_permissions`,
+    `external_service_permissions`, or any other block-shaped mapping an adopting project
+    names.
+
+    **What this closes.** Nothing in this framework's own boolean-valued permission blocks
+    ever named a closed set of keys to compare an order against: `additionalProperties:
+    {"type": "boolean"}` with no `required` array inside any block, so any key spelling, or
+    none at all, was schema-valid, and a permission key's absence could not be told apart from
+    a deliberate denial anywhere. This function makes the vocabulary an adopting project
+    supplies closed against a given order: a registered key absent from its block is reported
+    by name, and a key present in the block that the vocabulary does not recognise (under its
+    canonical spelling or a registered alias) is reported by name too -- so a newly invented
+    spelling cannot quietly re-open the channel this closes.
+
+    **No built-in vocabulary, deliberately.** `vocabulary` has no default: the actual set of
+    permission-key names a real adopting project uses is that project's own data, not a
+    property of this framework, and a framework-level default would either invent one
+    (something this module's sibling functions already refuse to do for a type registry, see
+    `BUILTIN_TYPES`) or bake one adopter's specific vocabulary into code every other adopter
+    also loads. The caller derives and owns its own vocabulary, exactly as it already owns
+    `type_registry` for `validate_sealed`.
+
+    **Report, never rewrite.** This is a pure comparison against whatever `order`,
+    `vocabulary` and `aliases` it is given. It does not read a live corpus, does not
+    special-case a historical population, and does not gate anything: a caller sweeping many
+    orders decides what to do with the returned strings, exactly as `validate_sealed`'s own
+    caller does for every other predicate in this module. Nothing here is wired into
+    `validate_sealed`, `execution_contract_failures`, or any other existing consumer -- arming
+    any of this as a refusal is a separate, later decision this function does not make.
+
+    **Silent on a block `validate_sealed` already refuses outright.** A missing or
+    non-mapping block is `validate_sealed`'s own failure to report (`"... are incomplete"`);
+    duplicating that here would double-report the identical defect under two different
+    strings, so this function skips a block it cannot read as a mapping rather than
+    re-describing it.
+
+    Returns failure strings in block order, deduplicated within each block's two possible
+    findings (omission, then anything unregistered), never raising on a malformed order.
+    """
+    failures: list[str] = []
+    for block, canonical_keys in vocabulary.items():
+        value = order.get(block)
+        if not isinstance(value, Mapping):
+            continue
+        present = set(value)
+        block_aliases = aliases.get(block, {})
+        missing = tuple(
+            key for key in canonical_keys
+            if key not in present
+            and not any(alias in present for alias, canonical in block_aliases.items() if canonical == key)
+        )
+        if missing:
+            failures.append(f"{block} omits registered permission keys: {', '.join(missing)}")
+        recognized = set(canonical_keys) | set(block_aliases)
+        unregistered = tuple(sorted(key for key in present if key not in recognized))
+        if unregistered:
+            failures.append(f"{block} carries unregistered permission keys: {', '.join(unregistered)}")
+    return tuple(failures)
+
+
+#: A criterion slug's shape, generic across any adopting project that names its own closure
+#: criteria this way: lowercase words joined by hyphens, at least three segments. Not a
+#: prose parser -- see `definition_of_done_failures`'s own docstring for why a literal-slug
+#: search is the deliberate boundary rather than an oversight.
+_DEFINITION_OF_DONE_CRITERION_TOKEN = re.compile(r"\b[a-z][a-z0-9]*(?:-[a-z0-9]+){2,}\b")
+
+
+def definition_of_done_failures(
+    order: Mapping[str, object],
+    *,
+    registry: Mapping[str, tuple[str, ...]],
+) -> tuple[str, ...] | None:
+    """Whether `order["definition_of_done"]` names exactly its work-item type's closure
+    criteria as `registry` states them for that type -- no fewer, no criterion the registry
+    does not recognise.
+
+    **What this closes.** A sealed order's Definition of Done is free-text prose nobody
+    compares against anything. An order can omit the field entirely, name a subset of its
+    type's criteria, or name a criterion that does not exist, and every existing mechanism in
+    this framework reports success in all three cases. The measured, real-world instance this
+    closes: a sealed order naming four of five registered criteria, with the omitted one being
+    the one criterion the executing party can never satisfy of its own authority -- dropping
+    exactly that criterion converts a completion claim into a closure.
+
+    **No built-in registry, deliberately.** `registry` has no default, for the identical
+    reason `permission_vocabulary_failures` takes no default `vocabulary`: which closure
+    criteria apply to which work-item type is an adopting project's own governance content,
+    not something this portable module invents or ships an example of.
+
+    **Returns `None`, not `()`, for a work-item type `registry` does not cover.** An empty
+    tuple means "checked, zero failures"; `None` means "nothing to check against exists for
+    this type" -- a caller sweeping many orders must keep those apart rather than reporting a
+    type the registry has no criteria for as though it had cleanly passed one.
+
+    **Absence is a failure**, via the same non-`None` path as a named-but-incomplete
+    statement: a missing or non-string `definition_of_done` returns a one-element tuple
+    rather than `None`, because the type DOES have a registry to fail against -- the order
+    simply never engaged with it.
+
+    **Detection is a literal-slug search, not a prose parser.** This deliberately does not
+    attempt to infer a named criterion from paraphrase or from prose that never states the
+    slug: the same reasoning `contradicted_authorized_paths` gives for comparing a structured
+    signal instead of parsing prose applies here without alteration. A caller whose own corpus
+    already cites criteria this way (a literal slug appearing as a substring of the free-text
+    field) is exactly what this detection is fitted to.
+    """
+    kind = str(order.get("work_item_type", ""))
+    criteria = registry.get(kind)
+    if criteria is None:
+        return None
+    stated = order.get("definition_of_done")
+    if not isinstance(stated, str) or not stated.strip():
+        return ("definition of done is absent",)
+    named = set(_DEFINITION_OF_DONE_CRITERION_TOKEN.findall(stated))
+    failures: list[str] = []
+    missing = tuple(criterion for criterion in criteria if criterion not in named)
+    if missing:
+        failures.append(f"definition of done omits registered criteria: {', '.join(missing)}")
+    unregistered = tuple(sorted(named - set(criteria)))
+    if unregistered:
+        failures.append(f"definition of done names criteria outside the registry: {', '.join(unregistered)}")
+    return tuple(failures)

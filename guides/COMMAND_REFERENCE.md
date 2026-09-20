@@ -56,7 +56,9 @@ git diff --cached --name-status
 python tooling/staged_publication.py validate-staged --root .
 ```
 
-The `stage` action stages only manifest-owned paths and exact governed removals. It rejects unknown files, common generated artifacts and caches (even when ignored), missing governed files, content-hash drift, marker drift, and likely secrets. Do not substitute `git add -A` or another unbounded staging command.
+The `stage` action stages only manifest-owned paths and exact governed removals. It rejects unknown files, common generated artifacts and caches, missing governed files, content-hash drift, marker drift, and likely secrets, over tracked and untracked-not-ignored content; a path a repository's own ignore rules exclude is outside this scan and is never rejected on that basis -- rejection reaches only what the scan can see. Do not substitute `git add -A` or another unbounded staging command.
+
+If `stage` raises partway through -- after staging some paths but before the run completes -- the index is left staged and a retry is refused: staging requires an empty index before it begins. Inspect what is staged (`git status --short`, `git diff --cached --name-status`) before clearing it; that is the only record of what the failed run reached, and it is what an operator needs before deciding whether to retry. Unstage with `git reset` -- not `git reset --hard`, which would also discard any propagated content the failed run wrote into the worktree -- then re-run `stage`.
 
 All three actions treat the standalone deployment namespace (`plugins/`, `.agents/plugins/`, `.claude-plugin/`, `assets/`, and the other paths `tooling/publication_ownership.py`'s `standalone_owned` declares) as preserved by default, so this exact command sequence succeeds against a derived publication repository that legitimately carries that content alongside the portable core -- and still rejects anything outside it. A product profile may wrap these generic commands with a broader or narrower preserved-path predicate but must not weaken their checks.
 

@@ -9,10 +9,13 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,6 +108,25 @@ def available_reparse_flavours(base: Path) -> tuple[str, ...]:
     return tuple(flavours)
 
 
+def assert_probed_flavours_all_ran(testcase, probed: "tuple[str, ...]", ran: list) -> None:
+    """Fail when a reparse flavour the host permits did not run to completion.
+
+    `probed` is what `available_reparse_flavours()` returned before a guard's
+    loop began; `ran` is appended to at the end of each per-flavour body, so it
+    holds only flavours whose assertions all completed. Before this existed,
+    the loop's own honest empty-set skip was the only signal a reader had: one
+    flavour out of two, or a per-flavour skip added later, still reported a
+    plain green with nothing else in the transcript to say so. Comparing the
+    two lists here means a flavour the host permits but that did not run --
+    silently, for any reason -- fails the guard instead of passing by omission.
+    """
+    testcase.assertEqual(
+        list(probed), ran,
+        f"host permits {list(probed)!r} but only {ran!r} ran to completion -- "
+        "a flavour the host permits was skipped",
+    )
+
+
 # --- README "Framework areas" completeness (README completeness) ------------------------
 #
 # The list is a completeness claim about this repository's own top-level
@@ -156,13 +178,25 @@ def readme_framework_areas() -> set[str]:
 
 
 def existing_framework_areas() -> set[str]:
-    """Every real top-level directory of this tree that holds unignored content."""
-    return {
+    """Every real top-level directory of this tree that holds unignored content.
+
+    A top-level directory this repository's own disjoint-ownership policy
+    (`publication_ownership.standalone_owned()`) assigns to standalone
+    deployment packaging -- `assets/`, `plugins/` -- is excluded: it is real
+    content in a standalone checkout and content the portable-core
+    publication policy forbids canonical-source from carrying at the same
+    time, so canonical README can neither list it (the byte-exact
+    canonical-source property) nor be faulted by direction 2 for omitting
+    it. Calls the ownership module's own function rather than restating its
+    prefixes as a second literal exclusion list.
+    """
+    areas = {
         relative.split("/", 1)[0]
         for path in repository_content_files(ROOT)
         for relative in (path.relative_to(ROOT).as_posix(),)
         if "/" in relative and not relative.startswith(".")
     }
+    return {area for area in areas if not standalone_owned(area + "/")}
 
 
 # --- single-canonical-home support -------------------------------------------
@@ -199,6 +233,19 @@ def existing_framework_areas() -> set[str]:
 # does -- today, before any of this -- a file that keeps the pinned phrase and
 # adds a clause contradicting it. These are `assertIn` checks on positive
 # substrings; neither form detects contradiction.
+#
+# A further limitation, of the MEASUREMENT rather than of the mechanism above:
+# a mutation or assurance battery run against a test built from several
+# assertions -- this pattern included -- counts that test as covered the
+# moment it goes red. That is a test-level score, and it is not the same claim
+# as "every assertion inside the test is doing work": a mutation that only the
+# test's least-scoped check happens to catch still turns the whole test red,
+# and the score cannot distinguish that from every check in it being
+# load-bearing. Establishing that a body of assertions is doing work, rather
+# than that the test containing them goes red, needs assertion-level
+# measurement; nothing at test granularity establishes it, whatever the score
+# reads, and this file's own tests are not exempt from that gap merely for
+# using the disciplined form above.
 
 MARKDOWN_LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)\s]+)")
 
@@ -420,6 +467,42 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             f"does not name: {sorted(unlisted)}. Direction checked: exists implies listed.",
         )
 
+    def test_existing_framework_areas_excludes_standalone_owned_prefixes(self):
+        """Direction 2 must not fire on a standalone-owned top-level directory.
+
+        Built as a synthetic tree so the standalone-checkout failure reproduces
+        without a standalone checkout on hand -- no real `assets/` or `plugins/`
+        directory is ever added to this repository. A directory the disjoint
+        ownership policy (`publication_ownership.standalone_owned()`) assigns to
+        standalone deployment packaging is real content there and content the
+        portable-core publication policy forbids canonical-source from carrying
+        at the same time, so it must never be reported as an unlisted framework
+        area.
+        """
+        global ROOT
+        original_root = ROOT
+        with tempfile.TemporaryDirectory() as raw_root:
+            synthetic_root = Path(raw_root)
+            (synthetic_root / "governance").mkdir()
+            (synthetic_root / "governance" / "kept.md").write_text("kept\n", encoding="utf-8")
+            (synthetic_root / "assets").mkdir()
+            (synthetic_root / "assets" / "logo.png").write_bytes(b"not-a-real-image")
+            (synthetic_root / "README.md").write_text(
+                "# Synthetic\n\n## Framework areas\n\n- `governance/` kept area.\n",
+                encoding="utf-8",
+            )
+            ROOT = synthetic_root
+            try:
+                unlisted = existing_framework_areas() - readme_framework_areas()
+            finally:
+                ROOT = original_root
+        self.assertEqual(
+            set(),
+            unlisted,
+            "a standalone-owned top-level directory was reported as an unlisted "
+            f"framework area: {sorted(unlisted)}",
+        )
+
     def test_completeness_walk_excludes_repository_ignored_content(self):
         """Ignored residue is not unowned content and must not be reported as it.
 
@@ -435,8 +518,15 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
         So a contributor who ran a linter or a test run inside the tree turned
         the framework's own completeness validator red and was then sent to the
         wrong file. The probe below is ignored by this tree's own .gitignore.
+
+        A fixed probe name lets two concurrent runs against one checkout collide
+        on the same path -- a real operating condition wherever more than one
+        process may validate the same working tree at once. The per-run random
+        suffix removes that collision without moving the walk off the real
+        framework root, which is the one thing it cannot do without ceasing to
+        test the thing it names.
         """
-        probe = ROOT / "framework-completeness-ignored-probe.pyc"
+        probe = ROOT / f"framework-completeness-ignored-probe-{uuid.uuid4().hex[:8]}.pyc"
         self.assertFalse(probe.exists(), "probe path is already in use")
         probe.write_bytes(b"ignored residue")
         try:
@@ -746,17 +836,14 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
         # Re-pointed. The canonical home was already declared in this test's own
         # comment; it is now also the structural anchor.
         #
-        # GUARD, and it is deliberate: the three assertions in the loop below --
-        # "sealed independent reviewer", "population, rule, evidence, blind
-        # spots", and the self-approval sentence -- are NOT part of the
-        # hypothesis-blind obligation. Mutation proved they survive its deletion
-        # in both prompts because they guard a DIFFERENT obligation living in the
-        # adjacent paragraph: the external-source discovery/ingestion
-        # restriction. They are mis-named, not inert. They are therefore kept
-        # UNCONDITIONAL here rather than folded into the canonical-home
-        # disjunction, because waiving them when a prompt defers on
-        # hypothesis-blind would strand a real obligation with no check at all.
-        # See PER_TEST_LEDGER.md T7 and the backlog candidate recorded there.
+        # The three assertions that used to live in a loop here -- "sealed
+        # independent reviewer", "population, rule, evidence, blind spots", and
+        # the self-approval sentence -- are NOT part of the hypothesis-blind
+        # obligation. Mutation proved they survive its deletion in both prompts
+        # because they guard a DIFFERENT obligation living in the adjacent
+        # paragraph: the external-source discovery/ingestion restriction. They
+        # were mis-named here, not inert, and have moved to their own test,
+        # below, named for what they actually guard.
         canonical = "architecture/REASONING_AND_DECISION_REVIEW.md"
         normalized_canonical = _normalized(canonical)
         self.assertIn("convene exactly three sealed independent arbiters", normalized_canonical)
@@ -768,14 +855,6 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
             normalized_canonical,
         )
         self.assertIn("The proposing role cannot review its own restriction.", normalized_canonical)
-
-        # The three preserved-in-place assertions for the adjacent obligation.
-        for relative in ("prompts/ARCHITECTURE_OFFICE_PROMPT.md",
-                         "prompts/ENGINEERING_AGENT_PROMPT.md"):
-            normalized = _normalized(relative)
-            self.assertIn("sealed independent reviewer", normalized)
-            self.assertIn("population, rule, evidence, blind spots", normalized)
-            self.assertIn("Neither Architecture nor Engineering may approve its own restriction.", normalized)
 
         self.assert_single_canonical_home(
             canonical=canonical,
@@ -801,6 +880,38 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 ),
             },
         )
+
+    def test_external_source_discovery_and_ingestion_restriction_rule_is_pinned_and_consistent(self):
+        # REASONING_AND_DECISION_REVIEW.md's external-source discovery/ingestion
+        # restriction rule sits in the paragraph immediately adjacent to
+        # hypothesis-blind execution and the three-arbiter protocol, in the
+        # same file. Both prompts restate it in their own words. These three
+        # assertions used to live inside the hypothesis-blind test above:
+        # mutation proved they survive deletion of the hypothesis-blind/
+        # three-arbiter paragraph in both prompts, because the text they match
+        # lives in THIS adjacent paragraph instead -- so they were mis-filed
+        # under a name that says nothing about what they guard. Moved here,
+        # under the obligation's own name, with the canonical text itself now
+        # also asserted -- unconditionally, like the canonical assertions
+        # above, and not folded into the canonical-home disjunction that
+        # governs the hypothesis-blind text, because waiving these when a
+        # prompt merely points elsewhere would strand a real obligation with
+        # no check at all.
+        canonical = "architecture/REASONING_AND_DECISION_REVIEW.md"
+        self.assertIn(
+            "An Architecture or Engineering proposal to narrow external-source discovery, "
+            "stop cataloguing, substitute sampling for inventory, exclude a source or media "
+            "surface, or filter discovered items out of ingestion is provisional until a "
+            "sealed independent reviewer approves or rejects it before the restriction is "
+            "applied.",
+            _normalized(canonical),
+        )
+        for relative in ("prompts/ARCHITECTURE_OFFICE_PROMPT.md",
+                         "prompts/ENGINEERING_AGENT_PROMPT.md"):
+            normalized = _normalized(relative)
+            self.assertIn("sealed independent reviewer", normalized)
+            self.assertIn("population, rule, evidence, blind spots", normalized)
+            self.assertIn("Neither Architecture nor Engineering may approve its own restriction.", normalized)
 
     def test_universal_completion_claim_rule_is_pinned_and_consistent_across_governance_and_prompts(self):
         # The "complete"/"all"/"none remaining" scope-qualification rule was
@@ -1612,7 +1723,9 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
         return flavours
 
     def test_staging_rejects_directory_symlink_without_touching_external_cache(self):
-        for flavour in self._reparse_flavours():
+        probed = self._reparse_flavours()
+        ran = []
+        for flavour in probed:
             with self.subTest(reparse=flavour), tempfile.TemporaryDirectory() as temp:
                 base = Path(temp)
                 root = base / "publication"
@@ -1642,9 +1755,13 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                     self.assertTrue(is_reparse(link))
                 finally:
                     remove_reparse(link)
+                ran.append(flavour)
+        assert_probed_flavours_all_ran(self, probed, ran)
 
     def test_staging_rejects_file_symlink_without_touching_external_cache(self):
-        for flavour in self._reparse_flavours():
+        probed = self._reparse_flavours()
+        ran = []
+        for flavour in probed:
             with self.subTest(reparse=flavour), tempfile.TemporaryDirectory() as temp:
                 base = Path(temp)
                 root = base / "publication"
@@ -1678,6 +1795,8 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                     self.assertTrue(is_reparse(link))
                 finally:
                     remove_reparse(link)
+                ran.append(flavour)
+        assert_probed_flavours_all_ran(self, probed, ran)
 
     def test_actual_test_runner_discovers_nonpackage_tests_from_any_cwd(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1850,6 +1969,142 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
     # drift, and drift between duplicated authorities is the defect this whole
     # repair exists to close.
 
+    # A fourteen-case mutation battery against the three halves below, built
+    # by an independent review, caught six reintroduction shapes and let
+    # eight past. Every name below is disclosed rather than silently carved
+    # out, per this check's own reason for existing: `CORE_VERSION_KEY` (imported above from
+    # the publication gate) is the shared authority naming WHICH json key
+    # carries a declared core version. It holds a key NAME string, never a
+    # version value, and is itself part of the mechanism this check hardens --
+    # flagging it would refuse the fix in the name of the defect.
+    _CORE_VERSION_ASSIGNED_NAME_EXEMPTIONS = frozenset({"CORE_VERSION_KEY"})
+
+    @classmethod
+    def _core_version_named_assignment_targets(cls, module: Path) -> list[str]:
+        """Every assignment to a name containing CORE_VERSION, any value shape.
+
+        D1, D2, D7: the literal-constant scan below cannot see a value the
+        reintroducer assembled instead of writing as one string constant --
+        concatenation, `.join`, an f-string. What every one of those shapes
+        still shares is the NAME it is bound to, so this keys on the
+        assignment target rather than trying to evaluate the expression.
+        """
+        tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+        hits: list[str] = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                targets = list(node.targets)
+            elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+                targets = [node.target]
+            else:
+                continue
+            for target in targets:
+                for name_node in ast.walk(target):
+                    if (
+                        isinstance(name_node, ast.Name)
+                        and "CORE_VERSION" in name_node.id
+                        and name_node.id not in cls._CORE_VERSION_ASSIGNED_NAME_EXEMPTIONS
+                    ):
+                        hits.append(f"{module.relative_to(ROOT).as_posix()}:{node.lineno}: {name_node.id}")
+        return hits
+
+    @staticmethod
+    def _non_json_core_version_declarations(shipped: str) -> list[str]:
+        """D5: half (b) below scans only `*.json`, so a stale core version in
+        a Markdown/YAML/TOML/text adopter-facing artifact is invisible --
+        precisely the "trains adopters into the defect" mechanism the core-
+        version authority repair exists to close. A DECLARATION is required -- the key immediately
+        followed by `:` or `=` and a version -- never a bare mention of the
+        field name, so instructional prose citing a past release's target
+        version (UPGRADING.md's own migration steps) is not a hit.
+        """
+        pattern = re.compile(r'dual_hat_core_version"?\s*[:=]\s*"?([0-9]+\.[0-9]+\.[0-9]+)')
+        hits: list[str] = []
+        for path in sorted(ROOT.rglob("*")):
+            if not path.is_file() or ".git" in path.parts or "__pycache__" in path.parts:
+                continue
+            if path.suffix.lower() not in {".md", ".yaml", ".yml", ".toml", ".txt"}:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            for number, line in enumerate(text.splitlines(), 1):
+                match = pattern.search(line)
+                if match and match.group(1) != shipped:
+                    hits.append(
+                        f"{path.relative_to(ROOT).as_posix()}:{number}: "
+                        f"dual_hat_core_version = {match.group(1)!r}"
+                    )
+        return hits
+
+    @staticmethod
+    def _inline_core_version_dict_literals(shipped: str) -> list[str]:
+        """D6: a core-version key hardcoded inside an inline dict LITERAL in a
+        test module -- never loaded from any shipped JSON file -- is invisible
+        to half (b) below (not a `.json` file) and to half (c) below (its
+        value is not the CURRENT shipped version, which is what half (c) looks
+        for). `ast.Dict` literals are scanned directly, so no test needs to be
+        imported or run to be covered.
+        """
+        hits: list[str] = []
+        for module in sorted((ROOT / "tests").glob("*.py")):
+            tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Dict):
+                    continue
+                for key_node, value_node in zip(node.keys, node.values):
+                    if (
+                        isinstance(key_node, ast.Constant) and isinstance(key_node.value, str)
+                        and "core_version" in key_node.value
+                        and isinstance(value_node, ast.Constant) and isinstance(value_node.value, str)
+                        and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", value_node.value)
+                        and value_node.value != shipped
+                    ):
+                        hits.append(
+                            f"{module.relative_to(ROOT).as_posix()}:{node.lineno}: "
+                            f"{key_node.value} = {value_node.value!r}"
+                        )
+        return hits
+
+    @staticmethod
+    def _other_keyed_core_version_declarations(shipped: str) -> list[str]:
+        """D8: half (b) below keys on the exact name `dual_hat_core_version`,
+        so a second core-version pin under any OTHER key containing
+        `core_version` in shipped JSON passed silently. Deliberately NOT a
+        change to `declared_core_versions` itself: that walker is the shared
+        authority the publication gate also calls, and `dual-hat/release/
+        PUBLICATION.md` documents its exact-key match as a stated policy
+        limit ("widening the walk is a change to this rule, not an
+        implementation detail") -- widening it is that policy's call, not
+        this test's.
+        """
+        def other_keyed(payload, key=None):
+            if isinstance(payload, dict):
+                for name, value in payload.items():
+                    yield from other_keyed(value, str(name))
+            elif isinstance(payload, list):
+                for value in payload:
+                    yield from other_keyed(value, key)
+            elif (
+                key is not None and key != CORE_VERSION_KEY and "core_version" in key
+                and isinstance(payload, str) and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", payload)
+            ):
+                yield f"{key} = {payload!r}"
+
+        hits: list[str] = []
+        for path in sorted(ROOT.rglob("*.json")):
+            if ".git" in path.parts or "__pycache__" in path.parts:
+                continue
+            payload = FrameworkTests._loaded_json(path)
+            if payload is None:
+                continue
+            relative = path.relative_to(ROOT).as_posix()
+            for row in other_keyed(payload):
+                if not row.endswith(f"{shipped!r}"):
+                    hits.append(f"{relative}: {row}")
+        return hits
+
     def test_no_hardcoded_core_version_survives_the_release_evidence_authority(self):
         shipped = self._shipped_version()
 
@@ -1858,9 +2113,12 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
         # already owns. AST constants are scanned rather than source text, so
         # the check sees an indirect binding -- a default argument, a dataclass
         # field, a decorator argument -- exactly as it sees a plain assignment.
+        # D3, D4: `rglob` rather than `glob`, and `scripts/` is in the surface
+        # -- it holds Python today and sat outside all three original halves.
         literals = [
             f"{module.relative_to(ROOT).as_posix()}:{node.lineno}: {node.value!r}"
-            for module in sorted((ROOT / "tooling").glob("*.py"))
+            for base in (ROOT / "tooling", ROOT / "scripts")
+            for module in sorted(base.rglob("*.py"))
             for node in ast.walk(ast.parse(module.read_text(encoding="utf-8"), filename=str(module)))
             if isinstance(node, ast.Constant) and isinstance(node.value, str)
             and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", node.value)
@@ -1871,6 +2129,23 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 "a hardcoded version literal was reintroduced into the tooling "
                 "surface; the active core version has exactly one authority, "
                 "release/VERSION.json, and must be resolved from it at call time",
+            )
+
+        # D1, D2, D7: any assignment to a CORE_VERSION-shaped name, however
+        # the value is built, over the same widened tooling/scripts surface.
+        named = [
+            hit
+            for base in (ROOT / "tooling", ROOT / "scripts")
+            for module in sorted(base.rglob("*.py"))
+            for hit in self._core_version_named_assignment_targets(module)
+        ]
+        with self.subTest(half="tooling assigned name"):
+            self.assertEqual(
+                [], named,
+                "a name matching CORE_VERSION was (re)bound in the tooling "
+                "surface, however its value was constructed; the active core "
+                "version has exactly one authority, release/VERSION.json, and "
+                "must be resolved from it at call time",
             )
 
         # (b) Data half. Principle 15 names already-produced artifacts, not only code
@@ -1892,6 +2167,18 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 "the version release/VERSION.json actually ships",
             )
 
+        # D8: the same shipped JSON, under any OTHER core-version-shaped key.
+        with self.subTest(half="shipped data, other keys"):
+            self.assertEqual([], self._other_keyed_core_version_declarations(shipped))
+
+        # D5: shipped Markdown/YAML/TOML/text declarations outside JSON.
+        with self.subTest(half="shipped non-json artifact"):
+            self.assertEqual([], self._non_json_core_version_declarations(shipped))
+
+        # D6: an inline dict literal in a test module, never loaded from JSON.
+        with self.subTest(half="test fixture dict literal"):
+            self.assertEqual([], self._inline_core_version_dict_literals(shipped))
+
         # (c) Test half. A test that pins the current version as a literal
         # reintroduces the same drift one release later; the suite must read it
         # from the same authority everything else does.
@@ -1907,6 +2194,156 @@ class FrameworkTests(CanonicalHomeAssertions, unittest.TestCase):
                 f"a test pins the shipped version {shipped!r} as a literal "
                 "instead of reading release/VERSION.json",
             )
+
+    # --- the core version is never bound at import scope ----------------------
+    #
+    # A design constraint protected until now by review and evidence only:
+    # `work_item_governance.py` is imported by the sealing, classification,
+    # transition and archival controls and by call sites that never touch a
+    # platform profile. An import-scope binding would turn unreadable or
+    # malformed release evidence into an `ImportError` for all of them,
+    # through a channel carrying none of the conformance vocabulary its
+    # callers are equipped to handle -- exactly the shape proved destructively
+    # (a scratch copy with the release evidence file deleted outright still
+    # imports cleanly) rather than merely designed against. Adopts that
+    # destructive proof, and an AST scan for the same property, as standing
+    # tests, since nothing had run either one before.
+
+    _CORE_VERSION_RESOLVER_CALL_NAMES = frozenset({
+        "active_core_version", "core_version_failures", "version_record", "release_maturity", "version",
+    })
+
+    @classmethod
+    def _resolver_call_expressions(cls, node: ast.AST) -> bool:
+        """True if `node`'s own immediately-evaluated expressions call a
+        resolver name, without descending into a nested def/class/lambda's
+        body -- each of those is visited separately, on its own timing."""
+        stack = [node]
+        while stack:
+            current = stack.pop()
+            if current is not node and isinstance(
+                current, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
+            ):
+                continue
+            if isinstance(current, ast.Call):
+                func = current.func
+                if (isinstance(func, ast.Name) and func.id in cls._CORE_VERSION_RESOLVER_CALL_NAMES) or (
+                    isinstance(func, ast.Attribute) and func.attr in cls._CORE_VERSION_RESOLVER_CALL_NAMES
+                ):
+                    return True
+            stack.extend(ast.iter_child_nodes(current))
+        return False
+
+    @classmethod
+    def _import_scope_binding_sites(cls, module_path: Path) -> list[str]:
+        """`path:line` for every module-level statement, function/method
+        default argument, decorator expression, or class-body statement where
+        a resolver call could execute at import time. Known, disclosed limit:
+        a `def`/`class` nested inside a compound statement (an `if` at module
+        scope, say) is not separately visited for its own decorators/defaults
+        -- no such shape exists on the scanned surface today."""
+        tree = ast.parse(module_path.read_text(encoding="utf-8"), filename=str(module_path))
+        relative = module_path.relative_to(ROOT).as_posix()
+        hits: list[str] = []
+
+        def visit(node: ast.stmt, immediate: bool) -> None:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if immediate:
+                    for decorator in node.decorator_list:
+                        if cls._resolver_call_expressions(decorator):
+                            hits.append(f"{relative}:{decorator.lineno}: decorator on {node.name}")
+                    for default in (*node.args.defaults, *node.args.kw_defaults):
+                        if default is not None and cls._resolver_call_expressions(default):
+                            hits.append(f"{relative}:{default.lineno}: default argument on {node.name}")
+                for statement in node.body:
+                    visit(statement, False)
+            elif isinstance(node, ast.ClassDef):
+                if immediate:
+                    for decorator in node.decorator_list:
+                        if cls._resolver_call_expressions(decorator):
+                            hits.append(f"{relative}:{decorator.lineno}: decorator on {node.name}")
+                    for base in (*node.bases, *(keyword.value for keyword in node.keywords)):
+                        if cls._resolver_call_expressions(base):
+                            hits.append(f"{relative}:{base.lineno}: base of {node.name}")
+                for statement in node.body:
+                    visit(statement, immediate)
+            elif immediate and cls._resolver_call_expressions(node):
+                hits.append(f"{relative}:{node.lineno}: module or class body statement")
+
+        for statement in tree.body:
+            visit(statement, True)
+        return hits
+
+    @staticmethod
+    def _core_version_resolution_modules() -> list[Path]:
+        """`work_item_governance.py`'s resolution path, and any module that
+        imports it or `release_package` at module scope -- test_operating_
+        modes.py's own `core_version()` names the risk this closes: "A
+        module-level binding here would be the same import-scope resolution
+        the governance module refuses, one file further out.\""""
+        resolver_source = [ROOT / "tooling/release_package.py", ROOT / "tooling/work_item_governance.py"]
+        importers: list[Path] = []
+        for base in (ROOT / "tooling", ROOT / "tests"):
+            for module in sorted(base.rglob("*.py")):
+                if module in resolver_source:
+                    continue
+                tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Import) and any(
+                        alias.name in ("work_item_governance", "release_package") for alias in node.names
+                    ):
+                        importers.append(module)
+                        break
+                    if isinstance(node, ast.ImportFrom) and node.module in (
+                        "work_item_governance", "release_package",
+                    ):
+                        importers.append(module)
+                        break
+        return resolver_source + importers
+
+    def test_core_version_resolution_has_no_import_scope_binding(self):
+        hits = [
+            hit
+            for module in self._core_version_resolution_modules()
+            for hit in self._import_scope_binding_sites(module)
+        ]
+        self.assertEqual(
+            [], hits,
+            "a core-version resolver call executes at import time rather than at "
+            "call time; a profile-free caller of work_item_governance must never "
+            "depend on release evidence being readable at all",
+        )
+
+    def test_core_version_resolution_survives_release_evidence_deleted_outright(self):
+        """The destructive proof this design constraint was originally
+        verified by, adopted as the second assertion: the module imports
+        cleanly and reports an unreadable-evidence failure
+        entry, never an exception, with `dual-hat/release/VERSION.json`
+        deleted outright. Run against a scratch copy of `tooling/` in a fresh
+        interpreter -- never the live tree, and never the live process, whose
+        `sys.modules` already carries these names imported against the real
+        release evidence."""
+        with tempfile.TemporaryDirectory() as scratch:
+            scratch_root = Path(scratch)
+            scratch_tooling = scratch_root / "dual-hat" / "tooling"
+            shutil.copytree(ROOT / "tooling", scratch_tooling)
+            probe = textwrap.dedent(
+                f"""
+                import sys
+                sys.path.insert(0, {str(scratch_tooling)!r})
+                import work_item_governance
+                version, failures = work_item_governance.active_core_version()
+                assert version is None, version
+                assert failures == ("governed release evidence is unreadable",), failures
+                import dispatch_reconciliation, profile_conformance  # unrelated controls
+                print("IMPORT_AND_RESOLUTION_OK")
+                """
+            )
+            result = subprocess.run(
+                [sys.executable, "-c", probe], capture_output=True, text=True, encoding="utf-8",
+            )
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("IMPORT_AND_RESOLUTION_OK", result.stdout)
 
     # --- a maturity label agrees with its own version -------------------------
     #

@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 from urllib.parse import urlsplit
@@ -37,6 +38,12 @@ IGNORED_LOCAL_TOOL_DIRS = {
     ".pytest_cache", ".mypy_cache", ".ruff_cache", ".claude", ".agents",
 }
 ARCHIVE_DATE = (1980, 1, 1, 0, 0, 0)
+#: The one spelling of the publication-provenance record's schema identifier,
+#: read by every producer and every comparison of it so none can go stale
+#: against the others the way a hand-typed literal already had: a fixture
+#: comparing a fabricated record against itself carried the PRIOR schema
+#: version and nothing caught it, because nothing forced the two to agree.
+PUBLICATION_PROVENANCE_SCHEMA = "dual-hat-remote-publication-provenance/2.0"
 
 
 def canonical_json(value: object) -> bytes:
@@ -58,7 +65,27 @@ def normalized(path: Path) -> bytes:
 
 
 def version() -> str:
-    return str(json.loads((ROOT / "release/VERSION.json").read_text(encoding="utf-8"))["version"])
+    """The single-key read of `release/VERSION.json`, validated.
+
+    `version_record()` is the same read this validates through
+    `work_item_governance.active_core_version()`'s own `core_version_failures`
+    -- the identical closed-structure/schema/semver/maturity cross-check the
+    conformance path already applies. Before this, `version()` was a second,
+    unvalidated entry point to the same authority: every caller reaching the
+    version through it got exactly the trust-the-input behaviour
+    `active_core_version()` does not have. Kept, not deleted -- it is
+    published API, used throughout this module -- and now routed through the
+    one validation the authority already has rather than a second copy of
+    it. `work_item_governance` is imported locally, as `active_core_version()`
+    itself imports back from this module locally, so neither module needs
+    the other importable at load time.
+    """
+    record = version_record()
+    from work_item_governance import core_version_failures
+    failures = core_version_failures(record)
+    if failures:
+        raise RuntimeError("; ".join(failures))
+    return str(record["version"])
 
 
 def version_record() -> dict[str, object]:
@@ -74,12 +101,54 @@ def release_maturity(release_version: str) -> str:
     synchronized, and the identical contradiction returned at 1.x-to-2.x with
     every major from 2 upward labelled stable_1_x. A third hand-written
     boundary would guarantee a third recurrence at 3.0.0.
+
+    The input is now validated before being parsed at all. The shipped
+    module previously fed `release_version` straight to
+    `int(release_version.split(".", 1)[0])`, which accepted leading zeros
+    (`'007.1.1'`), underscore digit separators (`'1_0.0.0'`, which `int()`
+    parses on its own), a leading space, a `+` sign, a `-rc1` suffix, a
+    two-segment or one-segment value, a trailing newline, and non-ASCII
+    digit characters -- succeeding silently on all of them -- and raised a
+    bare `ValueError` for `''` or `'abc'`, outside this module's own
+    `RuntimeError` convention, so a caller catching `RuntimeError` (as
+    `core_version_failures` above does) never caught them.
+    `work_item_governance.SEMANTIC_VERSION_PATTERN` is the same pattern
+    `active_core_version()`'s own validation already fullmatches the version
+    field against (itself pinned to `dual-hat/schemas/platform-profile.schema.json`'s
+    shape) -- reused rather than re-expressed so the two ends of the
+    comparison cannot diverge. A leading-zero component is rejected in
+    addition: the pattern's `[0-9]+` alone still accepts one, and a
+    non-canonical numeral is exactly the shape measured against this
+    function, even though the shared pattern's own consumer never needed to
+    reject it.
     """
+    from work_item_governance import SEMANTIC_VERSION_PATTERN
+    if not re.fullmatch(SEMANTIC_VERSION_PATTERN, release_version):
+        raise RuntimeError(f"release version is not a semantic version: {release_version!r}")
+    if any(len(part) > 1 and part[0] == "0" for part in release_version.split(".")):
+        raise RuntimeError(f"release version has a non-canonical leading zero: {release_version!r}")
     major = int(release_version.split(".", 1)[0])
     return f"stable_{major}_x" if major >= 1 else "functional_pre_1_0"
 
 
-def source_files() -> dict[str, bytes]:
+def _require_clean(*paths: str, message: str) -> None:
+    """Fail closed if any of `paths` differs from `HEAD` in the working tree.
+
+    `git status --porcelain=v1 -- <paths>` reports a path as dirty
+    exactly when its working-tree (or index) content disagrees with `HEAD`,
+    so a clean result for a path set is a cheap, exact proof that reading
+    those paths off disk reads the identical bytes `git show HEAD:<path>`
+    would return -- which is what "bound to the commit it stamps" means. One
+    predicate, called with `"."` for the whole-tree production check
+    (`release_provenance_record`, unchanged below) and with the exact
+    collected path set for the collection function itself (`source_files`),
+    rather than a second copy of the same git invocation.
+    """
+    if _git("status", "--porcelain=v1", "--", *paths):
+        raise RuntimeError(message)
+
+
+def source_files(*, require_clean: bool = True) -> dict[str, bytes]:
     canonical_specification = ROOT / "export/EXPORT_SOURCES.json"
     publication_manifest = ROOT / ".dual-hat/export-manifest.json"
     if canonical_specification.is_file():
@@ -122,6 +191,24 @@ def source_files() -> dict[str, bytes]:
     missing_inputs = sorted(set(included) - set(actual))
     if missing_inputs:
         raise RuntimeError(f"release source inputs are missing: {missing_inputs}")
+    # Collection itself is now bound to the commit it stamps,
+    # unconditionally on `production` -- previously only `build()`'s
+    # production branch, via `release_provenance_record`, ever asked whether
+    # the tree was clean; every non-production build (the framework's own
+    # `self_test()` included) packaged the live working tree with no such
+    # guard, under a manifest that stamps `HEAD` regardless. `require_clean`
+    # exists only for the one caller with a real reason to build from a
+    # dirty tree -- see `build()`'s `allow_uncommitted_source` docstring.
+    if require_clean and included:
+        _require_clean(
+            *included,
+            message=(
+                "release source collection path is dirty against the commit it "
+                "stamps; commit or discard the uncommitted change, or pass "
+                "allow_uncommitted_source=True if this build is deliberately "
+                "sourcing an uncommitted tree"
+            ),
+        )
     try:
         result = {relative: normalized(contained(ROOT, relative, must_exist=True, kind="file")) for relative in sorted(included)}
     except ContainmentError as exc:
@@ -154,8 +241,8 @@ def verify_head_on_canonical_branch_with_upstream(root: Path | None = None) -> d
 
     Accepts an explicit `root` (defaulting to this module's own `ROOT`, exactly
     as `_git` does) rather than assuming the caller's own checkout, so a
-    preflight run from a different repository entirely -- as
-    `release_dual_hat.py` does, against a standalone checkout this module does
+    preflight run from a different repository entirely -- as a consuming
+    project's release orchestrator does, against a standalone checkout this module does
     not itself live in yet -- can still call this exact function rather than
     restating its two-command shape.
 
@@ -202,31 +289,82 @@ def verify_portable_publication_commit(root: Path, revision: str) -> dict:
     )
 
 
-def _remote_identity(value: str) -> str:
+#: The scheme's own default port, collapsed out of an identity so a spelling
+#: that states it and a spelling that omits it compare equal. Not exhaustive
+#: of every git-capable scheme -- only the ones this identity comparison has
+#: ever had to distinguish a non-default port on.
+_DEFAULT_PORTS = {"https": 443, "http": 80, "ssh": 22, "git": 9418}
+
+
+def _remote_identity(value: str, *, push: bool = False) -> str:
+    """The identity a remote endpoint is compared against.
+
+    This is the whole contract, stated once so a future change to what is
+    kept, refused or normalised has one place to change it and one place
+    every caller and test can read it from:
+
+    - **Kept in the identity:** the host, casefolded, and a non-default
+      port. A port stated explicitly that equals the scheme's own default
+      (``:443`` on ``https://``, ``:22`` on ``ssh://``) collapses to the
+      identity that omits it; any other port (``:8443``) is a DIFFERENT
+      identity from the schemeless spelling.
+    - **Refused outright, never collapsed, when ``push`` is true:** an
+      ``http://`` or ``git://`` push endpoint. A transport downgrade from
+      whatever scheme the approved repository actually uses is not a
+      spelling of it, and collapsing it into the same identity as the
+      approved ``https://``/``ssh://`` form would let an unencrypted or
+      unauthenticated push endpoint pass as the approved one.
+      ``push=False`` -- a fetch endpoint, or the caller's own approved-
+      identity string -- never raises on scheme alone; this function does
+      not decide fetch endpoint policy.
+    - **Normalised, deliberately:** userinfo (credentials are not
+      identity -- ``urlsplit(...).hostname`` already excludes it for a
+      URL, and the scp-form branch below strips everything up to the last
+      ``@`` for the same reason), the scp form versus an explicit
+      ``ssh://``, a trailing ``.git`` suffix, case, and repeated or
+      trailing slashes in the path.
+    - **Fixed order**, because the steps are not commutative on a real
+      spelling: casefold, collapse repeated slashes, strip leading and
+      trailing slashes, remove a trailing ``.git``, strip slashes again --
+      removing ``.git`` can expose a slash the first strip never saw
+      (``org/repo.git/``), and skipping the casefold before the strip
+      leaves an uppercase spelling of the identical repository unmatched.
+    """
     raw=value.strip().replace("\\","/")
     if not raw: return ""
+    port: int | None = None
     if "://" in raw:
-        parsed=urlsplit(raw); host=(parsed.hostname or "").casefold(); path=parsed.path
+        parsed=urlsplit(raw)
+        scheme=parsed.scheme.casefold()
+        if push and scheme in {"http","git"}:
+            raise RuntimeError(f"push endpoint uses a refused transport: {scheme}://")
+        host=(parsed.hostname or "").casefold(); path=parsed.path
+        port=parsed.port
+        if port is not None and port==_DEFAULT_PORTS.get(scheme): port=None
     else:
         scp=raw.split("@",1)[-1]
         if ":" in scp: host,path=scp.split(":",1)
         else:
             parts=scp.split("/",1); host=parts[0]; path=parts[1] if len(parts)>1 else ""
         host=host.casefold()
-    path=path.removesuffix(".git").strip("/").casefold()
-    return f"{host}/{path}" if host and path else ""
+    path=re.sub(r"/+","/",path.casefold()).strip("/")
+    path=path.removesuffix(".git").strip("/")
+    if not host or not path: return ""
+    return f"{host}:{port}/{path}" if port else f"{host}/{path}"
 
 
-def _remote_endpoint_identities(*arguments: str) -> tuple[str, ...]:
+def _remote_endpoint_identities(*arguments: str, push: bool = False) -> tuple[str, ...]:
     """Every configured endpoint's identity, in configured order.
 
     `git remote get-url` without --all reports a single url while git writes
     to every configured `remote.origin.pushurl`, so the singular query cannot
     prove what a push will reach. Blank lines are dropped; an unparseable url
     is kept as "" rather than filtered out, so a malformed endpoint fails the
-    identity comparison instead of disappearing from it.
+    identity comparison instead of disappearing from it. `push` is threaded
+    to `_remote_identity` unchanged -- true only for the push-endpoint query,
+    so a downgraded transport is refused there and nowhere else.
     """
-    return tuple(_remote_identity(line) for line in _git(*arguments).splitlines() if line.strip())
+    return tuple(_remote_identity(line, push=push) for line in _git(*arguments).splitlines() if line.strip())
 
 
 def _fresh_remote_ref(remote: str = "origin", branch: str = "main") -> str:
@@ -237,12 +375,52 @@ def _fresh_remote_ref(remote: str = "origin", branch: str = "main") -> str:
     return rows[0][0]
 
 
+def _refuse_diverted_push_default(branch: str, *, remote: str = "origin") -> None:
+    """Refuse a `remote.pushDefault` or `branch.<branch>.pushRemote` naming
+    anything other than `remote` (always the verified `origin` here).
+
+    Either setting redirects a BARE `git push` -- one given no explicit
+    remote or refspec -- to a different repository entirely, a vector the
+    endpoint check in `fresh_remote_repository_state` cannot see: that check
+    enumerates `origin`'s own configured endpoints and says nothing about
+    whether an ordinary push actually reaches `origin` rather than
+    whichever remote these two settings nominate. `branch.<branch>.pushRemote`
+    is checked first because git itself prefers it over the more general
+    `remote.pushDefault` when both are set.
+
+    `git config --get <key>` exits 1, with empty stdout and stderr, for a key
+    that is simply unset -- not a failure, and not distinguishable from one
+    if read through `_git`, which treats any nonzero exit as an error. Read
+    directly with `subprocess.run` for that reason, rather than through `_git`.
+    """
+    for key in (f"branch.{branch}.pushRemote", "remote.pushDefault"):
+        result=subprocess.run(("git","config","--get",key), cwd=ROOT, capture_output=True, text=True)
+        if result.returncode==0:
+            value=result.stdout.strip()
+            if value and value!=remote:
+                raise RuntimeError(
+                    f"push destination is diverted by {key}={value!r}; a bare push would not "
+                    f"reach the approved remote {remote!r}"
+                )
+
+
 def fresh_remote_repository_state(expected_remote_identity: str, *, expected_remote_commit: str | None = None) -> dict[str, object]:
-    """Query the authorized remote and prove canonical local/upstream alignment."""
+    """Query the authorized remote and prove canonical local/upstream alignment.
+
+    The endpoint check below proves every configured fetch and push URL for
+    `origin` resolves to the approved identity. It says nothing about
+    whether an ordinary, bare `git push` -- one naming no remote or refspec
+    -- actually reaches `origin` at all: `remote.pushDefault` and
+    `branch.<branch>.pushRemote` can each nominate a *different* remote as
+    the default push target while `origin`'s own endpoints stay entirely
+    clean, so `_refuse_diverted_push_default` closes that separate vector
+    before the endpoint enumeration below is asked to prove anything.
+    """
     approved=_remote_identity(expected_remote_identity)
     if not approved: raise RuntimeError("approved remote identity is invalid")
-    head=_git("rev-parse","HEAD"); verify_head_on_canonical_branch_with_upstream()
-    fetch_identities=_remote_endpoint_identities("remote","get-url","--all","origin"); push_identities=_remote_endpoint_identities("remote","get-url","--all","--push","origin")
+    head=_git("rev-parse","HEAD"); canonical=verify_head_on_canonical_branch_with_upstream()
+    _refuse_diverted_push_default(canonical["branch"])
+    fetch_identities=_remote_endpoint_identities("remote","get-url","--all","origin"); push_identities=_remote_endpoint_identities("remote","get-url","--all","--push","origin",push=True)
     if not fetch_identities or not push_identities or set(fetch_identities)|set(push_identities)!={approved}: raise RuntimeError("standalone publication fetch or push endpoint is not the explicitly approved repository identity")
     remote_head=_fresh_remote_ref(); cached_head=_git("rev-parse","origin/main")
     if expected_remote_commit is not None and remote_head!=expected_remote_commit: raise RuntimeError("fresh remote main differs from the authorized expected starting or publication commit")
@@ -252,6 +430,14 @@ def fresh_remote_repository_state(expected_remote_identity: str, *, expected_rem
     # as complete whether it is or not -- which is the defect, not merely its
     # symptom. The plural field's own length is the verified-endpoint count,
     # so no second field exists that could disagree with it.
+    #
+    # `fetch_endpoint_identities` and `push_endpoint_identities` list
+    # COMPARED IDENTITIES, not configured URLs: two configured URLs that
+    # normalise to the same identity (a transport or credential spelling
+    # difference `_remote_identity` deliberately collapses) appear here as
+    # two identical strings. Read this record as an audit of what was
+    # proven equal to the approved identity, never as an audit of the
+    # distinct URLs `git remote` itself would list.
     return {"schema":"dual-hat-fresh-remote-state/2.0","remote":"origin","branch":"main","remote_ref":"refs/heads/main",
             "local_commit":head,"cached_upstream_commit":cached_head,"fresh_remote_commit":remote_head,
             "fetch_endpoint_identities":list(fetch_identities),"push_endpoint_identities":list(push_identities)}
@@ -271,7 +457,7 @@ def release_provenance_record(
         raise RuntimeError("publication commit is not a commit identity")
     if not _is_ancestor(publication_commit, head):
         raise RuntimeError("recorded source publication commit is not an ancestor of the current published main")
-    if _git("status","--porcelain=v1","--","."): raise RuntimeError("release inputs are not committed in the active repository")
+    _require_clean(".", message="release inputs are not committed in the active repository")
     publication_manifest=ROOT/".dual-hat/export-manifest.json"; marker_path=ROOT/".dual-hat/published-state.json"
     if not publication_manifest.is_file() or not marker_path.is_file(): raise RuntimeError("production release provenance requires standalone publication controls")
     manifest_bytes=publication_manifest.read_bytes(); manifest=json.loads(manifest_bytes); marker=json.loads(marker_path.read_text(encoding="utf-8"))
@@ -287,7 +473,7 @@ def release_provenance_record(
     committed=verify_portable_publication_commit(ROOT,publication_commit)
     if committed.get("commit")!=publication_commit or committed.get("manifest_sha256")!=marker.get("manifest_sha256"):
         raise RuntimeError("committed publication tree does not match marker and manifest provenance")
-    return {"schema":"dual-hat-remote-publication-provenance/2.0","canonical_source_commit":source,
+    return {"schema":PUBLICATION_PROVENANCE_SCHEMA,"canonical_source_commit":source,
             "external_publication_commit":publication_commit,
             "publication_tree":_git("rev-parse",f"{publication_commit}^{{tree}}"),
             "manifest_tree_sha256":manifest["tree_sha256"],"manifest_sha256":marker["manifest_sha256"],
@@ -300,10 +486,10 @@ def release_provenance(expected_remote_identity: str) -> tuple[str, str]:
     return str(record["canonical_source_commit"]),str(record["external_publication_commit"])
 
 
-def package_entries() -> dict[str, bytes]:
+def package_entries(*, require_clean: bool = True) -> dict[str, bytes]:
     release_version = version()
     prefix = f"dual-hat-{release_version}/"
-    source = source_files()
+    source = source_files(require_clean=require_clean)
     inspect_content_set(source)
     records = [
         {"bytes": len(data), "path": path, "sha256": sha256(data)}
@@ -341,8 +527,8 @@ def _write_zip(destination: Path, entries: dict[str, bytes]) -> None:
             archive.writestr(info, data, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
 
 
-def validate_archive(archive_path: Path) -> dict[str, object]:
-    expected = package_entries()
+def validate_archive(archive_path: Path, *, require_clean: bool = True) -> dict[str, object]:
+    expected = package_entries(require_clean=require_clean)
     with zipfile.ZipFile(archive_path) as archive:
         names = archive.namelist()
         if names != sorted(expected):
@@ -377,8 +563,26 @@ def _validate_output_boundary(output: Path, names: tuple[str, ...]) -> None:
 
 def build(output: Path, source_commit: str | None = None, external_publication_commit: str | None = None, *,
           fail_after_commit: bool = False, production: bool = True,
-          expected_remote_identity: str = "") -> dict[str, object]:
+          expected_remote_identity: str = "", allow_uncommitted_source: bool = False) -> dict[str, object]:
     """Build a deterministic release set and publish it into `output`.
+
+    **`allow_uncommitted_source`, named and disclosed rather than
+    a silent default.** Collection now fails closed on a dirty tree by
+    default (see `source_files`), so a non-production build is exactly as
+    bound as a production one -- but exactly one enumerated caller has a real
+    reason to build from a dirty tree: a release orchestrator's plan-only,
+    non-production build, called between propagating canonical content into
+    the standalone worktree (written, not yet committed) and the commit that
+    follows. Its own manifest's `canonical_source_commit` is never trusted or
+    persisted -- only its `archive_sha256` is compared, as a byte-identity
+    control, against the later production build's archive, and that
+    production build always runs `require_clean=True`. Every other
+    non-production caller found on this pass -- the framework's own
+    `self_test()`, and every direct test of `build(..., production=False)`
+    against this repository's own canonical `dual-hat/` tree -- keeps the new
+    default and is expected to require a clean tree. Refused outright when
+    `production=True`: a dirty-tolerant production build would defeat the
+    check `release_provenance_record` already makes.
 
     **Restart-journalled through `cross_family_transaction`, in place of the
     pre-existing hand-rolled replace loop with an in-process-only prior-bytes
@@ -403,6 +607,8 @@ def build(output: Path, source_commit: str | None = None, external_publication_c
     distinguishes "nothing real touched yet" from "recovery must now finish this
     forward" is immediately after `commit()`.
     """
+    if allow_uncommitted_source and production:
+        raise RuntimeError("allow_uncommitted_source is only valid for a non-production build")
     output = Path(output)
     _txn.recover_pending(output)
     if production:
@@ -411,12 +617,13 @@ def build(output: Path, source_commit: str | None = None, external_publication_c
     else:
         head = _git("rev-parse", "HEAD")
         derived_source, derived_publication = head, head
-        provenance_record={"schema":"dual-hat-remote-publication-provenance/2.0","verification":"not_applicable_nonpublishable_plan"}
+        provenance_record={"schema":PUBLICATION_PROVENANCE_SCHEMA,"verification":"not_applicable_nonpublishable_plan"}
     if source_commit is not None and source_commit != derived_source:
         raise RuntimeError("requested canonical source commit contradicts repository provenance")
     if external_publication_commit is not None and external_publication_commit != derived_publication:
         raise RuntimeError("requested external publication commit contradicts repository provenance")
     source_commit, external_publication_commit = derived_source, derived_publication
+    require_clean = not allow_uncommitted_source
     release_version = version()
     basename = f"dual-hat-{release_version}.zip"
     manifest_name = f"dual-hat-{release_version}.release.json"
@@ -425,9 +632,9 @@ def build(output: Path, source_commit: str | None = None, external_publication_c
     with policy.owned_run("package-build") as run:
         staging = run.subdirectory("staging")
         staged_archive = staging / basename
-        entries = package_entries()
+        entries = package_entries(require_clean=require_clean)
         _write_zip(staged_archive, entries)
-        validation = validate_archive(staged_archive)
+        validation = validate_archive(staged_archive, require_clean=require_clean)
         release_manifest = {
             "archive": basename,
             "archive_bytes": staged_archive.stat().st_size,
@@ -453,7 +660,8 @@ def build(output: Path, source_commit: str | None = None, external_publication_c
             f"{validation['archive_sha256']}  {basename}\n", encoding="utf-8"
         )
         validate_release_set(staging, source_commit=source_commit, external_publication_commit=external_publication_commit,
-                             require_publication_provenance=production, expected_remote_identity=expected_remote_identity)
+                             require_publication_provenance=production, expected_remote_identity=expected_remote_identity,
+                             require_clean=require_clean)
         names = (basename, manifest_name, checksum_name)
         _validate_output_boundary(output, names)
         archive_bytes = staged_archive.read_bytes()
@@ -470,7 +678,8 @@ def build(output: Path, source_commit: str | None = None, external_publication_c
         release_set = validate_release_set(
             output, source_commit=source_commit,
             external_publication_commit=external_publication_commit,
-            require_publication_provenance=production, expected_remote_identity=expected_remote_identity)
+            require_publication_provenance=production, expected_remote_identity=expected_remote_identity,
+            require_clean=require_clean)
     archive_path = output / basename
     manifest_path = output / manifest_name
     checksum_path = output / checksum_name
@@ -487,7 +696,8 @@ def build(output: Path, source_commit: str | None = None, external_publication_c
 def validate_release_set(output: Path, *, source_commit: str | None = None,
                          external_publication_commit: str | None = None,
                          require_publication_provenance: bool = True,
-                         expected_remote_identity: str = "") -> dict[str, object]:
+                         expected_remote_identity: str = "",
+                         require_clean: bool = True) -> dict[str, object]:
     output = Path(output)
     # A reader, exactly as much as `build()` is a writer: called directly (the
     # `validate` CLI action) against an `output` a prior `build()` may have left with
@@ -505,7 +715,7 @@ def validate_release_set(output: Path, *, source_commit: str | None = None,
     if actual != expected:
         raise RuntimeError(f"release-set membership mismatch; missing={sorted(expected-actual)}; extra={sorted(actual-expected)}")
     archive = output / basename
-    validation = validate_archive(archive)
+    validation = validate_archive(archive, require_clean=require_clean)
     manifest_path = output / f"dual-hat-{release_version}.release.json"
     checksum_path = output / f"dual-hat-{release_version}.zip.sha256"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -517,7 +727,7 @@ def validate_release_set(output: Path, *, source_commit: str | None = None,
         raise RuntimeError("release manifest version or maturity contradicts framework version")
     if manifest.get("archive") != basename or manifest.get("archive_sha256") != validation["archive_sha256"]:
         raise RuntimeError("release manifest does not bind the archive")
-    entries = package_entries()
+    entries = package_entries(require_clean=require_clean)
     expected_files = [{"bytes": len(data), "path": path, "sha256": sha256(data)}
                       for path, data in sorted(entries.items())]
     if manifest.get("archive_entry_count") != validation["entry_count"] or manifest.get("files") != expected_files:
@@ -554,7 +764,7 @@ def validate_release_set(output: Path, *, source_commit: str | None = None,
                 or manifest.get("external_publication_commit") != derived["external_publication_commit"]
                 or manifest.get("publication_provenance") != derived):
             raise RuntimeError("release manifest does not match verified standalone publication provenance")
-    elif manifest.get("publication_provenance")!={"schema":"dual-hat-remote-publication-provenance/2.0","verification":"not_applicable_nonpublishable_plan"}:
+    elif manifest.get("publication_provenance")!={"schema":PUBLICATION_PROVENANCE_SCHEMA,"verification":"not_applicable_nonpublishable_plan"}:
         raise RuntimeError("nonpublishable release plan contains invalid publication provenance")
     inspect_content_set({manifest_path.name: manifest_path.read_bytes(), checksum_path.name: checksum_path.read_bytes()})
     return {
@@ -614,6 +824,11 @@ def main() -> int:
     parser.add_argument("--external-publication-commit")
     parser.add_argument("--expected-remote-identity")
     parser.add_argument("--expected-remote-commit")
+    parser.add_argument(
+        "--allow-uncommitted-source", action="store_true",
+        help="build from a dirty working tree (non-production build only); "
+             "see build()'s own docstring for the one legitimate caller this exists for",
+    )
     args = parser.parse_args()
     if args.action == "self-test":
         result = self_test()
@@ -630,7 +845,8 @@ def main() -> int:
         if args.output is None:
             parser.error("build requires --output")
         result = build(args.output, args.source_commit, args.external_publication_commit,
-                       expected_remote_identity=args.expected_remote_identity or "")
+                       expected_remote_identity=args.expected_remote_identity or "",
+                       allow_uncommitted_source=args.allow_uncommitted_source)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 

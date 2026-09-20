@@ -170,6 +170,17 @@ diverge from the first. If none exists, escalate rather than improvising private
 consequential workflow gets exactly one implementation, not as many as the agents who have
 touched it.
 
+**The same discipline binds allocation of a tracked work item, not only a design or an
+implementation.** Before allocating a new identifier for a defect, gap, or proposal, search the
+existing backlogs — active and historical, since an item closed for the wrong reason is still
+prior art — for something similar, a subset, or a superset. Three outcomes are legitimate: reuse
+and queue the existing item; extend its scope and say so on its own row; or allocate new, with
+the survey's result recorded, naming what it is adjacent to and why that was not enough. This is
+a different corpus and a different act from surveying source for a capability, and it is stated
+separately for that reason — but it is the identical discipline, applied where a redundant entry
+costs a project not a diverged implementation but a fragmented, harder-to-find record of the
+same problem.
+
 The failure this principle prevents is not merely wasted effort. An option set assembled
 without a survey can be presented with full apparent rigor — tradeoffs weighed, alternatives
 compared — and that presentation makes an uninformed question indistinguishable from a
@@ -599,6 +610,15 @@ tracking half is confirmed current, through its own governed mechanism, at the m
 completion claim is made. This binds every such pairing a project establishes, present or
 future, rather than the specific pairs it was most recently caught in.
 
+**The identical one-act pairing binds the moment a systemic defect is first named, not only the
+moment work on it later closes.** Stating a defect crisply and moving on is not discharge of the
+obligation its naming creates — a crisp articulation of a defect is the most persuasive possible
+substitute for actually owning it, which is exactly why it does not count, and a finding that
+reaches only a message or a conversation reaches nothing: the stakeholder noticing it is not a
+control, because they do not read everything. Discharge is an identifier, its index entry, and
+its detail record landing together, in the same act that names the defect — never a description
+trusted to be tracked later by someone who read it.
+
 **Classification:** mechanically armed.
 
 **Armed by** `governance/WORK_ITEM_TYPE_REGISTRY.json` and
@@ -610,7 +630,11 @@ criteria or a runner for them. The checklists belong to the adopting project, an
 whose checklists are enumerated but never executed satisfies every mechanism named here.
 Enumeration by hand at closure has caught a sealed order whose own stated criteria were
 incomplete against the registry; that catch was a human reading a list, and nothing in this
-framework requires or observes it.
+framework requires or observes it. **The allocation-moment instance of the one-act pairing above
+is advice, not arming**, and separately so from the closure-moment instance this mechanism
+covers: nothing here detects a defect named in prose with no identifier, index entry, or detail
+record ever allocated for it, because there is no registry entry to check a failure to allocate
+against. It holds, where it holds, because a reasonable agent reads it and complies.
 
 ## 11. Human decisions, standing authorization, and the go-ahead on framework change
 
@@ -634,6 +658,17 @@ was not review quality but that the framework grew without the stakeholder notic
 drafted text is not adoption. A change that has not had its go-ahead is a draft, and every
 tracking artifact describing it states that status explicitly rather than implying the change
 is final.
+
+**Holding a draft has a second half: releasing it, and that release is the first act, not a
+background task.** Content held outside durable governed source because a specific, named
+constraint blocks it — most directly, exactly the missing go-ahead this principle requires, but
+the same shape recurs wherever some other declared condition holds otherwise-ready content back
+— is landed the moment that constraint actually lifts: before any other work, and before
+reporting on anything else. This has a precondition the release cannot retroactively supply: the
+constraint that forces the holding declares itself in the durable record at the moment the
+holding begins, not reconstructed after the fact when someone notices the content is missing. A
+reader arriving mid-hold finds a stated, dated reason there, not silence that could equally mean
+the content was simply lost.
 
 **A governance change codified during an active session takes effect immediately within that
 session**, not only for a future session that reads the updated files from scratch. From the
