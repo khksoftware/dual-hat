@@ -10,12 +10,17 @@ from typing import Mapping, Sequence
 
 
 TIERS = {
-    "tier_1_routine": {"reasoning": "routine deterministic execution", "tools": ["bounded_file_or_process_tools"], "context": "bounded", "independence": "not_required", "cost_latency": "optimize"},
+    "tier_1_routine": {"reasoning": "bounded execution of a known procedure whose outcomes still need a model", "tools": ["bounded_file_or_process_tools"], "context": "bounded", "independence": "not_required", "cost_latency": "optimize"},
     "tier_2_standard": {"reasoning": "standard implementation and analysis", "tools": ["repository_inspection", "validation"], "context": "work_item", "independence": "preferred_for_review", "cost_latency": "balance"},
     "tier_3_advanced": {"reasoning": "complex architecture and cross-domain reasoning", "tools": ["repository_inspection", "validation", "resumable_handoff"], "context": "cross_domain", "independence": "required_for_architecture_review", "cost_latency": "capability_first"},
     "tier_4_critical": {"reasoning": "deep independent high-risk security or release review", "tools": ["primary_evidence", "detached_validation", "resumable_handoff"], "context": "complete_risk_boundary", "independence": "mandatory", "cost_latency": "risk_first"},
 }
 ORDER = tuple(TIERS)
+
+# Tier 0 is bound to a script, never to a model, so it is deliberately outside TIERS and ORDER:
+# nothing that binds, confirms, falls back to or switches a model can select it.
+SCRIPTED_TIER = "tier_0_scripted"
+SCRIPTED = {"binding": "script", "model_binding": False, "time_bound": "required", "output": "complete, with an index"}
 
 
 class RoutingError(RuntimeError):
@@ -38,7 +43,8 @@ def verified_evidence(evidence: object, *, environment_fingerprint: str | None =
 
 def tier_for_activity(activity: str) -> str:
     mapping = {
-        "deterministic_execution": ORDER[0], "standard_implementation": ORDER[1],
+        "deterministic_execution": SCRIPTED_TIER, "bounded_execution": ORDER[0],
+        "standard_implementation": ORDER[1],
         "architecture": ORDER[2], "independent_review": ORDER[2],
         "security_review": ORDER[3], "release_review": ORDER[3],
     }
@@ -93,6 +99,8 @@ def bind_development_environment(
 
 
 def require_tier(binding: Mapping[str, object], tier: str, *, mandatory: bool = True) -> dict[str, object]:
+    if tier == SCRIPTED_TIER:
+        return {"status": "script_bound", "tier": tier, **SCRIPTED}
     if tier not in TIERS:
         raise RoutingError("unknown abstract tier")
     mapping = binding.get("tier_mapping", {})

@@ -37,6 +37,18 @@ healthy work merely to inspect it. Planning binds one thing principle 1 does not
 state: an optimization must preserve the authorized scope, not only authority,
 acceptance, safety, and recovery.
 
+**Deliver complete, tested partial vertical slices by default.** A partial
+increment crosses every layer needed to produce one real user-observable outcome:
+its entry surface, domain/service path, durable state or side-effect boundary,
+and the smallest real integration proof that can falsify their contract. Prefer
+several such end-to-end slices over completing a backend layer, then a frontend
+layer, then discovering their disagreement during late integration. A layer-only
+increment is admissible only when a vertical slice is genuinely impossible or
+would cost more without increasing confidence; the plan names that reason and
+integrates at the earliest safe checkpoint. Individually Green slices are not
+the final verdict: after the planned slices are complete, validate their full
+integrated union and the complete claimed workflow/product before acceptance.
+
 Every plan receives at least two adversarial reduction passes before it is ready
 for approval, and *plan* is read at its widest: any design, brief, dispatch,
 batch, sequence, estimate, test population or execution approach, whether or not

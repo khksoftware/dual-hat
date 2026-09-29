@@ -96,6 +96,186 @@ named, while a later round finds the same defect in artifacts nobody named, are
 evidence about the scoping of the repairs rather than about the quantity of
 defects remaining.
 
+Cost pressure, a narrow remaining budget, or a preference for the smallest
+immediate patch must not narrow a repair to the latest finding while sibling
+classes in the established population remain undispositioned. Optimize for
+total convergence: inspect and repair the complete class, its sibling classes,
+and their mapped population before the next confirming review. The relevant
+cost is the expected total of repair plus review rounds, not the size or price
+of the next local correction. A budget that cannot support the complete
+population returns to the deciding authority; it does not authorize a cheaper
+piecemeal review loop.
+
+### Executable preservation and review-assurance checks
+
+For a complete-object repair with mechanically extractable contracts, use
+`tooling/review_assurance.py` before commissioning the confirming review.
+Its basis is separate from the candidate: primary-source byte bindings,
+the predecessor's complete contract inventory, explicit replacements with
+before hashes and decision authority, semantic obligations, and declared
+transition writes and invariant dependencies. An adapter extracts candidate
+facts from the actual artifact; it must not copy expected facts into the
+candidate evidence or regenerate the predecessor inventory from the repair.
+
+The mechanism refuses unexplained contract loss, changes or additions;
+duplicates keyed by semantic obligation rather than label or wording;
+unaccounted predecessor obligations; and missing transition/invariant pairs
+derived from intersecting writes and reads. Every required observation has a
+bound witness. Scope, authorization and the meaning of equivalence remain
+Architecture judgments, explicitly exposed in the basis, not judgments a
+hash or a string comparison can make.
+
+Run the same checker against a valid control and systematically damaged
+copies using `--falsify`. Deleted contract units, changed layouts, omitted
+obligations, renamed duplicate cases, missing interactions and observations,
+and stale basis bindings must refuse. Record a missed mutation as failure of
+the assurance mechanism, not as an additional clean test. Language-specific
+or behavioral mechanisms also need defect-sensitive executable witnesses;
+phrase presence is not evidence that the described behavior exists.
+
+Evidence-only mutation cannot detect an extractor that never reads a contract.
+Use `falsify_source_adapter` with the real extraction and admission functions to
+mutate primary source bytes as well: remove complete units and individual clauses,
+and change supported layouts/behavioral clauses. Include a syntactically valid
+mutation so parser failure alone cannot stand in for detection. An extractor that
+copies expected facts must fail this exercise. Empty, duplicate or unapplied
+mutations and harness errors are failed proofs, never successful detections.
+
+`markdown_contract_units` provides exact section/preamble preservation, including
+behavioral prose, with fenced-block handling and duplicate-section refusal. Its
+byte preservation proves that reviewed wording survives; it does not prove the
+behavior that wording specifies. Bind the independent source basis and explicit
+changes before generation; do not reconstruct expectations from generated output.
+
+This is a read-only library and CLI, not an automatically armed hook. A
+consumer's builder or acceptance path must invoke it and stop on failure;
+merely shipping the source or writing a receipt establishes no enforcement.
+For an Architecture-accepted Deep baseline created under Dual Hat 5.2.0 or later,
+`quality_review.validate_baseline`
+requires the deep-review plan, assurance basis and assurance evidence and sends
+them through the actual validators. The consumer checks presence and internal
+consistency, and binds the deep-review plan's `subject_sha256` to the
+baseline's own `governed_state_binding.binding_hash`, case-insensitively, so a
+plan computed for a different repository state is refused even when it is
+otherwise well-formed; the assurance basis is not yet bound to that same
+subject, which remains open. A helper-only test is insufficient: tests
+must remove or corrupt each input through that acceptance entry point and prove
+that accepted state is unavailable. Earlier immutable accepted baselines retain
+their historical validation semantics; comparison does not retroactively erase
+evidence by applying a newer acceptance prerequisite.
+Independent reviewers inspect the extracted populations and dependency model
+as well as the result, because an omitted requirement can be absent from both
+the basis and candidate. Structural Green is not semantic acceptance, and
+declared witnesses are not claims that future implementation tests ran.
+
+Command: `python tooling/review_assurance.py <basis.json> <evidence.json> --falsify`.
+The input contract and mutation mechanism live in that module; adapters keep
+product names, domain rules and fixture populations outside the framework.
+
+### Deep complete-object review: prove chains, not corresponding prose
+
+Before an expensive or externally commissioned complete-object review, the
+candidate author does not approve its own readiness merely because every known
+finding has a paragraph and every paragraph has a proposed test. That pattern
+correlates design, audit and tests around the same mistaken premise. A separate
+local pre-review freezes the candidate and challenges each material claim as a
+complete seven-link chain:
+
+1. **authority** -- the current decision, including what it supersedes and when
+   it becomes effective;
+2. **producer** -- the concrete component or role that creates the fact;
+3. **representation** -- exact object, primitive/nested schema, canonical bytes,
+   hash and identity rules;
+4. **transition** -- the only state edge the fact may open, including temporal
+   order and no-op/pending behavior;
+5. **consumer** -- the named component or person and real interface that uses or
+   receives it;
+6. **failure/recovery** -- every partial side-effect boundary, timeout,
+   cancellation, retry prohibition and degraded result; and
+7. **evidence** -- a source-backed positive control and disconfirming witness at
+   the real seam.
+
+An empty or abstract link -- “existing channel,” “the schema is closed,” “the
+timeout is bounded,” “the caller supplies provenance” -- is a finding, not a
+placeholder an implementer may fill. Claims about executable behavior are
+checked against the selected source path, not against another candidate
+document. Fake clocks prove arithmetic, not killability of blocking I/O. A hash
+or local path proves identity or location, not delivery to its consumer.
+
+The pre-review must also search beyond encountered findings. It explicitly
+dispositions the current deep-review hazard population: authority temporality
+and circular gates; producer/consumer delivery; canonical representation;
+source/runtime contradiction; blocking-I/O killability; the cross-product of
+partial writes and recovery; identity provenance and relabelling; resource
+amplification and content encoding; time-of-check/time-of-use races;
+environment, dependency and platform behavior; privacy in logs, retention and
+crash artifacts; reviewer contamination and common-mode reasoning; population
+denominators and exclusions; measurement/cost basis; compatibility, migration
+and versioning; substantive human projection versus its machine source;
+evaluation-artifact fitness and post-result tuning; external control-plane
+reachability, revocation and receipt provenance; frozen-package execution side
+effects and transitive imports; authority revocation during an external pause;
+clock-domain expiry across restart; hostile-output renderer injection; and tool-
+binary/parser supply-chain drift. `not_applicable` requires a subject-specific basis;
+silence is not a disposition. This list is a mandatory search floor, never a
+claim that unknown failure classes cannot exist.
+
+For each content or provenance filter, use metamorphic attacks: place forbidden
+material in every mutable allowed carrier, relabel a forbidden carrier as each
+allowed role, and retain a legitimate-overlap positive control. Never subtract
+the candidate being tested from its own negative population. For every action
+that produces more than one durable object, enumerate the power set of valid
+partial publication states or give a justified equivalence partition; prove
+that paid, destructive or author-owned evidence cannot be stranded. For every
+external or blocking operation, distinguish a local timeout notification from
+termination of the work and prove the latter at a real local seam.
+
+The reviewer roster is selected by distinct detection value. A deep object whose
+acceptance spans architecture, end-user/domain value and source/test assurance
+normally uses those three isolated lenses. Each receives the same frozen bytes
+and this protocol, not sibling conclusions. Ambient memory or context that
+leaks a prior verdict is disclosed as contamination; the seat either restarts
+clean or treats it as untrusted and derives every finding from the frozen
+population. Report destinations are pre-resolved destinations anchored to a
+declared root, declared before review--never a path that inherits an unknown
+working directory. The supervisor verifies each is outside every protected/shared checkout before
+briefing, then copies terminal bytes into the governed candidate only after all
+seats finish. Reports are persisted byte-exact immediately, so session loss or
+working-directory drift cannot turn a verdict into chat reconstruction or
+mutate another lane.
+
+The frozen evidence directory itself is a no-write surface. Executable checker
+or test bytes are copied by the supervisor into a separately hashed writable
+execution directory; Python runs with bytecode and test-cache writes disabled.
+Every transitive import required by the claimed acceptance consumer is a
+manifested member. The reviewer re-verifies exact inventory and every member
+after admission tooling and again before terminal verdict. A collection or
+import failure, an undeclared cache file, or any member drift is failed custody,
+not a partial Green. The report/progress directories remain outside the package.
+
+Claims about external seats, UI delivery, custody brokers, schedulers or other
+platform capabilities name the real producer interface and bind its returned
+receipt. Local code may validate/import such a receipt but cannot manufacture
+reachability or visibility. A test fake proves the import contract only; a
+separately governed real-seam acceptance action proves the platform path.
+
+Where a held-out source, oracle, benchmark or evaluation fixture carries the
+substantive discriminator, byte identity and non-exposure do not establish
+fitness. Before spend or release, a content-aware role independent of the
+artifact author and target result applies a closed neutral admission profile;
+oracle/challenge material is assessed by a distinct role. Their reports bind
+exact artifact/profile identities, limitations and rejection behavior, and the
+roles do not later grade the target output.
+
+`deep_review_plan_failures()` in `tooling/review_assurance.py` supplies a
+product-neutral admission check for this review-plan accounting and is mandatory
+on the accepted Deep-baseline path from 5.2.0. It
+requires the seven links, source anchors, positive/negative cases, reviewer
+separation facts and every hazard disposition. It does not decide whether the
+claims are true, whether the selected source anchors are sufficient, or whether
+the hazard floor is complete. Structural Green remains only permission to start
+the independent review.
+
 ## Risk-proportionate tiers
 
 - Light: localized, narrow, low-risk behavior. Inspect the diff, clarity, established patterns, obvious correctness/error/security/lifecycle hazards, test relevance, duplication, dead code, and sealed scope.

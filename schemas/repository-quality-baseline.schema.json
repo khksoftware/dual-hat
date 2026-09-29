@@ -85,6 +85,9 @@
     "debt_references": {
       "type": "array"
     },
+    "deep_review_plan": {
+      "type": "object"
+    },
     "dual_hat_commit": {
       "pattern": "^[A-Fa-f0-9]{40}$",
       "type": "string"
@@ -158,6 +161,12 @@
     },
     "residual_risk": {
       "type": "array"
+    },
+    "review_assurance_basis": {
+      "type": "object"
+    },
+    "review_assurance_evidence": {
+      "type": "object"
     },
     "review_methods": {
       "items": {
