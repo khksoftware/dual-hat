@@ -129,6 +129,23 @@ mechanism when it provides equivalent evidence and protection. New process must 
 consumer, its prevented failure, its invalidation trigger, its expected cost, and its
 retirement or simplification condition.
 
+**Economy is achieved by structure, never by instruction.** Do not tell an executor to conserve
+effort or tokens. Such an instruction does not say what to spend less on, so the executor decides,
+and the reported result is narrowed or abandoned work rather than the same work done more cheaply:
+a saving that arrives as a quality loss nobody traces back to it. Stating the task's scope, and
+what its output must contain, is structure and not such an instruction. Remove from the executor's
+path instead the decisions it does not need to make:
+
+- bind work that passes the Tier 0 test to a script (Model Tier and Runtime Binding);
+- let a procedure, rather than the executor, decide what comes next, and give the executor a
+  governed way to contest the procedure's answer rather than route around it.
+
+A resident instruction that its common invocation does not use may be loaded only on the branch
+that needs it. But an instruction that is long because a shorter one was ignored falls under that
+document's admission test: cut it only if the behaviour it guards does not regress. **A decision
+moved into a procedure stops depending on the executor's judgement at run time.** It is made once,
+where it can be reviewed, and it stays made, proportionate or not, until the procedure changes.
+
 **Classification:** judgement-only.
 
 **Advice.** Nothing enforces any sentence in this principle. There is no detector for a

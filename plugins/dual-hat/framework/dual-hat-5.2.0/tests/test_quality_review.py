@@ -20,10 +20,12 @@ from test_framework import (  # noqa: E402
     assert_probed_flavours_all_ran, available_reparse_flavours, make_reparse, remove_reparse,
 )
 from quality_review import (  # noqa: E402
-    QualityReviewError, baseline_hash, compare_baselines, derive_governed_baseline_state, discover_rule_files, effective_review_plan, load_rules,
+    ASSURANCE_REQUIRED_FROM_VERSION, QualityReviewError, baseline_hash, compare_baselines, derive_governed_baseline_state, discover_rule_files, effective_review_plan, load_rules,
     governed_state_binding_hash, review_acceptance_blockers, select_review_tier, validate_baseline,
     validate_baseline_against_state, validate_baseline_from_repository, validate_rule, write_generated_json,
 )
+from review_assurance import (BASIS_SCHEMA, DEEP_REVIEW_HAZARDS, EVIDENCE_SCHEMA,
+                              REVIEW_PLAN_SCHEMA, canonical_digest)  # noqa: E402
 
 
 def rule(rule_id: str, *, precedence: str, action: dict, tiers=None, validity=None, scope=None) -> dict:
@@ -52,6 +54,53 @@ def bind_baseline(baseline: dict, *, disposition: str | None = None) -> dict:
     state["binding_hash"] = governed_state_binding_hash(state)
     baseline["governed_state_binding"] = state
     return state
+
+
+def add_acceptance_assurance(baseline: dict) -> None:
+    """Call after `bind_baseline`: the plan's subject binds to this baseline's own state."""
+    chain = {name: name.replace("_", " ") for name in (
+        "authority", "producer", "representation", "transition", "consumer",
+        "failure_recovery", "evidence")}
+    baseline["deep_review_plan"] = {
+        "schema": REVIEW_PLAN_SCHEMA, "tier": "deep_complete_object",
+        "subject_sha256": baseline["governed_state_binding"]["binding_hash"].lower(),
+        "separation": {"candidate_frozen": True, "candidate_author_separate": True,
+                       "sibling_findings_hidden": True, "ambient_context_disclosed": True,
+                       "durable_report_target_predeclared": True, "package_no_write": True,
+                       "tooling_execution_copy_separate": True,
+                       "post_tool_inventory_verified": True,
+                       "transitive_imports_manifested": True},
+        "claims": [{"id": "baseline", "assertion": "accepted baseline is fully reviewed",
+                    "risk": "acceptance can bypass assurance", "chain": chain,
+                    "source_anchors": [{"id": "baseline", "sha256": "b" * 64}],
+                    "falsification_cases": [
+                        {"id": "valid", "polarity": "positive", "witness": "complete evidence accepts"},
+                        {"id": "missing", "polarity": "negative", "witness": "missing evidence refuses"}]}],
+        "hazard_dispositions": [{"hazard": hazard, "status": "applicable",
+                                 "basis": "covered by the accepted review evidence"}
+                                for hazard in DEEP_REVIEW_HAZARDS],
+    }
+    basis = {
+        "schema": BASIS_SCHEMA, "source_bindings": {"baseline": "c" * 64},
+        "contract": {"acceptance": "requires assurance"}, "changes": [],
+        "source_obligations": ["acceptance-armed"],
+        "obligations": [["baseline", "acceptance", "armed"]],
+        "transitions": [{"id": "accept", "writes": ["state"]}],
+        "invariants": [{"id": "assured", "reads": ["state"], "observations": ["evidence"]}],
+    }
+    evidence = {
+        "schema": EVIDENCE_SCHEMA, "basis_sha256": canonical_digest(basis),
+        "source_bindings": dict(basis["source_bindings"]),
+        "contract": dict(basis["contract"]),
+        "cases": [{"id": "armed", "obligation": ["baseline", "acceptance", "armed"],
+                   "witness": "real acceptance consumer rejects missing evidence",
+                   "covers": ["acceptance-armed"]}],
+        "witnesses": [{"id": "acceptance", "observations": {"evidence": "validated"}}],
+        "interactions": [{"transition": "accept", "invariant": "assured",
+                          "witness_id": "acceptance"}],
+    }
+    baseline["review_assurance_basis"] = basis
+    baseline["review_assurance_evidence"] = evidence
 
 
 class QualityReviewTests(unittest.TestCase):
@@ -210,8 +259,53 @@ class QualityReviewTests(unittest.TestCase):
         self.assertEqual((), validate_baseline_against_state(baseline, expected))
         wrong={**expected,"repository_commit":"F"*40}; wrong["binding_hash"]=governed_state_binding_hash(wrong)
         self.assertTrue(any("internally derived" in row for row in validate_baseline_against_state(baseline, expected, caller_assertion=wrong)))
-        accepted=json.loads(json.dumps(baseline)); accepted["architecture_disposition_state"]="accepted"; bind_baseline(accepted,disposition="accepted"); accepted["baseline_hash"]=baseline_hash(accepted)
+        accepted=json.loads(json.dumps(baseline)); accepted["architecture_disposition_state"]="accepted"; accepted["dual_hat_version"]=".".join(map(str, ASSURANCE_REQUIRED_FROM_VERSION)); bind_baseline(accepted,disposition="accepted"); add_acceptance_assurance(accepted); accepted["baseline_hash"]=baseline_hash(accepted)
         self.assertEqual((), validate_baseline(accepted))
+        for field in ("deep_review_plan", "review_assurance_basis", "review_assurance_evidence"):
+            damaged=json.loads(json.dumps(accepted)); damaged.pop(field); damaged["baseline_hash"]=baseline_hash(damaged)
+            self.assertTrue(validate_baseline(damaged), field)
+
+    def test_deep_review_plan_subject_binds_to_this_baselines_own_state_not_a_borrowed_one(self) -> None:
+        def accepted(commit: str) -> dict:
+            baseline = {
+                "baseline_id": "BASE-" + commit[:4], "repository_commit": commit, "dual_hat_commit": "B"*40,
+                "dual_hat_version": ".".join(map(str, ASSURANCE_REQUIRED_FROM_VERSION)),
+                "date": "2026-07-20", "review_scope": [], "exclusions": [], "selected_review_tier": "deep",
+                "active_platform_profile": {"profile_id":"test","profile_version":"5.2.0","profile_sha256":"C"*64}, "user_rule_sources": [], "rule_set_hash": "A" * 64,
+                "effective_plan_hash": "B" * 64, "suppressed_architecture_rules": [], "replaced_rules": [],
+                "severity_adjustments": [], "rule_conflicts": [], "non_waivable_controls": ["REVIEW-NW-001"], "review_methods": ["independent review"],
+                "tool_versions": {}, "principal_metrics": {"coverage": {"value": 90, "desired_direction": "increase"}},
+                "risk_areas": [], "accepted_exceptions": [], "user_approved_tradeoffs": [], "unresolved_findings": [],
+                "debt_references": [], "validation_evidence": ["detached committed-tree tests"], "preliminary_findings_mapping": [], "final_findings": [],
+                "remediated_findings": [], "residual_risk": [], "architecture_disposition_state": "accepted",
+            }
+            bind_baseline(baseline, disposition="accepted")
+            add_acceptance_assurance(baseline)
+            baseline["baseline_hash"] = baseline_hash(baseline)
+            return baseline
+        one, other = accepted("A"*40), accepted("F"*40)
+        self.assertEqual((), validate_baseline(one))
+        self.assertEqual((), validate_baseline(other))
+        self.assertNotEqual(one["governed_state_binding"]["binding_hash"], other["governed_state_binding"]["binding_hash"])
+        # A plan built for a different baseline's subject must not accept this one, even though
+        # it is internally well-formed and every other field validates.
+        borrowed = json.loads(json.dumps(one))
+        borrowed["deep_review_plan"] = json.loads(json.dumps(other["deep_review_plan"]))
+        borrowed["baseline_hash"] = baseline_hash(borrowed)
+        borrowed_failures = validate_baseline(borrowed)
+        self.assertTrue(any("subject does not match" in row for row in borrowed_failures), borrowed_failures)
+        # A hand-edited subject that matches no real governed state must not accept either.
+        forged = json.loads(json.dumps(one))
+        forged["deep_review_plan"]["subject_sha256"] = "f" * 64
+        forged["baseline_hash"] = baseline_hash(forged)
+        forged_failures = validate_baseline(forged)
+        self.assertTrue(any("subject does not match" in row for row in forged_failures), forged_failures)
+        # A baseline missing its own governed-state binding cannot have its plan bound at all.
+        unbound = json.loads(json.dumps(one))
+        unbound.pop("governed_state_binding")
+        unbound["baseline_hash"] = baseline_hash(unbound)
+        unbound_failures = validate_baseline(unbound)
+        self.assertTrue(any("subject cannot be bound" in row for row in unbound_failures), unbound_failures)
 
     def test_actual_state_is_derived_and_historical_comparison_is_distinct(self) -> None:
         with TemporaryDirectory() as temporary:
@@ -237,10 +331,40 @@ class QualityReviewTests(unittest.TestCase):
             self.assertEqual((),validate_baseline_from_repository(candidate,root,"quality/state.json"))
             forged={**actual,"repository_commit":"F"*40}; forged["binding_hash"]=governed_state_binding_hash(forged)
             self.assertTrue(any("caller assertion" in row for row in validate_baseline_from_repository(candidate,root,"quality/state.json",caller_assertion=forged)))
-            historical=json.loads(json.dumps(candidate)); historical["baseline_id"]="BASE-1"; historical["architecture_disposition_state"]="accepted"; bind_baseline(historical,disposition="accepted"); historical["principal_metrics"]["coverage"]["value"]=90; historical["baseline_hash"]=baseline_hash(historical)
+            historical=json.loads(json.dumps(candidate)); historical["baseline_id"]="BASE-1"; historical["architecture_disposition_state"]="accepted"; bind_baseline(historical,disposition="accepted"); add_acceptance_assurance(historical); historical["principal_metrics"]["coverage"]["value"]=90; historical["baseline_hash"]=baseline_hash(historical)
             comparison=compare_baselines(historical,candidate,repository=root,resolver_config="quality/state.json")
             self.assertFalse(comparison["non_regression_passed"]); self.assertEqual("coverage",comparison["metric_regressions"][0]["metric"]); self.assertEqual([],comparison["invalid_historical_baseline_evidence"])
             (root/"dirty.txt").write_text("dirty",encoding="utf-8"); self.assertTrue(any("dirty repository" in row for row in validate_baseline_from_repository(candidate,root,"quality/state.json")))
+
+    def test_accepted_baseline_below_the_assurance_threshold_stays_compatible_and_at_the_threshold_requires_assurance(self) -> None:
+        def accepted_baseline(version: str) -> dict:
+            baseline = {
+                "baseline_id": "BASE-1", "repository_commit": "A"*40, "dual_hat_commit": "B"*40, "dual_hat_version": version,
+                "date": "2026-07-20", "review_scope": [], "exclusions": [], "selected_review_tier": "deep",
+                "active_platform_profile": {"profile_id":"test","profile_version":version,"profile_sha256":"C"*64}, "user_rule_sources": [], "rule_set_hash": "A" * 64,
+                "effective_plan_hash": "B" * 64, "suppressed_architecture_rules": [], "replaced_rules": [],
+                "severity_adjustments": [], "rule_conflicts": [], "non_waivable_controls": ["REVIEW-NW-001"], "review_methods": ["independent review"],
+                "tool_versions": {}, "principal_metrics": {"coverage": {"value": 90, "desired_direction": "increase"}},
+                "risk_areas": [], "accepted_exceptions": [], "user_approved_tradeoffs": [], "unresolved_findings": [],
+                "debt_references": [], "validation_evidence": ["detached committed-tree tests"], "preliminary_findings_mapping": [], "final_findings": [],
+                "remediated_findings": [], "residual_risk": [], "architecture_disposition_state": "accepted",
+            }
+            bind_baseline(baseline, disposition="accepted"); baseline["baseline_hash"] = baseline_hash(baseline)
+            return baseline
+        threshold = ".".join(map(str, ASSURANCE_REQUIRED_FROM_VERSION))
+        shipped = str(json.loads((ROOT/"release/VERSION.json").read_text(encoding="utf-8"))["version"])
+        self.assertNotEqual(shipped, threshold, "the last pre-gate release must stay below the live threshold")
+        before, at_threshold = accepted_baseline(shipped), accepted_baseline(threshold)
+        self.assertEqual((), validate_baseline(before))
+        self.assertTrue(validate_baseline(at_threshold))
+        candidate = {"baseline_id": "BASE-2", "principal_metrics": {}, "debt_references": [], "unresolved_findings": []}
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary); (root/"marker.txt").write_text("not a governed repository",encoding="utf-8")
+            subprocess.run(("git","init"),cwd=root,check=True,capture_output=True)
+            comparison_before = compare_baselines(before, candidate, repository=root, resolver_config="quality/state.json")
+            comparison_threshold = compare_baselines(at_threshold, candidate, repository=root, resolver_config="quality/state.json")
+        self.assertEqual([], comparison_before["invalid_historical_baseline_evidence"])
+        self.assertTrue(comparison_threshold["invalid_historical_baseline_evidence"])
 
     def test_actual_state_rejects_a_profile_whose_declared_core_version_disagrees_with_the_independently_stated_release_version(self) -> None:
         """Sibling case to the fixture above. It writes

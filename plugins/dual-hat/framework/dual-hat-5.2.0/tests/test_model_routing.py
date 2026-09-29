@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
 
-from model_routing import ORDER, TIERS, bind_development_environment, fingerprint, production_configuration, require_tier, switch_selection, tier_for_activity
+from model_routing import ORDER, SCRIPTED_TIER, TIERS, bind_development_environment, fingerprint, production_configuration, require_tier, switch_selection, tier_for_activity
 
 DUAL_HAT_CAPABILITY_PROOFS = {"explicit_user_and_architecture_reporting", "resumable_handoff"}
 
@@ -26,6 +26,15 @@ class ModelRoutingTests(unittest.TestCase):
         self.assertEqual(4, len(TIERS)); self.assertEqual(ORDER[3], tier_for_activity("security_review"))
         text = " ".join(str(value) for value in TIERS.values()).casefold()
         self.assertNotIn("provider", text); self.assertNotIn("model name", text)
+
+    def test_deterministic_work_routes_to_a_script_never_a_model(self):
+        self.assertEqual(SCRIPTED_TIER, tier_for_activity("deterministic_execution"))
+        self.assertNotIn(SCRIPTED_TIER, TIERS); self.assertNotIn(SCRIPTED_TIER, ORDER)
+        self.assertEqual(ORDER[0], tier_for_activity("bounded_execution"))
+        binding = bind_development_environment(adapter_identity="test-host", tools=["files"], runtime_fingerprint={"os": "fixture"}, configured_models=self.models())
+        self.assertNotIn(SCRIPTED_TIER, binding["tier_mapping"])
+        scripted = require_tier(binding, SCRIPTED_TIER)
+        self.assertEqual("script_bound", scripted["status"]); self.assertFalse(scripted["model_binding"])
 
     def test_onboarding_and_project_lifecycle_require_current_project_mapping(self):
         onboarding = (ROOT / "process/ONBOARDING.md").read_text(encoding="utf-8")

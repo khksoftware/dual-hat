@@ -2,6 +2,64 @@
 
 # Changelog
 
+## 5.2.0 - 2026-09-29
+
+## 5.2.0
+
+Thirteen pending propagations, published together, per the standing rule that a release carries every
+pending item and never a subset. This is a minor increment. Most of the thirteen are additive
+governance. One is a new read-only assurance library and CLI, with a consumer that fails closed. The
+single tightening refuses input that was never within the documented contract. Under the release
+policy this release itself publishes, that makes it a patch-level change, not a breaking one.
+
+**Release classification.** The release policy now states the test its three change classes always
+implied. A change that refuses input a previous release accepted is:
+- **breaking** when that input was within the documented contract;
+- **patch** when it was not;
+- **breaking** where the contract is silent.
+
+A minor release therefore never carries a tightening.
+
+**Scripted execution, Tier 0.** A new Tier 0 (Scripted) model tier binds work that a procedure fully
+determines and whose failures it classifies. It runs as a time-bounded script that keeps its complete
+output and reports an index of it. Routing sends deterministic execution to that tier, outside every
+model binding. Principle 1 gains a structure-not-instruction economy paragraph: never instruct an
+executor to economise; remove the decisions it does not need to make. Worked instances and consequences:
+- A registry preflight that lists every registry a change owes an update to is Tier 0 work.
+- A role that launches a deterministic script, and reads its complete output, has run its checks itself
+  for every check a procedure fully decides. Reading the output and deciding acceptance stay with that
+  role.
+- Once a Tier 0 route exists for a step, it is that step's required path. Any other executor is a
+  fallback, confined to the route's declared failure classes.
+- A re-run used to attribute a failure repeats at the suspected point more than once. Runs that
+  disagree attribute nothing.
+- In a batched pass, a target's absence is a whole-run verdict, merged across partitions.
+- A refresh may recompute recorded evidence. If the other side has moved, the refresh refuses to rewrite
+  the judgement silently.
+
+**Planning and review.** Planning now defaults to complete, tested, partial vertical slices, and still
+requires final acceptance of the full integration. Review convergence gains an explicit rule: cost
+pressure, or a narrow remaining budget, never narrows a repair to the latest finding while sibling
+classes remain in the established population.
+
+**Whole-object review assurance.** A product-neutral, read-only assurance library and CLI, with a
+consumer of Architecture-accepted Deep baselines that fails closed:
+- Accepted Deep baselines created under 5.2.0 or later must carry a valid deep plan, an assurance basis
+  and assurance evidence.
+- Pending baselines and baselines from before 5.2.0 remain compatible.
+- A deep review plan is accepted only for the governed state its own baseline binds.
+
+**Validation and parallelism.** Test execution in a repository worked by concurrent agents or platforms
+is named as a shared consequential workflow, under the existing single-orchestrator rule:
+- **Identity.** A run is identified by its tree and its target set.
+- **Reuse.** Identical requests share one result. A held result covers a descendant tree only where the
+  intervening change selects none of that result's targets.
+- **Admission.** Admission is machine-wide, and a stopped holder leaves no live process tree.
+- **Deferral.** Any coalescing deferral is bounded and visible, and never lets work close without
+  coverage.
+
+Full live validation also runs periodically, at a cadence the adopting profile sets.
+
 ## 5.1.0 - 2026-09-20
 
 ## 5.1.0

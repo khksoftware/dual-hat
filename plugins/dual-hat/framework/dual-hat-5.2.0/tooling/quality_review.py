@@ -15,6 +15,7 @@ from typing import Iterable, Mapping, Sequence
 
 from path_containment import ContainmentError, contained, is_reparse
 from profile_conformance import validate_profile
+from review_assurance import deep_review_plan_failures, validate_assurance
 from work_item_governance import validate_sealed
 
 
@@ -27,6 +28,7 @@ ACTIONS = {
 }
 PRECEDENCE = {"architecture_default": 10, "repository_architecture": 20, "user": 30, "non_waivable": 40}
 BLOCKING_SEVERITIES = {"critical", "high"}
+ASSURANCE_REQUIRED_FROM_VERSION = (5, 2, 0)
 
 
 class QualityReviewError(ValueError):
@@ -46,6 +48,11 @@ def _digest_bytes(value: bytes) -> str:
 
 def _canonical_hash(value: object) -> str:
     return _digest_bytes(json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+
+
+def _version_at_least(value: object, minimum: tuple[int, int, int]) -> bool:
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?", str(value))
+    return bool(match and tuple(map(int, match.groups())) >= minimum)
 
 
 def _git(root: Path, *args: str) -> str:
@@ -466,8 +473,16 @@ def select_review_tier(risk_signals: Iterable[str], internal_release_only: bool 
     return "standard" if signals else "light"
 
 
-def review_acceptance_blockers(findings: Sequence[Mapping[str, object]]) -> tuple[str, ...]:
+def review_acceptance_blockers(findings: Sequence[Mapping[str, object]], *,
+                              assurance_basis: dict | None = None,
+                              assurance_evidence: dict | None = None,
+                              require_assurance: bool = False) -> tuple[str, ...]:
     blockers: list[str] = []
+    if require_assurance or assurance_basis is not None or assurance_evidence is not None:
+        if assurance_basis is None or assurance_evidence is None:
+            blockers.append("review assurance basis/evidence required")
+        else:
+            blockers.extend("review assurance: " + error for error in validate_assurance(assurance_basis, assurance_evidence))
     for row in findings:
         severity = str(row.get("severity", "")).casefold()
         disposition = str(row.get("disposition", ""))
@@ -511,7 +526,8 @@ def validate_baseline(payload: Mapping[str, object]) -> tuple[str, ...]:
                 "final_findings", "remediated_findings", "residual_risk", "governed_state_binding"}
     failures: list[str] = []
     if required - set(payload): failures.append("baseline lacks required fields")
-    if set(payload) - required - {"$comment"}: failures.append("baseline contains unknown fields")
+    assurance_fields = {"deep_review_plan", "review_assurance_basis", "review_assurance_evidence"}
+    if set(payload) - required - assurance_fields - {"$comment"}: failures.append("baseline contains unknown fields")
     if payload.get("selected_review_tier") != "deep": failures.append("initial repository baseline must use Deep review")
     if payload.get("baseline_hash") != baseline_hash(payload): failures.append("baseline hash mismatch")
     for field in ("repository_commit", "dual_hat_commit"):
@@ -542,7 +558,28 @@ def validate_baseline(payload: Mapping[str, object]) -> tuple[str, ...]:
         if len({str(row.get("finding_id")) for row in result}) != len(result): failures.append(f"baseline {field} contains duplicate finding IDs")
         return result
     unresolved, final, remediated = findings("unresolved_findings"), findings("final_findings"), findings("remediated_findings")
-    blockers = review_acceptance_blockers([*unresolved, *final])
+    require_assurance = (payload.get("architecture_disposition_state") == "accepted"
+                         and _version_at_least(payload.get("dual_hat_version"), ASSURANCE_REQUIRED_FROM_VERSION))
+    assurance_basis = payload.get("review_assurance_basis")
+    assurance_evidence = payload.get("review_assurance_evidence")
+    plan = payload.get("deep_review_plan")
+    if require_assurance or plan is not None:
+        if not isinstance(plan, dict):
+            failures.append("baseline deep review plan is absent or invalid")
+        else:
+            failures.extend("deep review plan: " + error for error in deep_review_plan_failures(plan))
+            subject_binding = payload.get("governed_state_binding")
+            baseline_subject = subject_binding.get("binding_hash") if isinstance(subject_binding, Mapping) else None
+            if not isinstance(baseline_subject, str) or not baseline_subject:
+                failures.append("deep review plan subject cannot be bound: baseline lacks a governed-state binding")
+            elif str(plan.get("subject_sha256", "")).casefold() != baseline_subject.casefold():
+                failures.append("deep review plan subject does not match the baseline's own governed-state binding")
+    blockers = review_acceptance_blockers(
+        [*unresolved, *final],
+        assurance_basis=assurance_basis,
+        assurance_evidence=assurance_evidence,
+        require_assurance=require_assurance,
+    )
     if blockers: failures.append("baseline contains unresolved blocking findings: " + ", ".join(dict.fromkeys(blockers)))
     final_by_id = {str(row["finding_id"]): row for row in final}
     for row in unresolved:

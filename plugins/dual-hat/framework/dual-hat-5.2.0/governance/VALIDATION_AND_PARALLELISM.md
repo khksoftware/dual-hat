@@ -6,7 +6,8 @@ Validation profiles are risk-based:
 
 - focused development validates changed owning layers and direct consumers;
 - final integration validates affected regressions, schemas, dependencies, documentation, packaging, and disposition;
-- full live validation runs once for a release, major migration, or high-risk candidate fingerprint;
+- full live validation runs once for a release, major migration, or high-risk candidate fingerprint,
+  and also periodically outside a release, at a cadence the adopting profile sets;
 - committed-tree validation runs after commit in a Git-aware isolated worktree;
 - export validation runs in a metadata-free standalone tree and never substitutes for committed-tree validation;
 - post-publication checks verify only identity, cleanliness, remote alignment, and evidence binding.
@@ -82,6 +83,24 @@ write owner-scoped immutable checkpoints and candidate outputs, return one
 structured terminal result, and exit. They never allocate follow-on work,
 relaunch/reset a failed operation, mutate shared cursors or canonical products,
 clean another lane, terminate peers, or improvise recovery strategy.
+
+Test execution in a repository worked by concurrent agents or platforms is such
+a workflow without qualification: every run is a request to that one authority,
+and a requester never launches a suite itself, redirected to it by the strongest
+mechanism the platform exposes for that redirection; a platform exposing only
+guidance for it declares that as a known limitation rather than assuming
+compliance, the same discipline the quiescence section below already asks of an
+unreadable boundary. A run's identity is its tree and its target set; two
+identical requests share one result, and a held result is reused for a
+descendant tree only where the repository's own selection rule shows the
+intervening change selects none of that result's targets. The allocation this
+one orchestrator owns is machine-wide admission: no run can start without the
+slot it grants, and a holder that has stopped leaves no live process tree behind
+it -- the same containment its cleanup and quiescence duties already require.
+Where it defers a request so it can coalesce with a later, overlapping one, the
+deferral carries a maximum hold, stays visible wherever the requester's own work
+status is shown, and never lets a work item close without a run that actually
+covered it.
 
 Partial failure does not require discarding valid work or granting workers
 shared-state authority. The orchestrator validates the maximal contiguous
