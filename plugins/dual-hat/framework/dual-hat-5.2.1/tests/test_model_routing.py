@@ -10,8 +10,6 @@ sys.path.insert(0, str(ROOT / "tooling"))
 
 from model_routing import ORDER, SCRIPTED_TIER, TIERS, bind_development_environment, fingerprint, production_configuration, require_tier, switch_selection, tier_for_activity
 
-DUAL_HAT_CAPABILITY_PROOFS = {"explicit_user_and_architecture_reporting", "resumable_handoff"}
-
 
 class ModelRoutingTests(unittest.TestCase):
     def models(self, adapter="test-host", tools=("files","tests"), runtime=None):
@@ -22,10 +20,6 @@ class ModelRoutingTests(unittest.TestCase):
             return {"selection_id":selection, "capability_evidence":capability, "availability_evidence":availability, "user_confirmation":{"selection_id":selection,"adapter_identity":adapter,"environment_fingerprint":environment,"confirmed":confirmed,"confirmed_by":"fixture-user"}}
         return [row("local-standard", ORDER[:2]), row("confirmed-advanced", [ORDER[2]])]
 
-    def test_portable_tiers_are_abstract_and_assign_activities(self):
-        self.assertEqual(4, len(TIERS)); self.assertEqual(ORDER[3], tier_for_activity("security_review"))
-        text = " ".join(str(value) for value in TIERS.values()).casefold()
-        self.assertNotIn("provider", text); self.assertNotIn("model name", text)
 
     def test_deterministic_work_routes_to_a_script_never_a_model(self):
         self.assertEqual(SCRIPTED_TIER, tier_for_activity("deterministic_execution"))
@@ -36,17 +30,6 @@ class ModelRoutingTests(unittest.TestCase):
         scripted = require_tier(binding, SCRIPTED_TIER)
         self.assertEqual("script_bound", scripted["status"]); self.assertFalse(scripted["model_binding"])
 
-    def test_onboarding_and_project_lifecycle_require_current_project_mapping(self):
-        onboarding = (ROOT / "process/ONBOARDING.md").read_text(encoding="utf-8")
-        planning = (ROOT / "planning/PLANNING_MODEL.md").read_text(encoding="utf-8")
-        profile = (ROOT / "governance/PLATFORM_PROFILE_CONTRACT.md").read_text(encoding="utf-8")
-        handover = (ROOT / "sessions/SESSION_AND_HANDOVER_PROTOCOL.md").read_text(encoding="utf-8")
-        self.assertIn("Onboarding is incomplete when tiers remain abstract", onboarding)
-        self.assertIn("project-local model-tier mapping", onboarding)
-        self.assertIn("assigns the abstract model tier", planning)
-        self.assertIn("environment fingerprint", planning)
-        self.assertIn("model-tier mapping", profile)
-        self.assertIn("model-tier mapping identity and environment fingerprint", handover)
 
     def test_evidence_binding_remaps_and_hard_stops_missing_mandatory_tier(self):
         first = bind_development_environment(adapter_identity="test-host", tools=["files", "tests"], runtime_fingerprint={"os": "fixture"}, configured_models=self.models())

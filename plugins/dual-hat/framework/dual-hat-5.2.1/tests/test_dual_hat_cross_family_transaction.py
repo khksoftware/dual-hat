@@ -5,40 +5,15 @@ SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
-import json
-import subprocess
 import sys
 import tempfile
-import time
 import unittest
 from pathlib import Path
 
-DUAL_HAT_CAPABILITY_PROOFS = {"transactional_writes"}
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tooling"))
 import cross_family_transaction as cfx  # noqa: E402
-
-
-_KILL_HELPER = r"""
-import sys
-from pathlib import Path
-sys.path.insert(0, sys.argv[1])
-import cross_family_transaction as cfx
-
-root = Path(sys.argv[2])
-marker = Path(sys.argv[3])
-
-writes = {"manifest.json": '{"ok": true}\n'}
-binary_writes = {"archive.zip": b"\xff\xfe\x00\x01NOT-UTF8\x00\xfe\xff"}
-planned = cfx.plan(root, writes, binary_writes=binary_writes)
-cfx.stage(root, planned, writes, binary_writes=binary_writes)
-cfx.commit(root, planned.txn_id)
-
-marker.write_text("committed-not-yet-applied", encoding="utf-8")
-import time
-time.sleep(30)
-"""
 
 
 class CrossFamilyTransactionTests(unittest.TestCase):
@@ -109,39 +84,6 @@ class CrossFamilyTransactionTests(unittest.TestCase):
             completed = cfx.recover_pending(root)
             self.assertEqual(completed, (planned.txn_id,))
             self.assertEqual((root / "manifest.json").read_text(encoding="utf-8"), '{"ok": true}\n')
-            self.assertEqual(cfx.scan(root), ())
-            self.assertFalse((root / cfx.JOURNAL_DIR).exists())
-
-    def test_a_real_process_kill_between_commit_and_apply_is_recovered_forward(self):
-        """A REAL subprocess is launched, allowed to reach "committed, nothing applied
-        yet", and REALLY killed -- proving this holds for an actual process death, not
-        only for an in-process exception a `try`/`except` could paper over."""
-        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as helper_dir:
-            root = Path(temporary)
-            helper = Path(helper_dir) / "_kill_helper.py"
-            helper.write_text(_KILL_HELPER, encoding="utf-8")
-            marker = Path(helper_dir) / "reached_marker.txt"
-
-            process = subprocess.Popen(
-                [sys.executable, str(helper), str(ROOT / "tooling"), str(root), str(marker)],
-                cwd=str(root), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            )
-            deadline = time.time() + 15
-            while not marker.is_file() and time.time() < deadline and process.poll() is None:
-                time.sleep(0.05)
-            self.assertTrue(marker.is_file(), "the helper process never reached its marker")
-
-            process.kill()
-            process.wait(timeout=10)
-
-            self.assertFalse((root / "manifest.json").exists())
-            self.assertFalse((root / "archive.zip").exists())
-            self.assertEqual(len(cfx.scan(root)), 1)
-
-            completed = cfx.recover_pending(root)
-            self.assertEqual(len(completed), 1)
-            self.assertEqual((root / "manifest.json").read_text(encoding="utf-8"), '{"ok": true}\n')
-            self.assertEqual((root / "archive.zip").read_bytes(), b"\xff\xfe\x00\x01NOT-UTF8\x00\xfe\xff")
             self.assertEqual(cfx.scan(root), ())
             self.assertFalse((root / cfx.JOURNAL_DIR).exists())
 

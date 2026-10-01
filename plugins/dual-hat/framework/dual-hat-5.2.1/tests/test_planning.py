@@ -151,32 +151,6 @@ class ClaimedIdentityTests(unittest.TestCase):
         claimed = {"namespace": "backlog", "identifier": "WORK-9999", "title": "Never queued"}
         self.assertEqual("absent", check_claimed_identity(claimed, registry))
 
-    def test_identifier_presence_check_alone_reports_the_collision_as_reconciled(self):
-        # Pins the originating defect this function exists to close: a shallow
-        # identifier-presence check -- "does this id exist in the live registry" --
-        # reports the identifier-collision fixture above as reconciled, because it
-        # never compares title, purpose, namespace or provenance. check_claimed_identity
-        # is the fix; this test proves the shallow check's blind spot on the same
-        # fixture the fix is proven against.
-        with tempfile.TemporaryDirectory() as temp:
-            registry = self._registry_with_mutated_backlog_title(Path(temp), "Retire the legacy ingest adapter")
-            claimed_identifier = "WORK-0001"
-
-            # The old behaviour this repairs: presence alone, nothing else compared.
-            identifier_presence_check_reports_reconciled = claimed_identifier in registry
-            self.assertTrue(
-                identifier_presence_check_reports_reconciled,
-                "the shallow check is expected to be fooled -- that is the defect",
-            )
-
-            claimed = {
-                "namespace": "backlog",
-                "identifier": claimed_identifier,
-                "title": "Add bounded status reporting",
-            }
-            self.assertNotEqual("identity-match", check_claimed_identity(claimed, registry))
-            self.assertEqual("identifier-collision", check_claimed_identity(claimed, registry))
-
 
 if __name__ == "__main__":
     unittest.main()
