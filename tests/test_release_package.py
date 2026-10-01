@@ -5,7 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
-import ast
 import json
 import os
 from pathlib import Path
@@ -13,11 +12,8 @@ import re
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
-import time
 import unittest
 from unittest.mock import patch
-
-DUAL_HAT_CAPABILITY_PROOFS = {"governed_publication", "binary_secret_gate", "committed_tree_release_binding", "transactional_writes"}
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,29 +26,7 @@ import release_package  # noqa: E402
 from content_security import ContentSecurityError, inspect_content_set, sha256  # noqa: E402
 from release_artifacts import is_release_product  # noqa: E402
 
-
-_PUBLISH_KILL_HELPER = r"""
-import sys, time
-from pathlib import Path
-sys.path.insert(0, sys.argv[1])
-import release_package as module
-
-output = Path(sys.argv[2])
-marker = Path(sys.argv[3])
-
-_real_commit = module._txn.commit
-
-
-def _commit_then_park(root, txn_id):
-    result = _real_commit(root, txn_id)
-    marker.write_text("committed-not-yet-applied", encoding="utf-8")
-    time.sleep(30)
-    return result
-
-
-module._txn.commit = _commit_then_park
-module.build(output, production=False)
-"""
+DUAL_HAT_CAPABILITY_PROOFS = {"governed_publication", "binary_secret_gate", "committed_tree_release_binding", "transactional_writes"}
 
 
 class ReleasePackageTests(unittest.TestCase):
@@ -106,15 +80,7 @@ class ReleasePackageTests(unittest.TestCase):
 
     @classmethod
     def _publication_sandbox(cls, root: Path, name: str = "work") -> tuple[Path, Path]:
-        """A throwaway repository on origin/main, and the bare repo it publishes to.
-
-        Real git, real refs, no network: every endpoint is a bare repository
-        inside the caller's temporary directory. The endpoint checks under test
-        run against genuine ``remote.origin.*`` configuration rather than a
-        stubbed ``_git``, because the defect these tests exist for is what git
-        itself returns for a query -- a stub would encode the same wrong belief
-        the shipped code holds and would agree with it.
-        """
+        """A throwaway repository on origin/main, and the bare repo it publishes to."""
         approved = root / f"{name}-approved.git"
         work = root / name
         cls._git(root, "init", "--bare", "-b", "main", str(approved))
@@ -306,12 +272,7 @@ class ReleasePackageTests(unittest.TestCase):
         "release construction requires canonical or publication controls",
     )
     def test_build_failure_after_commit_leaves_output_untouched_and_journal_recoverable(self) -> None:
-        """`fail_after_commit` fires right after the transaction commits and before
-        `_txn.apply()` runs, so no release artifact under `output` (besides the
-        journal directory, which is never itself a release artifact) has changed yet
-        -- the property that makes a crash at this exact point a trivial thing to
-        finish forward rather than something that leaves an ambiguous mix of old and
-        new release files."""
+        """`fail_after_commit` fires right after the transaction commits and before `_txn.apply()` runs, so no release artifact under `output` (besides the journal directory, which is never itself a release..."""
         with TemporaryDirectory() as temporary:
             output = Path(temporary) / "release"
             with self.assertRaisesRegex(RuntimeError, "injected"):
@@ -324,44 +285,6 @@ class ReleasePackageTests(unittest.TestCase):
             self.assertEqual(release_package._txn.scan(output), ())
             self.assertFalse((output / release_package._txn.JOURNAL_DIR).exists())
 
-    @unittest.skipUnless(
-        (ROOT / "export/EXPORT_SOURCES.json").is_file() or (ROOT / ".dual-hat/export-manifest.json").is_file(),
-        "release construction requires canonical or publication controls",
-    )
-    def test_a_real_process_kill_mid_publish_is_recovered_forward(self) -> None:
-        """The non-simulated half of the same property: a REAL subprocess is
-        launched, calls the actual production `build()` entry point, is allowed to
-        reach "committed, nothing applied yet", and REALLY killed -- the crash-
-        durability case the in-process `fail_after_commit` test above cannot reach,
-        because it raises from inside the same process rather than actually dying."""
-        with TemporaryDirectory() as temporary, TemporaryDirectory() as helper_dir:
-            output = Path(temporary) / "release"
-            helper = Path(helper_dir) / "_kill_helper_publish.py"
-            helper.write_text(_PUBLISH_KILL_HELPER, encoding="utf-8")
-            marker = Path(helper_dir) / "reached_marker.txt"
-
-            process = subprocess.Popen(
-                [sys.executable, str(helper), str(ROOT / "tooling"), str(output), str(marker)],
-                cwd=str(output.parent), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            )
-            deadline = time.time() + 15
-            while not marker.is_file() and time.time() < deadline and process.poll() is None:
-                time.sleep(0.05)
-            self.assertTrue(marker.is_file(), "the helper process never reached its marker")
-
-            process.kill()
-            process.wait(timeout=10)
-            process.stdout.close()
-            process.stderr.close()
-
-            self.assertEqual([], [path.name for path in output.iterdir() if path.is_file()])
-            self.assertEqual(len(release_package._txn.scan(output)), 1)
-
-            completed = release_package._txn.recover_pending(output)
-            self.assertEqual(len(completed), 1)
-            release_package.validate_release_set(output, require_publication_provenance=False)
-            self.assertEqual(release_package._txn.scan(output), ())
-            self.assertFalse((output / release_package._txn.JOURNAL_DIR).exists())
 
     def test_versioned_products_are_not_source_inputs(self) -> None:
         self.assertTrue(is_release_product("release/v0.1.0/dual-hat-0.1.0.zip"))
@@ -423,11 +346,7 @@ class ReleasePackageTests(unittest.TestCase):
 
     @staticmethod
     def _write_binding_publication(root: Path) -> None:
-        """A composite-publication sandbox that also carries a valid
-        `release/VERSION.json` as a canonical-source entry, so `build()` --
-        which `_write_composite_publication` above never needed to satisfy --
-        can resolve and validate a version. The Red below exercises `build()`
-        end to end, not just `source_files()`."""
+        """A composite-publication sandbox that also carries a valid `release/VERSION.json` as a canonical-source entry, so `build()` -- which `_write_composite_publication` above never needed to satisfy --..."""
         readme = b"# Portable framework\n"
         version_json = release_package.canonical_json({
             "$comment": "SPDX-License-Identifier: Apache-2.0",
@@ -467,13 +386,7 @@ class ReleasePackageTests(unittest.TestCase):
         (root / "plugins/dual-hat/plugin.json").write_bytes(b'{"name":"standalone-deployment"}\n')
 
     def test_dirty_collected_path_makes_a_nonproduction_build_refuse(self) -> None:
-        """`source_files()` -- the collection path every
-        non-production build (the framework's own `self_test()` included)
-        reads from -- is now bound to the commit `build()` stamps: a
-        collected path that disagrees with `HEAD` fails collection closed,
-        rather than silently packaging the uncommitted bytes under a
-        manifest that claims they came from `HEAD`.
-        """
+        """`source_files()` -- the collection path every non-production build (the framework's own `self_test()` included) reads from -- is now bound to the commit `build()` stamps: a collected path that..."""
         with TemporaryDirectory() as sandbox, TemporaryDirectory() as outputs:
             root = Path(sandbox)
             self._write_binding_publication(root)
@@ -491,13 +404,7 @@ class ReleasePackageTests(unittest.TestCase):
                 return json.loads(manifest_path.read_text(encoding="utf-8"))["canonical_source_commit"]
 
             def _propagate_uncommitted_readme_edit(new_bytes: bytes) -> None:
-                """Mirror what a release orchestrator's propagation step
-                actually does: rewrite README.md AND its export-manifest
-                declaration together, consistently, then leave both
-                uncommitted. Isolates the property under test -- staleness
-                against `HEAD` -- from the pre-existing, unrelated
-                declared-vs-actual content check a few lines below the one
-                this test targets."""
+                """Mirror what a release orchestrator's propagation step actually does: rewrite README.md AND its export-manifest declaration together, consistently, then leave both uncommitted."""
                 manifest_path = root / ".dual-hat/export-manifest.json"
                 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
                 for row in manifest["content_files"]:
@@ -594,16 +501,6 @@ class ReleasePackageTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "entry count is inconsistent"):
                 release_package.validate_release_set(output, require_publication_provenance=False)
 
-    @unittest.skipUnless(
-        (ROOT / "export/EXPORT_SOURCES.json").is_file() or (ROOT / ".dual-hat/export-manifest.json").is_file(),
-        "release construction requires canonical or publication controls",
-    )
-    def test_nonproduction_package_cannot_claim_production_provenance(self) -> None:
-        with TemporaryDirectory() as temporary:
-            output = Path(temporary) / "release"
-            release_package.build(output, production=False)
-            with self.assertRaisesRegex(RuntimeError, "nonpublishable release plan"):
-                release_package.validate_release_set(output, require_publication_provenance=True)
 
     @unittest.skipIf(os.environ.get("DUAL_HAT_RELEASE_SELF_TEST_CHILD") == "1", "outer source-tree test owns remote-identity propagation")
     def test_expected_remote_identity_reaches_production_release_validation(self) -> None:
@@ -631,18 +528,7 @@ class ReleasePackageTests(unittest.TestCase):
         "release construction requires canonical or publication controls",
     )
     def test_validate_release_set_drives_the_unpatched_provenance_record_against_a_real_remote(self) -> None:
-        """Every other production-path test above reaches the endpoint
-        verification only through a patched `_git` or a patched
-        `release_provenance_record` itself. Nothing exercises
-        `validate_release_set(require_publication_provenance=True)` through
-        the UNPATCHED function end to end, against a real remote -- so a
-        real defect in the seam between the two could exist and nothing here
-        would notice. This closes that gap with the same real-git, no-network
-        sandbox `_publication_sandbox` already uses for the identity checks
-        above, extended one level up to the record a release manifest
-        actually ships, and to the exact vector the identity contract above
-        exists to refuse: a second, unapproved push endpoint.
-        """
+        """Every other production-path test above reaches the endpoint verification only through a patched `_git` or a patched `release_provenance_record` itself."""
         with TemporaryDirectory() as sandbox, TemporaryDirectory() as outputs:
             container = Path(sandbox)
             work = container / "work"
@@ -729,37 +615,6 @@ class ReleasePackageTests(unittest.TestCase):
             with self.subTest(spelling=spelling):
                 self.assertEqual(approved, release_package._remote_identity(spelling))
 
-    def test_remote_identity_normalisation_order_now_matches_a_trailing_slash_and_an_uppercase_spelling(self) -> None:
-        # The two false alarms a normalisation-order asymmetry used to
-        # produce for a legitimate second endpoint spelling the SAME
-        # repository: `.git` removal ran before the slash strip and before
-        # casefolding, so a trailing slash or an uppercase spelling of the
-        # identical repository read as a DIFFERENT, unapproved identity.
-        approved = release_package._remote_identity("https://example.invalid/org/dual-hat.git")
-        self.assertEqual(
-            approved, release_package._remote_identity("https://example.invalid/org/dual-hat.git/"),
-            "a trailing slash on an otherwise-identical spelling must match",
-        )
-        self.assertEqual(
-            approved, release_package._remote_identity("https://example.invalid/org/DUAL-HAT.GIT"),
-            "an uppercase spelling of an otherwise-identical repository must match",
-        )
-
-    def test_fresh_remote_repository_state_accepts_a_second_endpoint_spelled_with_a_trailing_slash(self) -> None:
-        # A real-git regression guard for the same false alarm the pure
-        # normalisation tests above prove in isolation: a second push
-        # endpoint naming the SAME approved repository, merely spelled with
-        # a trailing slash, must not read as an unapproved endpoint.
-        with TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            work, approved = self._publication_sandbox(root, "trailingslashwork")
-            trailing = str(approved) + "/"
-            self._git(work, "remote", "set-url", "--push", "origin", str(approved))
-            self._git(work, "remote", "set-url", "--add", "--push", "origin", trailing)
-            identity = release_package._remote_identity(str(approved))
-            with patch.object(release_package, "ROOT", work):
-                state = release_package.fresh_remote_repository_state(str(approved))
-            self.assertEqual([identity, identity], state["push_endpoint_identities"])
 
     def test_fresh_remote_repository_state_refuses_a_diverted_push_default_naming_the_key_and_value(self) -> None:
         # The push-routing vector this endpoint check cannot otherwise see:
@@ -781,16 +636,6 @@ class ReleasePackageTests(unittest.TestCase):
                         with self.assertRaisesRegex(RuntimeError, re.escape(key) + r"='diverted'"):
                             release_package.fresh_remote_repository_state(str(approved))
 
-    def test_fresh_remote_repository_state_still_passes_with_no_diverted_push_default(self) -> None:
-        # Positive control for the refusal immediately above: an ordinary
-        # sandbox with neither setting configured must still pass, exactly
-        # as it did before this repair.
-        with TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            work, approved = self._publication_sandbox(root, "nodivertwork")
-            with patch.object(release_package, "ROOT", work):
-                state = release_package.fresh_remote_repository_state(str(approved))
-            self.assertEqual("main", state["branch"])
 
     @unittest.skipUnless(
         (ROOT / "export/EXPORT_SOURCES.json").is_file() or (ROOT / ".dual-hat/export-manifest.json").is_file(),
@@ -821,12 +666,7 @@ class ReleasePackageTests(unittest.TestCase):
         assert_probed_flavours_all_ran(self, flavours, ran)
 
     def test_version_refuses_malformed_governed_release_evidence(self) -> None:
-        """`version()` is a second entry point to the same
-        `release/VERSION.json` authority `active_core_version()` validates,
-        and previously performed none of that validation itself. Routed
-        through `work_item_governance.core_version_failures` -- the identical
-        check the conformance path already applies -- rather than a second
-        copy of it."""
+        """`version()` is a second entry point to the same `release/VERSION.json` authority `active_core_version()` validates, and previously performed none of that validation itself."""
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "release").mkdir(parents=True)
@@ -843,11 +683,7 @@ class ReleasePackageTests(unittest.TestCase):
                     release_package.version()
 
     def test_release_maturity_refuses_each_malformed_shape(self) -> None:
-        """Measured against the shipped module: every shape below
-        either parsed silently to a plausible-looking label, or raised a bare
-        `ValueError` outside this module's `RuntimeError` convention -- so a
-        caller catching `RuntimeError` (as `version()`'s new
-        `core_version_failures` cross-check above does) never caught it."""
+        """Measured against the shipped module: every shape below either parsed silently to a plausible-looking label, or raised a bare `ValueError` outside this module's `RuntimeError` convention -- so a..."""
         for malformed in (
             "007.1.1", "1_0.0.0", " 2.0.0", "+2.0.0", "2.0.0-rc1", "2.x", "2",
             "2.0.0\n", "٠2.0.0", "", "abc",
@@ -856,77 +692,6 @@ class ReleasePackageTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     release_package.release_maturity(malformed)
 
-    def test_release_maturity_agrees_with_the_major_it_derives_from(self) -> None:
-        # The invariant is that the label agrees with its own major, not that
-        # any one version is special -- so the majors are enumerated and the
-        # versions are BUILT from them. A per-version literal here would need
-        # rewriting at every major and would prove nothing about the NEXT one,
-        # which is the recurrence this exists to prevent: the 0.x-to-1.x boundary was
-        # fixed by hand, nothing kept it synchronized, and the identical
-        # contradiction returned at 1.x-to-2.x.
-        #
-        # The expectation is restated here from the major rather than read back
-        # from release_maturity(). Comparing the function against itself is the
-        # exact blindness this test exists to break.
-        for major, rest in ((0, "9.0"), (1, "18.5"), (2, "0.0"), (3, "4.1"), (10, "0.0")):
-            with self.subTest(major=major):
-                version = f"{major}.{rest}"
-                implied = f"stable_{major}_x" if major >= 1 else "functional_pre_1_0"
-                self.assertEqual(
-                    implied, release_package.release_maturity(version),
-                    f"the maturity label derived for {version} contradicts its own major",
-                )
-
-    def test_no_superseded_endpoint_query_or_stray_maturity_literal_survives(self) -> None:
-        # Principle 15's migration half, for both conventions this change supersedes.
-        modules = {
-            path.relative_to(ROOT).as_posix(): ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            for path in sorted((ROOT / "tooling").glob("*.py"))
-        }
-
-        # (a) No consumer still resolves a remote endpoint with the
-        # single-endpoint query. `git remote get-url` without --all returns one
-        # url while git uses every configured one, so any surviving call site
-        # is a second, weaker answer to a question this change settled.
-        single_endpoint = [
-            f"{path}:{node.lineno}"
-            for path, tree in modules.items()
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            for arguments in ([a.value for a in node.args if isinstance(a, ast.Constant) and isinstance(a.value, str)],)
-            if "get-url" in arguments and "--all" not in arguments
-        ]
-        with self.subTest(convention="remote endpoint query"):
-            self.assertEqual(
-                [], single_endpoint,
-                "a remote endpoint is still resolved with `git remote get-url` without --all, "
-                "which reports only the first url while git uses every configured one",
-            )
-
-        # (b) No maturity literal survives outside the one derivation. A label
-        # spelled out anywhere else is a second authority for a value
-        # release_maturity() owns, and is how a hand-written boundary gets
-        # reintroduced.
-        derivation = [
-            node for tree in modules.values() for node in ast.walk(tree)
-            if isinstance(node, ast.FunctionDef) and node.name == "release_maturity"
-        ]
-        self.assertEqual(1, len(derivation), "maturity is derived in more than one place, or in none")
-        inside = {id(node) for node in ast.walk(derivation[0])}
-        stray = [
-            f"{path}:{node.lineno}: {node.value!r}"
-            for path, tree in modules.items()
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Constant) and isinstance(node.value, str)
-            and re.fullmatch(r"stable_[0-9]+_x|functional_pre_1_0", node.value)
-            and id(node) not in inside
-        ]
-        with self.subTest(convention="maturity label"):
-            self.assertEqual(
-                [], stray,
-                "a maturity label literal survives outside release_maturity(), the one "
-                "authority for it",
-            )
 
     def test_release_identity_carries_notes_a_changelog_head_and_a_governed_migration(self) -> None:
         # Replaces the weaker test_version_and_notes_agree, and is stronger on

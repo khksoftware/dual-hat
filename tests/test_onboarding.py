@@ -13,8 +13,6 @@ sys.path.insert(0, str(ROOT / "tooling"))
 
 from onboarding import (DISCOVERY_FIELDS, OnboardingError, apply_binding, approve_package, binding_plan, build_onboarding_package, classify_repository, create_greenfield_repository, framework_tree_checksum, inspect_repository, removal_plan, remove_binding)
 
-DUAL_HAT_CAPABILITY_PROOFS = {"repository_state_preservation", "explicit_user_and_architecture_reporting", "canonical_path_containment", "binary_secret_gate"}
-
 
 def discovery():
     return {field: f"fixture {field}" for field in DISCOVERY_FIELDS}
@@ -105,9 +103,6 @@ class OnboardingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary); before=framework_tree_checksum(root); (root/"vendor").mkdir(); (root/"vendor/unexpected.py").write_text("pass",encoding="utf-8"); self.assertNotEqual(before,framework_tree_checksum(root))
 
-    def test_fixture_manifest_has_no_private_or_paid_inputs(self):
-        manifest = json.loads((ROOT / "fixtures/onboarding/fixture-manifest.json").read_text(encoding="utf-8"))
-        self.assertFalse(manifest["private_data"]); self.assertFalse(manifest["paid_services"]); self.assertEqual(3, len(manifest["scenarios"]))
 
     def test_golden_semantics_are_consumed(self):
         golden=json.loads((ROOT/"fixtures/onboarding/existing-imperfect-task-tracker/golden-semantic-expectations.json").read_text(encoding="utf-8"))

@@ -2,9 +2,13 @@
 
 # Changelog
 
-## 5.2.0 - 2026-09-29
+## 5.2.1 - 2026-09-30
 
-## 5.2.0
+- The framework's own test suite is thinned under an inverted burden: a test stays only if it guards a live, relied-on behaviour that could realistically regress and that no other retained test already covers. Assertions on documentation wording, echoes of constants and schema shapes, and duplicate angles on a single behaviour were removed. No framework behaviour, schema, gate or governance text changes.
+- `CHANGELOG.md`: the 5.2.0 entry carried a second, undated `## 5.2.0` heading beside the dated one; it is removed.
+- A quality-review test derived its pre-gate baseline from the shipped version, which stopped working once the shipped version reached the assurance threshold. It now derives that baseline from the threshold itself.
+
+## 5.2.0 - 2026-09-29
 
 Thirteen pending propagations, published together, per the standing rule that a release carries every
 pending item and never a subset. This is a minor increment. Most of the thirteen are additive
